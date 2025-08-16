@@ -1,21 +1,545 @@
-<?php include 'includes/header.php'; ?>
+<?php 
+include 'includes/header.php';
+include 'config/database.php';
+
+// Lấy danh sách sản phẩm và hình ảnh chính từ cơ sở dữ liệu
+$sql = "SELECT p.product_id, p.product_name, p.description, p.price, p.stock, pi.image_url
+    FROM products p
+    LEFT JOIN product_images pi ON p.product_id = pi.product_id AND pi.is_primary = 1
+    ORDER BY p.product_id";
+$stmt = $pdo->prepare($sql);
+$stmt->execute();
+$products = $stmt->fetchAll(PDO::FETCH_ASSOC);
+?>
 
 <h2 class="section-title">Cửa hàng thể thao</h2>
-<div class="products">
-    <div class="product">
-        <img src="https://via.placeholder.com/300x200" alt="Vợt Yonex">
-        <div class="product-info">
-            <h3>Vợt Yonex Pro</h3>
-            <p class="price">1.200.000đ</p>
-        </div>
-    </div>
-    <div class="product">
-        <img src="https://via.placeholder.com/300x200" alt="Giày Lining">
-        <div class="product-info">
-            <h3>Giày Lining 2025</h3>
-            <p class="price">850.000đ</p>
-        </div>
+
+<div class="shop-intro">
+    <img src="images/Olypic.png" alt="Cửa hàng thể thao">
+    <div class="shop-intro-content">
+    <h2>Chào mừng đến với Sunny Sport</h2>
+    <p style="text-align:justify">Chúng tôi cung cấp đầy đủ các sản phẩm thể thao chất lượng cao, từ vợt cầu lông, giày thể thao đến các phụ kiện thiết bị chuyên nghiệp. Hãy khám phá bộ sưu tập của chúng tôi!</p>
     </div>
 </div>
+
+<div class="products">
+    <?php foreach($products as $product): ?>
+    <div class="product">
+        <?php
+            $imgSrc = !empty($product['image_url']) ? 'images/' . $product['image_url'] : 'images/sport1.webp';
+        ?>
+        <img src="<?php echo $imgSrc; ?>"
+             alt="<?php echo htmlspecialchars($product['product_name']); ?>"
+             onerror="this.src='https://via.placeholder.com/300x200?text=<?php echo urlencode($product['product_name']); ?>'">
+        <div class="product-info">
+            <h3><?php echo htmlspecialchars($product['product_name']); ?></h3>
+            <p class="description"><?php echo htmlspecialchars($product['description']); ?></p>
+            <p class="price"><?php echo number_format($product['price'], 0, ',', '.'); ?>đ</p>
+            <p class="stock">Còn lại: <?php echo $product['stock']; ?> sản phẩm</p>
+            <div class="product-actions">
+                <button class="btn-add-cart" onclick="addToCart(<?php echo $product['product_id']; ?>, '<?php echo htmlspecialchars($product['product_name']); ?>', <?php echo $product['price']; ?>)">
+                    <i class="fas fa-shopping-cart"></i> Thêm vào giỏ
+                </button>
+                <button class="btn-buy-now" onclick="buyNow(<?php echo $product['product_id']; ?>, '<?php echo htmlspecialchars($product['product_name']); ?>', <?php echo $product['price']; ?>)">
+                    <i class="fas fa-credit-card"></i> Mua ngay
+                </button>
+            </div>
+        </div>
+    </div>
+    <?php endforeach; ?>
+</div>
+
+<!-- Giỏ hàng mini -->
+<div id="cart-sidebar" class="cart-sidebar">
+    <div class="cart-header">
+        <h3>Giỏ hàng</h3>
+        <button onclick="closeCart()" class="close-cart">&times;</button>
+    </div>
+    <div id="cart-items" class="cart-items">
+        <!-- Các sản phẩm trong giỏ hàng sẽ hiển thị ở đây -->
+    </div>
+    <div class="cart-footer">
+        <div class="cart-total">
+            <strong>Tổng cộng: <span id="cart-total">0đ</span></strong>
+        </div>
+        <button onclick="checkout()" class="btn-checkout">Thanh toán</button>
+    </div>
+</div>
+
+<!-- Nút mở giỏ hàng -->
+<button id="cart-toggle" class="cart-toggle" onclick="toggleCart()">
+    <i class="fas fa-shopping-cart"></i>
+    <span id="cart-count">0</span>
+</button>
+
+<style>
+/* CSS cho sản phẩm */
+.products {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    gap: 25px;
+    margin-bottom: 40px;
+}
+
+.product {
+    background: white;
+    border-radius: 15px;
+    overflow: hidden;
+    box-shadow: 0 8px 25px rgba(0,0,0,0.1);
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+    text-align: center;
+}
+
+.product:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 12px 35px rgba(0,0,0,0.15);
+}
+
+.product img {
+    width: 100%;
+    height: 250px;
+    object-fit: cover;
+    transition: transform 0.3s ease;
+}
+
+.product:hover img {
+    transform: scale(1.05);
+}
+
+.product-info {
+    padding: 20px;
+}
+
+.product-info h3 {
+    font-size: 18px;
+    font-weight: bold;
+    margin-bottom: 10px;
+    color: #333;
+    min-height: 50px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.description {
+    color: #666;
+    font-size: 14px;
+    margin-bottom: 15px;
+    min-height: 40px;
+    line-height: 1.4;
+}
+
+.price {
+    color: #dc3545;
+    font-weight: bold;
+    font-size: 20px;
+    margin-bottom: 10px;
+}
+
+.stock {
+    color: #28a745;
+    font-size: 14px;
+    margin-bottom: 15px;
+}
+
+.product-actions {
+    display: flex;
+    gap: 10px;
+    flex-direction: column;
+}
+
+.btn-add-cart, .btn-buy-now {
+    padding: 12px 20px;
+    border: none;
+    border-radius: 8px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+}
+
+.btn-add-cart {
+    background: #007bff;
+    color: white;
+}
+
+.btn-add-cart:hover {
+    background: #0056b3;
+    transform: translateY(-2px);
+}
+
+.btn-buy-now {
+    background: #28a745;
+    color: white;
+}
+
+.btn-buy-now:hover {
+    background: #1e7e34;
+    transform: translateY(-2px);
+}
+
+/* CSS cho giỏ hàng */
+.cart-sidebar {
+    position: fixed;
+    top: 0;
+    right: -400px;
+    width: 400px;
+    height: 100vh;
+    background: white;
+    box-shadow: -5px 0 15px rgba(0,0,0,0.1);
+    transition: right 0.3s ease;
+    z-index: 1000;
+    display: flex;
+    flex-direction: column;
+}
+
+.cart-sidebar.open {
+    right: 0;
+}
+
+.cart-header {
+    background: #007bff;
+    color: white;
+    padding: 20px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.cart-header h3 {
+    margin: 0;
+    font-size: 20px;
+}
+
+.close-cart {
+    background: none;
+    border: none;
+    color: white;
+    font-size: 24px;
+    cursor: pointer;
+    padding: 0;
+    width: auto;
+}
+
+.cart-items {
+    flex: 1;
+    padding: 20px;
+    overflow-y: auto;
+}
+
+.cart-item {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    padding: 15px 0;
+    border-bottom: 1px solid #eee;
+}
+
+.cart-item img {
+    width: 60px;
+    height: 60px;
+    object-fit: cover;
+    border-radius: 8px;
+}
+
+.cart-item-info {
+    flex: 1;
+}
+
+.cart-item-name {
+    font-weight: 600;
+    margin-bottom: 5px;
+}
+
+.cart-item-price {
+    color: #dc3545;
+    font-weight: bold;
+}
+
+.cart-item-quantity {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-top: 5px;
+}
+
+.quantity-btn {
+    background: #f8f9fa;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    padding: 5px 10px;
+    cursor: pointer;
+    width: auto;
+}
+
+.cart-footer {
+    padding: 20px;
+    border-top: 1px solid #eee;
+    background: #f8f9fa;
+}
+
+.cart-total {
+    margin-bottom: 15px;
+    font-size: 18px;
+}
+
+.btn-checkout {
+    width: 100%;
+    background: #28a745;
+    color: white;
+    padding: 15px;
+    border: none;
+    border-radius: 8px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background 0.3s ease;
+}
+
+.btn-checkout:hover {
+    background: #1e7e34;
+}
+
+.cart-toggle {
+    position: fixed;
+    bottom: 30px;
+    right: 30px;
+    background: #007bff;
+    color: white;
+    border: none;
+    border-radius: 50%;
+    width: 60px;
+    height: 60px;
+    font-size: 20px;
+    cursor: pointer;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+    transition: all 0.3s ease;
+    z-index: 999;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 5px;
+}
+
+.cart-toggle:hover {
+    background: #0056b3;
+    transform: scale(1.1);
+}
+
+#cart-count {
+    background: #dc3545;
+    color: white;
+    border-radius: 50%;
+    width: 20px;
+    height: 20px;
+    font-size: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: absolute;
+    top: -5px;
+    right: -5px;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+    .cart-sidebar {
+        width: 100%;
+        right: -100%;
+    }
+    
+    .products {
+        grid-template-columns: 1fr;
+    }
+    
+    .product-actions {
+        flex-direction: column;
+    }
+
+
+}
+</style>
+
+<script>
+// Khởi tạo giỏ hàng
+let cart = JSON.parse(localStorage.getItem('cart')) || [];
+let cartTotal = 0;
+
+// Cập nhật hiển thị giỏ hàng
+function updateCartDisplay() {
+    const cartItems = document.getElementById('cart-items');
+    const cartCount = document.getElementById('cart-count');
+    const cartTotalElement = document.getElementById('cart-total');
+    
+    cartItems.innerHTML = '';
+    cartTotal = 0;
+    
+    if (cart.length === 0) {
+        cartItems.innerHTML = '<p style="text-align: center; color: #666; margin-top: 50px;">Giỏ hàng trống</p>';
+    } else {
+        cart.forEach((item, index) => {
+            const itemElement = document.createElement('div');
+            itemElement.className = 'cart-item';
+            itemElement.innerHTML = `
+                <img src="images/sport1.webp" 
+                     alt="${item.name}" 
+                     onerror="this.src='https://via.placeholder.com/60x60?text=${encodeURIComponent(item.name)}'">
+                <div class="cart-item-info">
+                    <div class="cart-item-name">${item.name}</div>
+                    <div class="cart-item-price">${formatPrice(item.price)}đ</div>
+                    <div class="cart-item-quantity">
+                        <button class="quantity-btn" onclick="updateQuantity(${index}, -1)">-</button>
+                        <span>${item.quantity}</span>
+                        <button class="quantity-btn" onclick="updateQuantity(${index}, 1)">+</button>
+                        <button class="quantity-btn" onclick="removeFromCart(${index})" style="margin-left: 10px; background: #dc3545; color: white;">Xóa</button>
+                    </div>
+                </div>
+            `;
+            cartItems.appendChild(itemElement);
+            cartTotal += item.price * item.quantity;
+        });
+    }
+    
+    cartCount.textContent = cart.reduce((total, item) => total + item.quantity, 0);
+    cartTotalElement.textContent = formatPrice(cartTotal);
+    
+    // Lưu vào localStorage
+    localStorage.setItem('cart', JSON.stringify(cart));
+}
+
+// Thêm vào giỏ hàng
+function addToCart(productId, productName, price) {
+    const existingItem = cart.find(item => item.id === productId);
+    
+    if (existingItem) {
+        existingItem.quantity += 1;
+    } else {
+        cart.push({
+            id: productId,
+            name: productName,
+            price: price,
+            quantity: 1
+        });
+    }
+    
+    updateCartDisplay();
+    showNotification('Đã thêm vào giỏ hàng!');
+}
+
+// Mua ngay
+function buyNow(productId, productName, price) {
+    // Thêm vào giỏ hàng trước
+    addToCart(productId, productName, price);
+    
+    // Mở giỏ hàng
+    toggleCart();
+    
+    // Hiển thị thông báo
+    showNotification('Sản phẩm đã được thêm vào giỏ hàng! Vui lòng thanh toán.');
+}
+
+// Cập nhật số lượng
+function updateQuantity(index, change) {
+    cart[index].quantity += change;
+    
+    if (cart[index].quantity <= 0) {
+        cart.splice(index, 1);
+    }
+    
+    updateCartDisplay();
+}
+
+// Xóa khỏi giỏ hàng
+function removeFromCart(index) {
+    cart.splice(index, 1);
+    updateCartDisplay();
+}
+
+// Mở/đóng giỏ hàng
+function toggleCart() {
+    const cartSidebar = document.getElementById('cart-sidebar');
+    cartSidebar.classList.toggle('open');
+}
+
+function closeCart() {
+    const cartSidebar = document.getElementById('cart-sidebar');
+    cartSidebar.classList.remove('open');
+}
+
+// Thanh toán
+function checkout() {
+    if (cart.length === 0) {
+        alert('Giỏ hàng trống!');
+        return;
+    }
+    
+    // Hiển thị thông tin thanh toán
+    const total = formatPrice(cartTotal);
+    const confirmCheckout = confirm(`Tổng cộng: ${total}đ\n\nBạn có muốn tiếp tục thanh toán?`);
+    
+    if (confirmCheckout) {
+        // Ở đây có thể thêm logic chuyển đến trang thanh toán
+        alert('Chức năng thanh toán đang được phát triển. Vui lòng liên hệ với chúng tôi để đặt hàng!');
+        
+        // Xóa giỏ hàng sau khi thanh toán
+        cart = [];
+        updateCartDisplay();
+        closeCart();
+    }
+}
+
+// Format giá tiền
+function formatPrice(price) {
+    return new Intl.NumberFormat('vi-VN').format(price);
+}
+
+// Hiển thị thông báo
+function showNotification(message) {
+    const notification = document.createElement('div');
+    notification.style.cssText = `
+        position: fixed;
+        top: 20px;
+        right: 20px;
+        background: #28a745;
+        color: white;
+        padding: 15px 20px;
+        border-radius: 8px;
+        box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+        z-index: 1001;
+        animation: slideIn 0.3s ease;
+    `;
+    notification.textContent = message;
+    
+    document.body.appendChild(notification);
+    
+    setTimeout(() => {
+        notification.style.animation = 'slideOut 0.3s ease';
+        setTimeout(() => {
+            document.body.removeChild(notification);
+        }, 300);
+    }, 2000);
+}
+
+// Thêm CSS animation
+const style = document.createElement('style');
+style.textContent = `
+    @keyframes slideIn {
+        from { transform: translateX(100%); opacity: 0; }
+        to { transform: translateX(0); opacity: 1; }
+    }
+    @keyframes slideOut {
+        from { transform: translateX(0); opacity: 1; }
+        to { transform: translateX(100%); opacity: 0; }
+    }
+`;
+document.head.appendChild(style);
+
+// Khởi tạo hiển thị giỏ hàng khi trang load
+document.addEventListener('DOMContentLoaded', function() {
+    updateCartDisplay();
+});
+</script>
 
 <?php include 'includes/footer.php'; ?>
