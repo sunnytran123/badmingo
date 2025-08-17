@@ -2,13 +2,55 @@
 include 'includes/header.php';
 include 'config/database.php';
 
+// Lấy danh mục sản phẩm
+$categorySql = "SELECT category_id, category_name FROM product_categories ORDER BY category_name";
+$categoryStmt = $pdo->prepare($categorySql);
+$categoryStmt->execute();
+$categories = $categoryStmt->fetchAll(PDO::FETCH_ASSOC);
+
+// Xử lý bộ lọc
+$filterCategory = isset($_GET['category']) ? intval($_GET['category']) : 0;
+$filterPrice = isset($_GET['price']) ? $_GET['price'] : '';
+
+$where = [];
+$params = [];
+
+if ($filterCategory > 0) {
+    $where[] = "p.category_id = ?";
+    $params[] = $filterCategory;
+}
+
+if ($filterPrice == '1') { // Dưới 500k
+    $where[] = "p.price < 500000";
+} elseif ($filterPrice == '2') { // 500k - 1tr
+    $where[] = "p.price >= 500000 AND p.price <= 1000000";
+} elseif ($filterPrice == '3') { // Trên 1tr
+    $where[] = "p.price > 1000000";
+}
+
+$whereSql = $where ? 'WHERE ' . implode(' AND ', $where) : '';
+
+// Phân trang
+$page = isset($_GET['page']) ? max(1, intval($_GET['page'])) : 1;
+$limit = 6;
+$offset = ($page - 1) * $limit;
+
+// Đếm tổng số sản phẩm
+$countSql = "SELECT COUNT(*) FROM products p " . $whereSql;
+$countStmt = $pdo->prepare($countSql);
+$countStmt->execute($params);
+$totalProducts = $countStmt->fetchColumn();
+$totalPages = ceil($totalProducts / $limit);
+
 // Lấy danh sách sản phẩm và hình ảnh chính từ cơ sở dữ liệu
 $sql = "SELECT p.product_id, p.product_name, p.description, p.price, p.stock, pi.image_url
     FROM products p
     LEFT JOIN product_images pi ON p.product_id = pi.product_id AND pi.is_primary = 1
-    ORDER BY p.product_id";
+    $whereSql
+    ORDER BY p.product_id
+    LIMIT $limit OFFSET $offset";
 $stmt = $pdo->prepare($sql);
-$stmt->execute();
+$stmt->execute($params);
 $products = $stmt->fetchAll(PDO::FETCH_ASSOC);
 ?>
 
@@ -21,6 +63,30 @@ $products = $stmt->fetchAll(PDO::FETCH_ASSOC);
     <p style="text-align:justify">Chúng tôi cung cấp đầy đủ các sản phẩm thể thao chất lượng cao, từ vợt cầu lông, giày thể thao đến các phụ kiện thiết bị chuyên nghiệp. Hãy khám phá bộ sưu tập của chúng tôi!</p>
     </div>
 </div>
+
+<!-- Bộ lọc sản phẩm -->
+<form method="get" class="product-filter" style="margin-bottom:30px;display:flex;gap:20px;align-items:center;">
+    <label>
+        Loại sản phẩm:
+        <select name="category" onchange="this.form.submit()">
+            <option value="0">Tất cả</option>
+            <?php foreach($categories as $cat): ?>
+                <option value="<?php echo $cat['category_id']; ?>" <?php if($filterCategory == $cat['category_id']) echo 'selected'; ?>>
+                    <?php echo htmlspecialchars($cat['category_name']); ?>
+                </option>
+            <?php endforeach; ?>
+        </select>
+    </label>
+    <label>
+        Giá:
+        <select name="price" onchange="this.form.submit()">
+            <option value="">Tất cả</option>
+            <option value="1" <?php if($filterPrice=='1') echo 'selected'; ?>>Dưới 500.000đ</option>
+            <option value="2" <?php if($filterPrice=='2') echo 'selected'; ?>>500.000đ - 1.000.000đ</option>
+            <option value="3" <?php if($filterPrice=='3') echo 'selected'; ?>>Trên 1.000.000đ</option>
+        </select>
+    </label>
+</form>
 
 <div class="products">
     <?php foreach($products as $product): ?>
@@ -47,6 +113,23 @@ $products = $stmt->fetchAll(PDO::FETCH_ASSOC);
         </div>
     </div>
     <?php endforeach; ?>
+</div>
+
+<!-- Phân trang -->
+<div class="pagination" style="text-align:center; margin-bottom:40px;">
+    <?php if ($totalPages > 1): ?>
+        <?php for ($i = 1; $i <= $totalPages; $i++): ?>
+            <a href="?<?php
+                $query = $_GET;
+                $query['page'] = $i;
+                echo http_build_query($query);
+            ?>"
+            style="display:inline-block;padding:8px 16px;margin:0 2px;border-radius:5px;
+            background:<?php echo $i==$page?'#007bff':'#f8f9fa'; ?>;color:<?php echo $i==$page?'#fff':'#333'; ?>;text-decoration:none;">
+                <?php echo $i; ?>
+            </a>
+        <?php endfor; ?>
+    <?php endif; ?>
 </div>
 
 <!-- Giỏ hàng mini -->

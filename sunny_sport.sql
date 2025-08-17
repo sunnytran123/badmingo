@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: 127.0.0.1
--- Generation Time: Aug 16, 2025 at 09:44 AM
+-- Generation Time: Aug 17, 2025 at 09:31 AM
 -- Server version: 10.4.32-MariaDB
 -- PHP Version: 8.1.25
 
@@ -407,6 +407,7 @@ INSERT INTO `order_items` (`order_item_id`, `order_id`, `product_id`, `quantity`
 CREATE TABLE `products` (
   `product_id` int(11) NOT NULL COMMENT 'Mã sản phẩm',
   `product_name` varchar(100) NOT NULL COMMENT 'Tên sản phẩm',
+  `category_id` int(11) DEFAULT NULL COMMENT 'Mã danh mục sản phẩm',
   `description` text DEFAULT NULL COMMENT 'Mô tả sản phẩm',
   `price` decimal(10,2) NOT NULL COMMENT 'Giá sản phẩm (VNĐ)',
   `stock` int(11) NOT NULL DEFAULT 0 COMMENT 'Số lượng tồn kho',
@@ -417,17 +418,42 @@ CREATE TABLE `products` (
 -- Dumping data for table `products`
 --
 
-INSERT INTO `products` (`product_id`, `product_name`, `description`, `price`, `stock`, `created_at`) VALUES
-(1, 'Vợt Yonex Astrox 99 Pro', 'Vợt cầu lông cao cấp, phù hợp đánh tấn công', 2500000.00, 30, '2025-08-16 01:00:00'),
-(2, 'Giày Lining Attack 2025', 'Giày cầu lông chuyên nghiệp, nhẹ và bền', 1500000.00, 20, '2025-08-16 01:05:00'),
-(3, 'Quả cầu lông Yonex Aerosensa', 'Quả cầu lông thi đấu tiêu chuẩn', 300000.00, 100, '2025-08-16 01:10:00'),
-(4, 'Áo thi đấu Lining Pro', 'Áo cầu lông thoáng khí, thấm hút mồ hôi', 450000.00, 50, '2025-08-16 01:15:00'),
-(5, 'Băng cuốn cổ tay Victor', 'Băng cuốn cổ tay hỗ trợ thi đấu', 100000.00, 80, '2025-08-16 01:20:00'),
-(6, 'Vợt Yonex Nanoflare 800', 'Vợt cầu lông nhẹ, phù hợp phòng thủ', 2200000.00, 25, '2025-08-16 01:25:00'),
-(7, 'Giày Asics Sky Elite FF', 'Giày cầu lông chống trượt, độ bám tốt', 1800000.00, 15, '2025-08-16 01:30:00'),
-(8, 'Quần cầu lông Yonex', 'Quần ngắn thoải mái, thiết kế thể thao', 350000.00, 40, '2025-08-16 01:35:00'),
-(9, 'Túi đựng vợt Lining 6 cây', 'Túi đựng vợt cao cấp, sức chứa 6 vợt', 800000.00, 10, '2025-08-16 01:40:00'),
-(10, 'Dây đan lưới Yonex BG65', 'Dây đan lưới bền, độ căng tốt', 150000.00, 60, '2025-08-16 01:45:00');
+INSERT INTO `products` (`product_id`, `product_name`, `category_id`, `description`, `price`, `stock`, `created_at`) VALUES
+(1, 'Vợt Yonex Astrox 99 Pro', 1, 'Vợt cầu lông cao cấp, phù hợp đánh tấn công', 2500000.00, 30, '2025-08-16 01:00:00'),
+(2, 'Giày Lining Attack 2025', 2, 'Giày cầu lông chuyên nghiệp, nhẹ và bền', 1500000.00, 20, '2025-08-16 01:05:00'),
+(3, 'Quả cầu lông Yonex Aerosensa', 3, 'Quả cầu lông thi đấu tiêu chuẩn', 300000.00, 100, '2025-08-16 01:10:00'),
+(4, 'Áo thi đấu Lining Pro', 4, 'Áo cầu lông thoáng khí, thấm hút mồ hôi', 450000.00, 50, '2025-08-16 01:15:00'),
+(5, 'Băng cuốn cổ tay Victor', 7, 'Băng cuốn cổ tay hỗ trợ thi đấu', 100000.00, 80, '2025-08-16 01:20:00'),
+(6, 'Vợt Yonex Nanoflare 800', 1, 'Vợt cầu lông nhẹ, phù hợp phòng thủ', 2200000.00, 25, '2025-08-16 01:25:00'),
+(7, 'Giày Asics Sky Elite FF', 2, 'Giày cầu lông chống trượt, độ bám tốt', 1800000.00, 15, '2025-08-16 01:30:00'),
+(8, 'Quần cầu lông Yonex', 5, 'Quần ngắn thoải mái, thiết kế thể thao', 350000.00, 40, '2025-08-16 01:35:00'),
+(9, 'Túi đựng vợt Lining 6 cây', 6, 'Túi đựng vợt cao cấp, sức chứa 6 vợt', 800000.00, 10, '2025-08-16 01:40:00'),
+(10, 'Dây đan lưới Yonex BG65', 7, 'Dây đan lưới bền, độ căng tốt', 150000.00, 60, '2025-08-16 01:45:00');
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `product_categories`
+--
+
+CREATE TABLE `product_categories` (
+  `category_id` int(11) NOT NULL COMMENT 'Mã danh mục sản phẩm',
+  `category_name` varchar(100) NOT NULL COMMENT 'Tên danh mục',
+  `description` text DEFAULT NULL COMMENT 'Mô tả danh mục'
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='Bảng lưu danh mục sản phẩm';
+
+--
+-- Dumping data for table `product_categories`
+--
+
+INSERT INTO `product_categories` (`category_id`, `category_name`, `description`) VALUES
+(1, 'Vợt', 'Vợt cầu lông'),
+(2, 'Giày', 'Giày cầu lông'),
+(3, 'Quả cầu', 'Quả cầu lông'),
+(4, 'Áo', 'Áo thi đấu cầu lông'),
+(5, 'Quần', 'Quần thi đấu cầu lông'),
+(6, 'Túi', 'Túi đựng đồ thể thao'),
+(7, 'Phụ kiện', 'Phụ kiện cầu lông như băng cuốn, dây đan');
 
 -- --------------------------------------------------------
 
@@ -654,7 +680,14 @@ ALTER TABLE `order_items`
 -- Indexes for table `products`
 --
 ALTER TABLE `products`
-  ADD PRIMARY KEY (`product_id`);
+  ADD PRIMARY KEY (`product_id`),
+  ADD KEY `category_id` (`category_id`);
+
+--
+-- Indexes for table `product_categories`
+--
+ALTER TABLE `product_categories`
+  ADD PRIMARY KEY (`category_id`);
 
 --
 -- Indexes for table `product_images`
@@ -770,6 +803,12 @@ ALTER TABLE `products`
   MODIFY `product_id` int(11) NOT NULL AUTO_INCREMENT COMMENT 'Mã sản phẩm', AUTO_INCREMENT=11;
 
 --
+-- AUTO_INCREMENT for table `product_categories`
+--
+ALTER TABLE `product_categories`
+  MODIFY `category_id` int(11) NOT NULL AUTO_INCREMENT COMMENT 'Mã danh mục sản phẩm', AUTO_INCREMENT=8;
+
+--
 -- AUTO_INCREMENT for table `product_images`
 --
 ALTER TABLE `product_images`
@@ -855,6 +894,12 @@ ALTER TABLE `orders`
 ALTER TABLE `order_items`
   ADD CONSTRAINT `order_items_ibfk_1` FOREIGN KEY (`order_id`) REFERENCES `orders` (`order_id`) ON DELETE CASCADE,
   ADD CONSTRAINT `order_items_ibfk_2` FOREIGN KEY (`product_id`) REFERENCES `products` (`product_id`) ON DELETE CASCADE;
+
+--
+-- Constraints for table `products`
+--
+ALTER TABLE `products`
+  ADD CONSTRAINT `products_ibfk_3` FOREIGN KEY (`category_id`) REFERENCES `product_categories` (`category_id`) ON DELETE SET NULL;
 
 --
 -- Constraints for table `product_images`
