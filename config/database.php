@@ -1,15 +1,14 @@
 <?php
-// Cấu hình kết nối cơ sở dữ liệu
-$host = 'localhost';
-$dbname = 'sunny_sport';
-$username = 'root';
-$password = '';
+$servername = "localhost";   // nếu chạy XAMPP thì giữ nguyên
+$username   = "root";        // user mặc định của XAMPP
+$password   = "";            // thường để trống
+$dbname     = "sunny_sport";   // đổi thành tên CSDL bạn đã tạo
 
-try {
-    $pdo = new PDO("mysql:host=$host;dbname=$dbname;charset=utf8mb4", $username, $password);
-    $pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
-} catch(PDOException $e) {
-    echo "Lỗi kết nối cơ sở dữ liệu: " . $e->getMessage();
-    exit;
+// Kết nối MySQLi
+$conn = new mysqli($servername, $username, $password, $dbname);
+
+// Kiểm tra kết nối
+if ($conn->connect_error) {
+    die("Kết nối thất bại: " . $conn->connect_error);
 }
-?> 
+?>
