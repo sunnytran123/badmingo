@@ -121,13 +121,16 @@ $products = $stmt->fetchAll(PDO::FETCH_ASSOC);
                 <p class="price"><?php echo number_format($product['price'], 0, ',', '.'); ?>đ</p>
                 <p class="stock">Còn lại: <?php echo $product['stock']; ?> sản phẩm</p>
                 <div class="product-actions">
-                    <button class="btn-add-cart" onclick="addToCart(<?php echo $product['product_id']; ?>, '<?php echo htmlspecialchars($product['product_name']); ?>', <?php echo $product['price']; ?>)">
-                        <i class="fas fa-shopping-cart"></i> Thêm vào giỏ
+                    <button class="btn-add-cart" 
+                        onclick="addToCart(<?php echo $product['product_id']; ?>, '<?php echo htmlspecialchars($product['product_name']); ?>', <?php echo $product['price']; ?>)">
+                        <i class="fas fa-shopping-cart"></i>
                     </button>
-                    <button class="btn-buy-now" onclick="buyNow(<?php echo $product['product_id']; ?>, '<?php echo htmlspecialchars($product['product_name']); ?>', <?php echo $product['price']; ?>)">
+                    <button class="btn-buy-now" 
+                        onclick="buyNow(<?php echo $product['product_id']; ?>, '<?php echo htmlspecialchars($product['product_name']); ?>', <?php echo $product['price']; ?>)">
                         <i class="fas fa-credit-card"></i> Mua ngay
                     </button>
                 </div>
+
             </div>
         </div>
         <?php endforeach; ?>
@@ -345,24 +348,24 @@ $products = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
 .product-actions {
     display: flex;
-    gap: 3px;
-    flex-direction: row; /* Thay đổi từ column thành row */
-    justify-content: space-between; /* Phân bố đều không gian */
+    gap: 5px;
+    justify-content: space-between;
 }
 
-.btn-add-cart, .btn-buy-now {
-    padding: 5px 8px;
+.btn-add-cart {
+    background: #007bff;
+    color: white;
+    width: 40px;   /* ngắn lại */
+    height: 30px;
+    padding: 0;
     border: none;
     border-radius: 4px;
-    font-weight: 600;
     cursor: pointer;
-    transition: all 0.3s ease;
+    transition: background 0.3s ease, transform 0.2s ease;
     display: flex;
     align-items: center;
     justify-content: center;
-    gap: 2px;
-    font-size: 10px;
-    flex: 1; /* Thêm để cân bằng không gian */
+    font-size: 14px; /* icon to rõ */
 }
 
 .btn-add-cart {
@@ -374,7 +377,22 @@ $products = $stmt->fetchAll(PDO::FETCH_ASSOC);
     background: #0056b3;
     transform: translateY(-2px);
 }
-
+.btn-buy-now {
+    background: #28a745;
+    color: white;
+    flex: 1;        /* dài ra */
+    height: 30px;
+    border: none;
+    border-radius: 4px;
+    font-weight: 600;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 5px;
+    font-size: 12px;
+    transition: background 0.3s ease, transform 0.2s ease;
+}
 .btn-buy-now {
     background: #28a745;
     color: white;
