@@ -9,23 +9,31 @@ $categoryStmt->execute();
 $categories = $categoryStmt->fetchAll(PDO::FETCH_ASSOC);
 
 // Xử lý bộ lọc
-$filterCategory = isset($_GET['category']) ? intval($_GET['category']) : 0;
-$filterPrice = isset($_GET['price']) ? $_GET['price'] : '';
+$filterCategory = isset($_GET['category']) && is_array($_GET['category']) ? array_map('intval', $_GET['category']) : [];
+$filterPrice = isset($_GET['price']) && is_array($_GET['price']) ? $_GET['price'] : [];
 
 $where = [];
 $params = [];
 
-if ($filterCategory > 0) {
-    $where[] = "p.category_id = ?";
-    $params[] = $filterCategory;
+if (!empty($filterCategory)) {
+    $where[] = "p.category_id IN (" . implode(',', array_fill(0, count($filterCategory), '?')) . ")";
+    $params = array_merge($params, $filterCategory);
 }
 
-if ($filterPrice == '1') { // Dưới 500k
-    $where[] = "p.price < 500000";
-} elseif ($filterPrice == '2') { // 500k - 1tr
-    $where[] = "p.price >= 500000 AND p.price <= 1000000";
-} elseif ($filterPrice == '3') { // Trên 1tr
-    $where[] = "p.price > 1000000";
+if (!empty($filterPrice)) {
+    $priceConditions = [];
+    foreach ($filterPrice as $price) {
+        if ($price == '1') {
+            $priceConditions[] = "p.price < 500000";
+        } elseif ($price == '2') {
+            $priceConditions[] = "p.price >= 500000 AND p.price <= 1000000";
+        } elseif ($price == '3') {
+            $priceConditions[] = "p.price > 1000000";
+        }
+    }
+    if (!empty($priceConditions)) {
+        $where[] = "(" . implode(' OR ', $priceConditions) . ")";
+    }
 }
 
 $whereSql = $where ? 'WHERE ' . implode(' AND ', $where) : '';
@@ -43,7 +51,7 @@ $totalProducts = $countStmt->fetchColumn();
 $totalPages = ceil($totalProducts / $limit);
 
 // Lấy danh sách sản phẩm và hình ảnh chính từ cơ sở dữ liệu
-$sql = "SELECT p.product_id, p.product_name, p.description, p.price, p.stock, pi.image_url
+$sql = "SELECT p.product_id, p.product_name, p.price, p.stock, pi.image_url
     FROM products p
     LEFT JOIN product_images pi ON p.product_id = pi.product_id AND pi.is_primary = 1
     $whereSql
@@ -64,55 +72,66 @@ $products = $stmt->fetchAll(PDO::FETCH_ASSOC);
     </div>
 </div>
 
-<!-- Bộ lọc sản phẩm -->
-<form method="get" class="product-filter" style="margin-bottom:30px;display:flex;gap:20px;align-items:center;">
-    <label>
-        Loại sản phẩm:
-        <select name="category" onchange="this.form.submit()">
-            <option value="0">Tất cả</option>
-            <?php foreach($categories as $cat): ?>
-                <option value="<?php echo $cat['category_id']; ?>" <?php if($filterCategory == $cat['category_id']) echo 'selected'; ?>>
-                    <?php echo htmlspecialchars($cat['category_name']); ?>
-                </option>
-            <?php endforeach; ?>
-        </select>
-    </label>
-    <label>
-        Giá:
-        <select name="price" onchange="this.form.submit()">
-            <option value="">Tất cả</option>
-            <option value="1" <?php if($filterPrice=='1') echo 'selected'; ?>>Dưới 500.000đ</option>
-            <option value="2" <?php if($filterPrice=='2') echo 'selected'; ?>>500.000đ - 1.000.000đ</option>
-            <option value="3" <?php if($filterPrice=='3') echo 'selected'; ?>>Trên 1.000.000đ</option>
-        </select>
-    </label>
-</form>
-
-<div class="products">
-    <?php foreach($products as $product): ?>
-    <div class="product">
-        <?php
-            $imgSrc = !empty($product['image_url']) ? 'images/' . $product['image_url'] : 'images/sport1.webp';
-        ?>
-        <img src="<?php echo $imgSrc; ?>"
-             alt="<?php echo htmlspecialchars($product['product_name']); ?>"
-             onerror="this.src='https://via.placeholder.com/300x200?text=<?php echo urlencode($product['product_name']); ?>'">
-        <div class="product-info">
-            <h3><?php echo htmlspecialchars($product['product_name']); ?></h3>
-            <p class="description"><?php echo htmlspecialchars($product['description']); ?></p>
-            <p class="price"><?php echo number_format($product['price'], 0, ',', '.'); ?>đ</p>
-            <p class="stock">Còn lại: <?php echo $product['stock']; ?> sản phẩm</p>
-            <div class="product-actions">
-                <button class="btn-add-cart" onclick="addToCart(<?php echo $product['product_id']; ?>, '<?php echo htmlspecialchars($product['product_name']); ?>', <?php echo $product['price']; ?>)">
-                    <i class="fas fa-shopping-cart"></i> Thêm vào giỏ
-                </button>
-                <button class="btn-buy-now" onclick="buyNow(<?php echo $product['product_id']; ?>, '<?php echo htmlspecialchars($product['product_name']); ?>', <?php echo $product['price']; ?>)">
-                    <i class="fas fa-credit-card"></i> Mua ngay
-                </button>
+<!-- Bộ lọc và sản phẩm -->
+<div class="shop-container">
+    <form method="get" class="product-filter">
+        <div class="filter-section">
+            <h3>Loại sản phẩm</h3>
+            <div class="filter-group">
+                <?php foreach($categories as $cat): ?>
+                    <label class="filter-checkbox">
+                        <input type="checkbox" name="category[]" value="<?php echo $cat['category_id']; ?>" 
+                               <?php if(in_array($cat['category_id'], $filterCategory)) echo 'checked'; ?>>
+                        <?php echo htmlspecialchars($cat['category_name']); ?>
+                    </label>
+                <?php endforeach; ?>
             </div>
         </div>
+        <div class="filter-section">
+            <h3>Giá</h3>
+            <div class="filter-group">
+                <label class="filter-checkbox">
+                    <input type="checkbox" name="price[]" value="1" <?php if(in_array('1', $filterPrice)) echo 'checked'; ?>>
+                    Dưới 500.000đ
+                </label>
+                <label class="filter-checkbox">
+                    <input type="checkbox" name="price[]" value="2" <?php if(in_array('2', $filterPrice)) echo 'checked'; ?>>
+                    500.000đ - 1.000.000đ
+                </label>
+                <label class="filter-checkbox">
+                    <input type="checkbox" name="price[]" value="3" <?php if(in_array('3', $filterPrice)) echo 'checked'; ?>>
+                    Trên 1.000.000đ
+                </label>
+            </div>
+        </div>
+        <button type="submit" class="filter-submit">Lọc</button>
+    </form>
+
+    <div class="products">
+        <?php foreach($products as $product): ?>
+        <div class="product">
+            <?php
+                $imgSrc = !empty($product['image_url']) ? 'images/' . $product['image_url'] : 'images/sport1.webp';
+            ?>
+            <img src="<?php echo $imgSrc; ?>"
+                 alt="<?php echo htmlspecialchars($product['product_name']); ?>"
+                 onerror="this.src='https://via.placeholder.com/300x200?text=<?php echo urlencode($product['product_name']); ?>'">
+            <div class="product-info">
+                <h3><?php echo htmlspecialchars($product['product_name']); ?></h3>
+                <p class="price"><?php echo number_format($product['price'], 0, ',', '.'); ?>đ</p>
+                <p class="stock">Còn lại: <?php echo $product['stock']; ?> sản phẩm</p>
+                <div class="product-actions">
+                    <button class="btn-add-cart" onclick="addToCart(<?php echo $product['product_id']; ?>, '<?php echo htmlspecialchars($product['product_name']); ?>', <?php echo $product['price']; ?>)">
+                        <i class="fas fa-shopping-cart"></i> Thêm vào giỏ
+                    </button>
+                    <button class="btn-buy-now" onclick="buyNow(<?php echo $product['product_id']; ?>, '<?php echo htmlspecialchars($product['product_name']); ?>', <?php echo $product['price']; ?>)">
+                        <i class="fas fa-credit-card"></i> Mua ngay
+                    </button>
+                </div>
+            </div>
+        </div>
+        <?php endforeach; ?>
     </div>
-    <?php endforeach; ?>
 </div>
 
 <!-- Phân trang -->
@@ -156,31 +175,122 @@ $products = $stmt->fetchAll(PDO::FETCH_ASSOC);
 </button>
 
 <style>
+/* CSS cho phần giới thiệu */
+.shop-intro {
+    display: flex;
+    align-items: center;
+    gap: 20px;
+    margin-bottom: 40px;
+    max-height: 250px;
+    overflow: hidden;
+}
+
+.shop-intro img {
+    width: 250px;
+    object-fit: cover;
+    border-radius: 8px;
+}
+
+.shop-intro-content {
+    flex: 1;
+}
+
+/* CSS cho bộ lọc và sản phẩm */
+.shop-container {
+    display: flex;
+    flex-direction: row;
+    gap: 20px;
+    align-items: flex-start;
+}
+
+/* CSS cho bộ lọc */
+.product-filter {
+    background: white;
+    padding: 20px;
+    border-radius: 8px;
+    box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+    width: 250px;
+    min-height: 300px;
+    overflow-y: auto;
+}
+
+.filter-section {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    margin-bottom: 20px;
+}
+
+.filter-section h3 {
+    font-size: 16px;
+    margin-bottom: 5px;
+    color: #333;
+}
+
+.filter-group {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.filter-checkbox {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 14px;
+    color: #333;
+}
+
+.filter-checkbox input {
+    width: 16px;
+    height: 16px;
+    cursor: pointer;
+}
+
+.filter-submit {
+    background: #007bff;
+    color: white;
+    padding: 8px 15px;
+    border: none;
+    border-radius: 6px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background 0.3s ease;
+    width: 100%;
+}
+
+.filter-submit:hover {
+    background: #0056b3;
+}
+
 /* CSS cho sản phẩm */
 .products {
     display: grid;
-    grid-template-columns: repeat(auto-fit, 300px);
-    gap: 25px;
+    grid-template-columns: repeat(3, 300px); /* Điều chỉnh để vừa 250px với gap 15px */
+    gap: 15px;
     margin-bottom: 40px;
-    justify-content: center;
+    flex: 1;
 }
+
 .product {
     background: white;
     border-radius: 15px;
     overflow: hidden;
-    box-shadow: 0 8px 25px rgba(0,0,0,0.1);
+    box-shadow: 0 4px 15px rgba(0,0,0,0.1);
     transition: transform 0.3s ease, box-shadow 0.3s ease;
     text-align: center;
+    min-height: 380px; /* Tăng chiều cao tối thiểu */
+    max-height: none;  /* Bỏ giới hạn chiều cao */
 }
 
 .product:hover {
-    transform: translateY(-5px);
-    box-shadow: 0 12px 35px rgba(0,0,0,0.15);
+    transform: translateY(-3px);
+    box-shadow: 0 8px 20px rgba(0,0,0,0.1);
 }
 
 .product img {
     width: 100%;
-    height: 250px;
+    height: 300px; /* Giảm chiều cao hình ảnh để phù hợp */
     object-fit: cover;
     transition: transform 0.3s ease;
 }
@@ -190,15 +300,18 @@ $products = $stmt->fetchAll(PDO::FETCH_ASSOC);
 }
 
 .product-info {
-    padding: 20px;
+    padding: 10px; /* Tăng padding */
+    min-height: 120px; /* Tăng chiều cao tối thiểu */
+    height: auto;      /* Bỏ giới hạn chiều cao */
+    overflow: visible; /* Cho phép hiển thị đầy đủ */
 }
 
 .product-info h3 {
-    font-size: 18px;
+    font-size: 12px; /* Giảm font-size */
     font-weight: bold;
-    margin-bottom: 10px;
+    margin-bottom: 2px;
     color: #333;
-    min-height: 50px;
+    min-height: 24px;
     display: flex;
     align-items: center;
     justify-content: center;
@@ -206,42 +319,50 @@ $products = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
 .description {
     color: #666;
-    font-size: 14px;
-    margin-bottom: 15px;
-    min-height: 40px;
-    line-height: 1.4;
+    font-size: 10px; /* Giảm font-size */
+    margin-bottom: 2px;
+    min-height: 24px;
+    line-height: 1.1;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
 }
 
 .price {
     color: #dc3545;
     font-weight: bold;
-    font-size: 20px;
-    margin-bottom: 10px;
+    font-size: 12px; /* Giảm font-size */
+    margin-bottom: 2px;
 }
 
 .stock {
     color: #28a745;
-    font-size: 14px;
-    margin-bottom: 15px;
+    font-size: 10px; /* Giảm font-size */
+    margin-bottom: 2px;
 }
 
 .product-actions {
     display: flex;
-    gap: 10px;
-    flex-direction: column;
+    gap: 3px;
+    flex-direction: row; /* Thay đổi từ column thành row */
+    justify-content: space-between; /* Phân bố đều không gian */
 }
 
 .btn-add-cart, .btn-buy-now {
-    padding: 12px 20px;
+    padding: 5px 8px;
     border: none;
-    border-radius: 8px;
+    border-radius: 4px;
     font-weight: 600;
     cursor: pointer;
     transition: all 0.3s ease;
     display: flex;
     align-items: center;
     justify-content: center;
-    gap: 8px;
+    gap: 2px;
+    font-size: 10px;
+    flex: 1; /* Thêm để cân bằng không gian */
 }
 
 .btn-add-cart {
@@ -433,6 +554,15 @@ $products = $stmt->fetchAll(PDO::FETCH_ASSOC);
         right: -100%;
     }
     
+    .shop-container {
+        flex-direction: column;
+    }
+    
+    .product-filter {
+        width: 100%;
+        min-height: auto;
+    }
+    
     .products {
         grid-template-columns: 1fr;
     }
@@ -440,8 +570,10 @@ $products = $stmt->fetchAll(PDO::FETCH_ASSOC);
     .product-actions {
         flex-direction: column;
     }
-
-
+    
+    .filter-section {
+        margin-bottom: 15px;
+    }
 }
 </style>
 
