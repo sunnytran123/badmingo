@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: 127.0.0.1
--- Generation Time: Aug 18, 2025 at 01:14 PM
+-- Generation Time: Aug 19, 2025 at 06:35 PM
 -- Server version: 10.4.32-MariaDB
 -- PHP Version: 8.1.25
 
@@ -46,16 +46,30 @@ CREATE TABLE `bookings` (
 --
 
 INSERT INTO `bookings` (`booking_id`, `user_id`, `court_id`, `booking_date`, `start_time`, `end_time`, `payment_method`, `total_price`, `discount`, `status`, `created_at`) VALUES
-(1, 1, 1, '2025-08-20', '06:00:00', '07:00:00', 'prepaid', 135000.00, 10.00, 'pending', '2025-08-16 01:00:00'),
-(2, 2, 2, '2025-08-20', '07:00:00', '08:00:00', 'ondelivery', 150000.00, 0.00, 'confirmed', '2025-08-16 01:05:00'),
-(3, 3, 3, '2025-08-21', '08:00:00', '09:00:00', 'prepaid', 108000.00, 10.00, 'pending', '2025-08-16 01:10:00'),
-(4, 4, 4, '2025-08-21', '15:00:00', '16:00:00', 'ondelivery', 150000.00, 0.00, 'confirmed', '2025-08-16 01:15:00'),
-(5, 5, 5, '2025-08-22', '16:00:00', '18:00:00', 'prepaid', 252000.00, 10.00, 'pending', '2025-08-16 01:20:00'),
-(6, 6, 6, '2025-08-22', '09:00:00', '10:00:00', 'ondelivery', 160000.00, 0.00, 'confirmed', '2025-08-16 01:25:00'),
-(7, 7, 7, '2025-08-23', '10:00:00', '11:00:00', 'prepaid', 108000.00, 10.00, 'pending', '2025-08-16 01:30:00'),
-(8, 8, 8, '2025-08-23', '17:00:00', '18:00:00', 'ondelivery', 180000.00, 0.00, 'confirmed', '2025-08-16 01:35:00'),
-(9, 1, 9, '2025-08-24', '18:00:00', '19:00:00', 'prepaid', 135000.00, 10.00, 'pending', '2025-08-16 01:40:00'),
-(10, 2, 10, '2025-08-24', '07:00:00', '08:00:00', 'ondelivery', 120000.00, 0.00, 'confirmed', '2025-08-16 01:45:00');
+(1, NULL, 1, '2025-08-20', '06:00:00', '07:00:00', 'prepaid', 135000.00, 10.00, 'pending', '2025-08-16 01:00:00'),
+(2, NULL, 2, '2025-08-20', '07:00:00', '08:00:00', 'ondelivery', 150000.00, 0.00, 'confirmed', '2025-08-16 01:05:00'),
+(3, NULL, 3, '2025-08-21', '08:00:00', '09:00:00', 'prepaid', 108000.00, 10.00, 'pending', '2025-08-16 01:10:00'),
+(4, NULL, 4, '2025-08-21', '15:00:00', '16:00:00', 'ondelivery', 150000.00, 0.00, 'confirmed', '2025-08-16 01:15:00'),
+(5, NULL, 5, '2025-08-22', '16:00:00', '18:00:00', 'prepaid', 252000.00, 10.00, 'pending', '2025-08-16 01:20:00'),
+(6, NULL, 6, '2025-08-22', '09:00:00', '10:00:00', 'ondelivery', 160000.00, 0.00, 'confirmed', '2025-08-16 01:25:00'),
+(7, NULL, 7, '2025-08-23', '10:00:00', '11:00:00', 'prepaid', 108000.00, 10.00, 'pending', '2025-08-16 01:30:00'),
+(8, NULL, 8, '2025-08-23', '17:00:00', '18:00:00', 'ondelivery', 180000.00, 0.00, 'confirmed', '2025-08-16 01:35:00'),
+(9, NULL, 9, '2025-08-24', '18:00:00', '19:00:00', 'prepaid', 135000.00, 10.00, 'pending', '2025-08-16 01:40:00'),
+(10, NULL, 10, '2025-08-24', '07:00:00', '08:00:00', 'ondelivery', 120000.00, 0.00, 'confirmed', '2025-08-16 01:45:00');
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `cart_items`
+--
+
+CREATE TABLE `cart_items` (
+  `cart_item_id` int(11) NOT NULL,
+  `user_id` int(11) NOT NULL,
+  `product_id` int(11) NOT NULL,
+  `quantity` int(11) NOT NULL DEFAULT 1,
+  `created_at` timestamp NOT NULL DEFAULT current_timestamp()
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 -- --------------------------------------------------------
 
@@ -77,15 +91,15 @@ CREATE TABLE `chat_history` (
 --
 
 INSERT INTO `chat_history` (`id`, `user_id`, `conversation_id`, `role`, `content`, `created_at`) VALUES
-(1, 1, 1, 'client', 'Chào bot, sân nào còn trống chiều nay?', '2025-08-16 09:00:00'),
+(1, NULL, 1, 'client', 'Chào bot, sân nào còn trống chiều nay?', '2025-08-16 09:00:00'),
 (2, NULL, 1, 'bot', 'Chào bạn! Sân 2 và Sân 4 còn trống từ 15:00-17:00. Bạn muốn đặt không?', '2025-08-16 09:00:05'),
-(3, 2, 2, 'client', 'Tôi muốn mua vợt Yonex, còn hàng không?', '2025-08-16 09:05:00'),
+(3, NULL, 2, 'client', 'Tôi muốn mua vợt Yonex, còn hàng không?', '2025-08-16 09:05:00'),
 (4, NULL, 2, 'bot', 'Vợt Yonex Astrox 99 Pro còn 30 cây. Bạn muốn đặt hàng không?', '2025-08-16 09:05:05'),
-(5, 3, 3, 'client', 'Giải đấu tháng 9 đăng ký ở đâu?', '2025-08-16 09:10:00'),
+(5, NULL, 3, 'client', 'Giải đấu tháng 9 đăng ký ở đâu?', '2025-08-16 09:10:00'),
 (6, NULL, 3, 'bot', 'Bạn có thể đăng ký tại trang Sự kiện trên website. Phí 200,000 VNĐ.', '2025-08-16 09:10:05'),
-(7, 4, 4, 'client', 'Kiểm tra trạng thái đặt sân ngày 20/8 của tôi.', '2025-08-16 09:15:00'),
+(7, NULL, 4, 'client', 'Kiểm tra trạng thái đặt sân ngày 20/8 của tôi.', '2025-08-16 09:15:00'),
 (8, NULL, 4, 'bot', 'Đặt sân Sân 1 ngày 20/8 từ 6:00-7:00 đang chờ xác nhận thanh toán.', '2025-08-16 09:15:05'),
-(9, 9, 5, 'admin', 'Kiểm tra danh sách đặt sân hôm nay.', '2025-08-16 09:20:00'),
+(9, NULL, 5, 'admin', 'Kiểm tra danh sách đặt sân hôm nay.', '2025-08-16 09:20:00'),
 (10, NULL, 5, 'bot', 'Hôm nay có 3 lượt đặt sân: Sân 1 (6:00-7:00), Sân 2 (7:00-8:00), Sân 3 (8:00-9:00).', '2025-08-16 09:20:05');
 
 -- --------------------------------------------------------
@@ -168,22 +182,6 @@ CREATE TABLE `event_registrations` (
   `status` enum('pending','confirmed','cancelled') DEFAULT 'pending' COMMENT 'Trạng thái: pending (chờ), confirmed (xác nhận), cancelled (hủy)'
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='Bảng lưu thông tin đăng ký sự kiện';
 
---
--- Dumping data for table `event_registrations`
---
-
-INSERT INTO `event_registrations` (`registration_id`, `event_id`, `user_id`, `registration_date`, `status`) VALUES
-(1, 1, 1, '2025-08-16 01:00:00', 'pending'),
-(2, 2, 2, '2025-08-16 01:05:00', 'confirmed'),
-(3, 3, 3, '2025-08-16 01:10:00', 'pending'),
-(4, 4, 4, '2025-08-16 01:15:00', 'confirmed'),
-(5, 5, 5, '2025-08-16 01:20:00', 'pending'),
-(6, 6, 6, '2025-08-16 01:25:00', 'confirmed'),
-(7, 7, 7, '2025-08-16 01:30:00', 'pending'),
-(8, 8, 8, '2025-08-16 01:35:00', 'confirmed'),
-(9, 9, 1, '2025-08-16 01:40:00', 'pending'),
-(10, 10, 2, '2025-08-16 01:45:00', 'confirmed');
-
 -- --------------------------------------------------------
 
 --
@@ -231,16 +229,16 @@ CREATE TABLE `forum_posts` (
 --
 
 INSERT INTO `forum_posts` (`post_id`, `thread_id`, `user_id`, `content`, `created_at`) VALUES
-(1, 1, 1, 'Tập trung vào lực cổ tay và góc đánh, thử bài tập plank để tăng sức mạnh!', '2025-08-16 01:00:00'),
-(2, 2, 2, 'Giải năm nay có nội dung đôi nam nữ, rất đáng mong chờ!', '2025-08-16 01:05:00'),
-(3, 3, 3, 'Vợt Astrox 99 Pro rất hợp đánh tấn công, nhưng hơi nặng.', '2025-08-16 01:10:00'),
-(4, 4, 4, 'Nên tập bài tập bước chân chéo để cải thiện tốc độ.', '2025-08-16 01:15:00'),
-(5, 5, 5, 'Mình ở Cầu Giấy, ai muốn đánh chung inbox nhé!', '2025-08-16 01:20:00'),
-(6, 6, 6, 'Chúc mừng đội tuyển Việt Nam, hy vọng tiếp tục tỏa sáng!', '2025-08-16 01:25:00'),
-(7, 7, 7, 'Chọn giày có đế chống trượt và hỗ trợ mắt cá chân là tốt nhất.', '2025-08-16 01:30:00'),
-(8, 8, 8, 'Vợt còn mới 90%, giá 1,5 triệu, liên hệ mình nhé.', '2025-08-16 01:35:00'),
-(9, 9, 1, 'Mình cần HLV dạy cho con 10 tuổi, ai biết giới thiệu giúp!', '2025-08-16 01:40:00'),
-(10, 10, 2, 'Thêm khung 20:00-22:00 sẽ tiện cho dân văn phòng.', '2025-08-16 01:45:00');
+(1, 1, NULL, 'Tập trung vào lực cổ tay và góc đánh, thử bài tập plank để tăng sức mạnh!', '2025-08-16 01:00:00'),
+(2, 2, NULL, 'Giải năm nay có nội dung đôi nam nữ, rất đáng mong chờ!', '2025-08-16 01:05:00'),
+(3, 3, NULL, 'Vợt Astrox 99 Pro rất hợp đánh tấn công, nhưng hơi nặng.', '2025-08-16 01:10:00'),
+(4, 4, NULL, 'Nên tập bài tập bước chân chéo để cải thiện tốc độ.', '2025-08-16 01:15:00'),
+(5, 5, NULL, 'Mình ở Cầu Giấy, ai muốn đánh chung inbox nhé!', '2025-08-16 01:20:00'),
+(6, 6, NULL, 'Chúc mừng đội tuyển Việt Nam, hy vọng tiếp tục tỏa sáng!', '2025-08-16 01:25:00'),
+(7, 7, NULL, 'Chọn giày có đế chống trượt và hỗ trợ mắt cá chân là tốt nhất.', '2025-08-16 01:30:00'),
+(8, 8, NULL, 'Vợt còn mới 90%, giá 1,5 triệu, liên hệ mình nhé.', '2025-08-16 01:35:00'),
+(9, 9, NULL, 'Mình cần HLV dạy cho con 10 tuổi, ai biết giới thiệu giúp!', '2025-08-16 01:40:00'),
+(10, 10, NULL, 'Thêm khung 20:00-22:00 sẽ tiện cho dân văn phòng.', '2025-08-16 01:45:00');
 
 -- --------------------------------------------------------
 
@@ -262,16 +260,16 @@ CREATE TABLE `forum_threads` (
 --
 
 INSERT INTO `forum_threads` (`thread_id`, `category_id`, `user_id`, `title`, `created_at`, `last_updated`) VALUES
-(1, 1, 1, 'Cách cải thiện cú đập cầu mạnh', '2025-08-16 01:00:00', '2025-08-16 01:00:00'),
-(2, 2, 2, 'Giải đấu Sunny Sport 2025 có gì hot?', '2025-08-16 01:05:00', '2025-08-16 01:05:00'),
-(3, 3, 3, 'Review vợt Yonex Astrox 99 Pro', '2025-08-16 01:10:00', '2025-08-16 01:10:00'),
-(4, 4, 4, 'Làm sao để di chuyển nhanh hơn?', '2025-08-16 01:15:00', '2025-08-16 01:15:00'),
-(5, 5, 5, 'Tìm bạn đánh cầu lông tại Hà Nội', '2025-08-16 01:20:00', '2025-08-16 01:20:00'),
-(6, 6, 6, 'VĐV cầu lông Việt Nam giành huy chương', '2025-08-16 01:25:00', '2025-08-16 01:25:00'),
-(7, 7, 7, 'Kinh nghiệm chọn giày cầu lông', '2025-08-16 01:30:00', '2025-08-16 01:30:00'),
-(8, 8, 8, 'Bán vợt Yonex cũ, giá tốt', '2025-08-16 01:35:00', '2025-08-16 01:35:00'),
-(9, 9, 1, 'Tìm HLV dạy cầu lông cho trẻ em', '2025-08-16 01:40:00', '2025-08-16 01:40:00'),
-(10, 10, 2, 'Góp ý thêm khung giờ đặt sân buổi tối', '2025-08-16 01:45:00', '2025-08-16 01:45:00');
+(1, 1, NULL, 'Cách cải thiện cú đập cầu mạnh', '2025-08-16 01:00:00', '2025-08-16 01:00:00'),
+(2, 2, NULL, 'Giải đấu Sunny Sport 2025 có gì hot?', '2025-08-16 01:05:00', '2025-08-16 01:05:00'),
+(3, 3, NULL, 'Review vợt Yonex Astrox 99 Pro', '2025-08-16 01:10:00', '2025-08-16 01:10:00'),
+(4, 4, NULL, 'Làm sao để di chuyển nhanh hơn?', '2025-08-16 01:15:00', '2025-08-16 01:15:00'),
+(5, 5, NULL, 'Tìm bạn đánh cầu lông tại Hà Nội', '2025-08-16 01:20:00', '2025-08-16 01:20:00'),
+(6, 6, NULL, 'VĐV cầu lông Việt Nam giành huy chương', '2025-08-16 01:25:00', '2025-08-16 01:25:00'),
+(7, 7, NULL, 'Kinh nghiệm chọn giày cầu lông', '2025-08-16 01:30:00', '2025-08-16 01:30:00'),
+(8, 8, NULL, 'Bán vợt Yonex cũ, giá tốt', '2025-08-16 01:35:00', '2025-08-16 01:35:00'),
+(9, 9, NULL, 'Tìm HLV dạy cầu lông cho trẻ em', '2025-08-16 01:40:00', '2025-08-16 01:40:00'),
+(10, 10, NULL, 'Góp ý thêm khung giờ đặt sân buổi tối', '2025-08-16 01:45:00', '2025-08-16 01:45:00');
 
 -- --------------------------------------------------------
 
@@ -322,22 +320,6 @@ CREATE TABLE `notifications` (
   `created_at` timestamp NOT NULL DEFAULT current_timestamp() COMMENT 'Thời gian tạo'
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='Bảng lưu thông báo cho người dùng';
 
---
--- Dumping data for table `notifications`
---
-
-INSERT INTO `notifications` (`notification_id`, `user_id`, `title`, `message`, `type`, `is_read`, `created_at`) VALUES
-(1, 1, 'Xác nhận đặt sân', 'Đặt sân Sân 1 ngày 2025-08-20 từ 6:00-7:00 đang chờ thanh toán.', 'booking', 0, '2025-08-16 01:00:00'),
-(2, 2, 'Đặt sân thành công', 'Đặt sân Sân 2 ngày 2025-08-20 từ 7:00-8:00 đã được xác nhận.', 'booking', 0, '2025-08-16 01:05:00'),
-(3, 3, 'Xác nhận đặt sân', 'Đặt sân Sân 3 ngày 2025-08-21 từ 8:00-9:00 đang chờ thanh toán.', 'booking', 0, '2025-08-16 01:10:00'),
-(4, 4, 'Đặt sân thành công', 'Đặt sân Sân 4 ngày 2025-08-21 từ 15:00-16:00 đã được xác nhận.', 'booking', 0, '2025-08-16 01:15:00'),
-(5, 1, 'Xác nhận đơn hàng', 'Đơn hàng #1 (2.800.000 VNĐ) đang chờ thanh toán.', '', 0, '2025-08-16 01:20:00'),
-(6, 2, 'Đơn hàng hoàn thành', 'Đơn hàng #2 (1.500.000 VNĐ) đã được giao thành công.', '', 0, '2025-08-16 01:25:00'),
-(7, 3, 'Đăng ký sự kiện', 'Đăng ký Giải cầu lông Sunny Sport 2025 đang chờ xác nhận.', 'event', 0, '2025-08-16 01:30:00'),
-(8, 4, 'Đăng ký sự kiện', 'Đăng ký Giải đôi nam Sunny Sport đã được xác nhận.', 'event', 0, '2025-08-16 01:35:00'),
-(9, 1, 'Thông báo diễn đàn', 'Chủ đề \"Tìm HLV dạy cầu lông cho trẻ em\" của bạn đã được tạo.', 'forum', 0, '2025-08-16 01:40:00'),
-(10, 2, 'Thông báo hệ thống', 'Hệ thống bảo trì từ 23:00-24:00 ngày 2025-08-16.', 'system', 0, '2025-08-16 01:45:00');
-
 -- --------------------------------------------------------
 
 --
@@ -357,16 +339,16 @@ CREATE TABLE `orders` (
 --
 
 INSERT INTO `orders` (`order_id`, `user_id`, `total_amount`, `status`, `created_at`) VALUES
-(1, 1, 2800000.00, 'pending', '2025-08-16 01:00:00'),
-(2, 2, 1500000.00, 'completed', '2025-08-16 01:05:00'),
-(3, 3, 600000.00, 'pending', '2025-08-16 01:10:00'),
-(4, 4, 450000.00, 'completed', '2025-08-16 01:15:00'),
-(5, 5, 200000.00, 'pending', '2025-08-16 01:20:00'),
-(6, 6, 2200000.00, 'completed', '2025-08-16 01:25:00'),
-(7, 7, 1800000.00, 'pending', '2025-08-16 01:30:00'),
-(8, 8, 350000.00, 'completed', '2025-08-16 01:35:00'),
-(9, 1, 800000.00, 'pending', '2025-08-16 01:40:00'),
-(10, 2, 300000.00, 'completed', '2025-08-16 01:45:00');
+(1, NULL, 2800000.00, 'pending', '2025-08-16 01:00:00'),
+(2, NULL, 1500000.00, 'completed', '2025-08-16 01:05:00'),
+(3, NULL, 600000.00, 'pending', '2025-08-16 01:10:00'),
+(4, NULL, 450000.00, 'completed', '2025-08-16 01:15:00'),
+(5, NULL, 200000.00, 'pending', '2025-08-16 01:20:00'),
+(6, NULL, 2200000.00, 'completed', '2025-08-16 01:25:00'),
+(7, NULL, 1800000.00, 'pending', '2025-08-16 01:30:00'),
+(8, NULL, 350000.00, 'completed', '2025-08-16 01:35:00'),
+(9, NULL, 800000.00, 'pending', '2025-08-16 01:40:00'),
+(10, NULL, 300000.00, 'completed', '2025-08-16 01:45:00');
 
 -- --------------------------------------------------------
 
@@ -541,16 +523,16 @@ CREATE TABLE `transactions` (
 --
 
 INSERT INTO `transactions` (`transaction_id`, `user_id`, `booking_id`, `order_id`, `amount`, `transaction_type`, `payment_method`, `payment_status`, `status`, `created_at`, `transaction_code`) VALUES
-(1, 1, 1, NULL, 135000.00, 'payment', 'bank_transfer', 'pending', 'pending', '2025-08-16 01:00:00', 'TXN_202508160001'),
-(2, 2, 2, NULL, 150000.00, 'payment', 'cash', 'received', 'completed', '2025-08-16 01:05:00', 'TXN_202508160002'),
-(3, 3, 3, NULL, 108000.00, 'payment', 'online', 'received', 'pending', '2025-08-16 01:10:00', 'TXN_202508160003'),
-(4, 4, 4, NULL, 150000.00, 'payment', 'cash', 'received', 'completed', '2025-08-16 01:15:00', 'TXN_202508160004'),
-(5, 1, NULL, 1, 2800000.00, 'payment', 'bank_transfer', 'pending', 'pending', '2025-08-16 01:20:00', 'TXN_202508160005'),
-(6, 2, NULL, 2, 1500000.00, 'payment', 'online', 'received', 'completed', '2025-08-16 01:25:00', 'TXN_202508160006'),
-(7, 3, NULL, 3, 600000.00, 'payment', 'bank_transfer', 'pending', 'pending', '2025-08-16 01:30:00', 'TXN_202508160007'),
-(8, 4, NULL, 4, 450000.00, 'payment', 'cash', 'received', 'completed', '2025-08-16 01:35:00', 'TXN_202508160008'),
-(9, 5, 5, NULL, 252000.00, 'payment', 'online', 'received', 'pending', '2025-08-16 01:40:00', 'TXN_202508160009'),
-(10, 6, 6, NULL, 160000.00, 'payment', 'cash', 'received', 'completed', '2025-08-16 01:45:00', 'TXN_202508160010');
+(1, NULL, 1, NULL, 135000.00, 'payment', 'bank_transfer', 'pending', 'pending', '2025-08-16 01:00:00', 'TXN_202508160001'),
+(2, NULL, 2, NULL, 150000.00, 'payment', 'cash', 'received', 'completed', '2025-08-16 01:05:00', 'TXN_202508160002'),
+(3, NULL, 3, NULL, 108000.00, 'payment', 'online', 'received', 'pending', '2025-08-16 01:10:00', 'TXN_202508160003'),
+(4, NULL, 4, NULL, 150000.00, 'payment', 'cash', 'received', 'completed', '2025-08-16 01:15:00', 'TXN_202508160004'),
+(5, NULL, NULL, 1, 2800000.00, 'payment', 'bank_transfer', 'pending', 'pending', '2025-08-16 01:20:00', 'TXN_202508160005'),
+(6, NULL, NULL, 2, 1500000.00, 'payment', 'online', 'received', 'completed', '2025-08-16 01:25:00', 'TXN_202508160006'),
+(7, NULL, NULL, 3, 600000.00, 'payment', 'bank_transfer', 'pending', 'pending', '2025-08-16 01:30:00', 'TXN_202508160007'),
+(8, NULL, NULL, 4, 450000.00, 'payment', 'cash', 'received', 'completed', '2025-08-16 01:35:00', 'TXN_202508160008'),
+(9, NULL, 5, NULL, 252000.00, 'payment', 'online', 'received', 'pending', '2025-08-16 01:40:00', 'TXN_202508160009'),
+(10, NULL, 6, NULL, 160000.00, 'payment', 'cash', 'received', 'completed', '2025-08-16 01:45:00', 'TXN_202508160010');
 
 -- --------------------------------------------------------
 
@@ -574,16 +556,8 @@ CREATE TABLE `users` (
 --
 
 INSERT INTO `users` (`user_id`, `username`, `password`, `full_name`, `phone`, `email`, `created_at`, `role`) VALUES
-(1, 'nguyenvana', '123', 'Nguyễn Văn An', '0901234567', 'an.nguyen@gmail.com', '2025-08-16 01:00:00', 'client'),
-(2, 'tranminhb', '456', 'Trần Minh Bảo', '0912345678', 'bao.tran@gmail.com', '2025-08-16 01:05:00', 'client'),
-(3, 'lethikimc', '789', 'Lê Thị Kim Cương', '0923456789', 'cuong.le@gmail.com', '2025-08-16 01:10:00', 'client'),
-(4, 'phamquangd', '012', 'Phạm Quang Dũng', '0934567890', 'dung.pham@gmail.com', '2025-08-16 01:15:00', 'client'),
-(5, 'hoangthie', '345', 'Hoàng Thị Ý', '0945678901', 'y.hoang@gmail.com', '2025-08-16 01:20:00', 'client'),
-(6, 'vuduch', '678', 'Vũ Đức Hạnh', '0956789012', 'hanh.vu@gmail.com', '2025-08-16 01:25:00', 'client'),
-(7, 'ngothil', '456', 'Ngô Thị Lan', '0967890123', 'lan.ngo@gmail.com', '2025-08-16 01:30:00', 'client'),
-(8, 'buitienm', '567', 'Bùi Tiến Minh', '0978901234', 'minh.bui@gmail.com', '2025-08-16 01:35:00', 'client'),
-(9, 'admin1', '567', 'Quản Trị Viên 1', '0989012345', 'admin1@sunnysport.com', '2025-08-16 01:40:00', 'admin'),
-(10, 'admin2', '678', 'Quản Trị Viên 2', '0990123456', 'admin2@sunnysport.com', '2025-08-16 01:45:00', 'admin');
+(11, 'sunny', '$2y$10$fsdqxx5ZQTpWEhyzkej0z.YxC9X0j.6cFR3Ou03G1Dduqx6oxoo2O', 'Trần Phương Thùy', '0914090876', 'phuongthuy091203@gmail.com', '2025-08-18 11:31:41', 'client'),
+(12, 'sunny1', '$2y$10$A16Ghm4FAg1JP5tzew2FZ.8zK.8oqNCkV54NgKuxBeAIuDxPeB/52', 'Trần Phương Thùy', '0914090876', 'phuongthuy091209@gmail.com', '2025-08-18 11:33:54', 'client');
 
 --
 -- Indexes for dumped tables
@@ -596,6 +570,14 @@ ALTER TABLE `bookings`
   ADD PRIMARY KEY (`booking_id`),
   ADD KEY `user_id` (`user_id`),
   ADD KEY `court_id` (`court_id`);
+
+--
+-- Indexes for table `cart_items`
+--
+ALTER TABLE `cart_items`
+  ADD PRIMARY KEY (`cart_item_id`),
+  ADD KEY `user_id` (`user_id`),
+  ADD KEY `product_id` (`product_id`);
 
 --
 -- Indexes for table `chat_history`
@@ -731,6 +713,12 @@ ALTER TABLE `bookings`
   MODIFY `booking_id` int(11) NOT NULL AUTO_INCREMENT COMMENT 'Mã đặt sân', AUTO_INCREMENT=11;
 
 --
+-- AUTO_INCREMENT for table `cart_items`
+--
+ALTER TABLE `cart_items`
+  MODIFY `cart_item_id` int(11) NOT NULL AUTO_INCREMENT;
+
+--
 -- AUTO_INCREMENT for table `chat_history`
 --
 ALTER TABLE `chat_history`
@@ -830,7 +818,7 @@ ALTER TABLE `transactions`
 -- AUTO_INCREMENT for table `users`
 --
 ALTER TABLE `users`
-  MODIFY `user_id` int(11) NOT NULL AUTO_INCREMENT COMMENT 'Mã người dùng', AUTO_INCREMENT=11;
+  MODIFY `user_id` int(11) NOT NULL AUTO_INCREMENT COMMENT 'Mã người dùng', AUTO_INCREMENT=13;
 
 --
 -- Constraints for dumped tables

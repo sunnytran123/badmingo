@@ -1,12 +1,17 @@
 <?php 
+session_start();
+require_once "config/database.php";
 include 'includes/header.php';
-include 'config/database.php';
 
 // Lấy danh mục sản phẩm
 $categorySql = "SELECT category_id, category_name FROM product_categories ORDER BY category_name";
-$categoryStmt = $pdo->prepare($categorySql);
-$categoryStmt->execute();
-$categories = $categoryStmt->fetchAll(PDO::FETCH_ASSOC);
+$stmt = $conn->prepare($categorySql);
+$stmt->execute();
+$result = $stmt->get_result();
+$categories = [];
+while ($row = $result->fetch_assoc()) {
+    $categories[] = $row;
+}
 
 // Xử lý bộ lọc
 $filterCategory = isset($_GET['category']) && is_array($_GET['category']) ? array_map('intval', $_GET['category']) : [];
@@ -14,12 +19,18 @@ $filterPrice = isset($_GET['price']) && is_array($_GET['price']) ? $_GET['price'
 
 $where = [];
 $params = [];
+$types = "";
 
+// Lọc theo loại sản phẩm
 if (!empty($filterCategory)) {
     $where[] = "p.category_id IN (" . implode(',', array_fill(0, count($filterCategory), '?')) . ")";
-    $params = array_merge($params, $filterCategory);
+    foreach ($filterCategory as $catId) {
+        $params[] = $catId;
+        $types .= "i";
+    }
 }
 
+// Lọc theo giá
 if (!empty($filterPrice)) {
     $priceConditions = [];
     foreach ($filterPrice as $price) {
@@ -44,22 +55,38 @@ $limit = 6;
 $offset = ($page - 1) * $limit;
 
 // Đếm tổng số sản phẩm
-$countSql = "SELECT COUNT(*) FROM products p " . $whereSql;
-$countStmt = $pdo->prepare($countSql);
-$countStmt->execute($params);
-$totalProducts = $countStmt->fetchColumn();
+$countSql = "SELECT COUNT(*) AS total FROM products p $whereSql";
+$countStmt = $conn->prepare($countSql);
+if (!empty($params)) {
+    $countStmt->bind_param($types, ...$params);
+}
+$countStmt->execute();
+$result = $countStmt->get_result();
+$row = $result->fetch_assoc();
+$totalProducts = $row['total'];
 $totalPages = ceil($totalProducts / $limit);
 
 // Lấy danh sách sản phẩm và hình ảnh chính từ cơ sở dữ liệu
 $sql = "SELECT p.product_id, p.product_name, p.price, p.stock, pi.image_url
-    FROM products p
-    LEFT JOIN product_images pi ON p.product_id = pi.product_id AND pi.is_primary = 1
-    $whereSql
-    ORDER BY p.product_id
-    LIMIT $limit OFFSET $offset";
-$stmt = $pdo->prepare($sql);
-$stmt->execute($params);
-$products = $stmt->fetchAll(PDO::FETCH_ASSOC);
+        FROM products p
+        LEFT JOIN product_images pi ON p.product_id = pi.product_id AND pi.is_primary = 1
+        $whereSql
+        ORDER BY p.product_id
+        LIMIT ? OFFSET ?";
+$stmt = $conn->prepare($sql);
+
+// Thêm limit và offset vào mảng tham số
+$params2 = $params;
+$types2 = $types . "ii";
+$params2[] = $limit;
+$params2[] = $offset;
+
+$stmt->bind_param($types2, ...$params2);
+$stmt->execute();
+$result = $stmt->get_result();
+$products = $result->fetch_all(MYSQLI_ASSOC);
+
+
 ?>
 
 <h2 class="section-title">Cửa hàng thể thao</h2>
@@ -76,6 +103,17 @@ $products = $stmt->fetchAll(PDO::FETCH_ASSOC);
 <div class="shop-container">
     <form method="get" class="product-filter">
         <div class="filter-section">
+            <?php
+        $categories = [];
+        $catResult = $conn->query("SELECT category_id, category_name FROM product_categories");
+        $categories = $catResult->fetch_all(MYSQLI_ASSOC);
+
+        if ($catResult && $catResult->num_rows > 0) {
+            while ($row = $catResult->fetch_assoc()) {
+                $categories[] = $row;
+            }
+        }
+        ?>
             <h3>Loại sản phẩm</h3>
             <div class="filter-group">
                 <?php foreach($categories as $cat): ?>
@@ -130,7 +168,6 @@ $products = $stmt->fetchAll(PDO::FETCH_ASSOC);
                         <i class="fas fa-credit-card"></i> Mua ngay
                     </button>
                 </div>
-
             </div>
         </div>
         <?php endforeach; ?>
@@ -596,11 +633,36 @@ $products = $stmt->fetchAll(PDO::FETCH_ASSOC);
 </style>
 
 <script>
-// Khởi tạo giỏ hàng
-let cart = JSON.parse(localStorage.getItem('cart')) || [];
+// Sử dụng CSDL qua AJAX, KHÔNG dùng localStorage
+
+let cart = [];
 let cartTotal = 0;
 
-// Cập nhật hiển thị giỏ hàng
+// Lấy giỏ hàng từ server
+function loadCart() {
+    fetch('cart.php', {
+        method: 'POST',
+        headers: {'Content-Type': 'application/x-www-form-urlencoded'},
+        body: 'action=get'
+    })
+    .then(res => res.json())
+    .then(data => {
+        if (data.success) {
+            cart = data.items.map(item => ({
+                id: item.product_id,
+                name: item.product_name,
+                price: parseFloat(item.price),
+                quantity: parseInt(item.quantity)
+            }));
+            updateCartDisplay();
+        } else {
+            cart = [];
+            updateCartDisplay();
+        }
+    });
+}
+
+// Hiển thị giỏ hàng
 function updateCartDisplay() {
     const cartItems = document.getElementById('cart-items');
     const cartCount = document.getElementById('cart-count');
@@ -637,57 +699,65 @@ function updateCartDisplay() {
     
     cartCount.textContent = cart.reduce((total, item) => total + item.quantity, 0);
     cartTotalElement.textContent = formatPrice(cartTotal);
-    
-    // Lưu vào localStorage
-    localStorage.setItem('cart', JSON.stringify(cart));
 }
 
-// Thêm vào giỏ hàng
+// Thêm vào giỏ hàng (gọi AJAX tới cart.php)
 function addToCart(productId, productName, price) {
-    const existingItem = cart.find(item => item.id === productId);
-    
-    if (existingItem) {
-        existingItem.quantity += 1;
-    } else {
-        cart.push({
-            id: productId,
-            name: productName,
-            price: price,
-            quantity: 1
-        });
-    }
-    
-    updateCartDisplay();
-    showNotification('Đã thêm vào giỏ hàng!');
+    fetch('cart.php', {
+        method: 'POST',
+        headers: {'Content-Type': 'application/x-www-form-urlencoded'},
+        body: `action=add&product_id=${productId}&quantity=1`
+    })
+    .then(res => res.json())
+    .then(data => {
+        if (data.success) {
+            showNotification('Đã thêm vào giỏ hàng!');
+            loadCart();
+        } else {
+            alert(data.message);
+        }
+    });
 }
 
-// Mua ngay
+// Mua ngay (thêm vào giỏ rồi chuyển tới thanh toán)
 function buyNow(productId, productName, price) {
-    // Thêm vào giỏ hàng trước
     addToCart(productId, productName, price);
-    
-    // Mở giỏ hàng
-    toggleCart();
-    
-    // Hiển thị thông báo
-    showNotification('Sản phẩm đã được thêm vào giỏ hàng! Vui lòng thanh toán.');
+    setTimeout(function() {
+        window.location.href = 'thanhtoan.php';
+    }, 500);
 }
 
 // Cập nhật số lượng
 function updateQuantity(index, change) {
-    cart[index].quantity += change;
-    
-    if (cart[index].quantity <= 0) {
-        cart.splice(index, 1);
+    const item = cart[index];
+    let newQty = item.quantity + change;
+    if (newQty <= 0) {
+        removeFromCart(index);
+        return;
     }
-    
-    updateCartDisplay();
+    fetch('cart.php', {
+        method: 'POST',
+        headers: {'Content-Type': 'application/x-www-form-urlencoded'},
+        body: `action=update&product_id=${item.id}&quantity=${newQty}`
+    })
+    .then(res => res.json())
+    .then(data => {
+        if (data.success) loadCart();
+    });
 }
 
 // Xóa khỏi giỏ hàng
 function removeFromCart(index) {
-    cart.splice(index, 1);
-    updateCartDisplay();
+    const item = cart[index];
+    fetch('cart.php', {
+        method: 'POST',
+        headers: {'Content-Type': 'application/x-www-form-urlencoded'},
+        body: `action=remove&product_id=${item.id}`
+    })
+    .then(res => res.json())
+    .then(data => {
+        if (data.success) loadCart();
+    });
 }
 
 // Mở/đóng giỏ hàng
@@ -707,20 +777,7 @@ function checkout() {
         alert('Giỏ hàng trống!');
         return;
     }
-    
-    // Hiển thị thông tin thanh toán
-    const total = formatPrice(cartTotal);
-    const confirmCheckout = confirm(`Tổng cộng: ${total}đ\n\nBạn có muốn tiếp tục thanh toán?`);
-    
-    if (confirmCheckout) {
-        // Ở đây có thể thêm logic chuyển đến trang thanh toán
-        alert('Chức năng thanh toán đang được phát triển. Vui lòng liên hệ với chúng tôi để đặt hàng!');
-        
-        // Xóa giỏ hàng sau khi thanh toán
-        cart = [];
-        updateCartDisplay();
-        closeCart();
-    }
+    window.location.href = 'thanhtoan.php';
 }
 
 // Format giá tiền
@@ -744,9 +801,7 @@ function showNotification(message) {
         animation: slideIn 0.3s ease;
     `;
     notification.textContent = message;
-    
     document.body.appendChild(notification);
-    
     setTimeout(() => {
         notification.style.animation = 'slideOut 0.3s ease';
         setTimeout(() => {
@@ -771,7 +826,7 @@ document.head.appendChild(style);
 
 // Khởi tạo hiển thị giỏ hàng khi trang load
 document.addEventListener('DOMContentLoaded', function() {
-    updateCartDisplay();
+    loadCart();
 });
 </script>
 

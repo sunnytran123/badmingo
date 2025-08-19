@@ -1,12 +1,17 @@
 <?php 
+session_start();
+require_once "config/database.php";
 include 'includes/header.php';
-include 'config/database.php';
 
 // Lấy danh mục sản phẩm
 $categorySql = "SELECT category_id, category_name FROM product_categories ORDER BY category_name";
-$categoryStmt = $pdo->prepare($categorySql);
-$categoryStmt->execute();
-$categories = $categoryStmt->fetchAll(PDO::FETCH_ASSOC);
+$stmt = $conn->prepare($categorySql);
+$stmt->execute();
+$result = $stmt->get_result();
+$categories = [];
+while ($row = $result->fetch_assoc()) {
+    $categories[] = $row;
+}
 
 // Xử lý bộ lọc
 $filterCategory = isset($_GET['category']) && is_array($_GET['category']) ? array_map('intval', $_GET['category']) : [];
@@ -14,12 +19,18 @@ $filterPrice = isset($_GET['price']) && is_array($_GET['price']) ? $_GET['price'
 
 $where = [];
 $params = [];
+$types = "";
 
+// Lọc theo loại sản phẩm
 if (!empty($filterCategory)) {
     $where[] = "p.category_id IN (" . implode(',', array_fill(0, count($filterCategory), '?')) . ")";
-    $params = array_merge($params, $filterCategory);
+    foreach ($filterCategory as $catId) {
+        $params[] = $catId;
+        $types .= "i";
+    }
 }
 
+// Lọc theo giá
 if (!empty($filterPrice)) {
     $priceConditions = [];
     foreach ($filterPrice as $price) {
@@ -44,22 +55,38 @@ $limit = 6;
 $offset = ($page - 1) * $limit;
 
 // Đếm tổng số sản phẩm
-$countSql = "SELECT COUNT(*) FROM products p " . $whereSql;
-$countStmt = $pdo->prepare($countSql);
-$countStmt->execute($params);
-$totalProducts = $countStmt->fetchColumn();
+$countSql = "SELECT COUNT(*) AS total FROM products p $whereSql";
+$countStmt = $conn->prepare($countSql);
+if (!empty($params)) {
+    $countStmt->bind_param($types, ...$params);
+}
+$countStmt->execute();
+$result = $countStmt->get_result();
+$row = $result->fetch_assoc();
+$totalProducts = $row['total'];
 $totalPages = ceil($totalProducts / $limit);
 
 // Lấy danh sách sản phẩm và hình ảnh chính từ cơ sở dữ liệu
 $sql = "SELECT p.product_id, p.product_name, p.price, p.stock, pi.image_url
-    FROM products p
-    LEFT JOIN product_images pi ON p.product_id = pi.product_id AND pi.is_primary = 1
-    $whereSql
-    ORDER BY p.product_id
-    LIMIT $limit OFFSET $offset";
-$stmt = $pdo->prepare($sql);
-$stmt->execute($params);
-$products = $stmt->fetchAll(PDO::FETCH_ASSOC);
+        FROM products p
+        LEFT JOIN product_images pi ON p.product_id = pi.product_id AND pi.is_primary = 1
+        $whereSql
+        ORDER BY p.product_id
+        LIMIT ? OFFSET ?";
+$stmt = $conn->prepare($sql);
+
+// Thêm limit và offset vào mảng tham số
+$params2 = $params;
+$types2 = $types . "ii";
+$params2[] = $limit;
+$params2[] = $offset;
+
+$stmt->bind_param($types2, ...$params2);
+$stmt->execute();
+$result = $stmt->get_result();
+$products = $result->fetch_all(MYSQLI_ASSOC);
+
+
 ?>
 
 <h2 class="section-title">Cửa hàng thể thao</h2>
@@ -76,6 +103,17 @@ $products = $stmt->fetchAll(PDO::FETCH_ASSOC);
 <div class="shop-container">
     <form method="get" class="product-filter">
         <div class="filter-section">
+            <?php
+        $categories = [];
+        $catResult = $conn->query("SELECT category_id, category_name FROM product_categories");
+        $categories = $catResult->fetch_all(MYSQLI_ASSOC);
+
+        if ($catResult && $catResult->num_rows > 0) {
+            while ($row = $catResult->fetch_assoc()) {
+                $categories[] = $row;
+            }
+        }
+        ?>
             <h3>Loại sản phẩm</h3>
             <div class="filter-group">
                 <?php foreach($categories as $cat): ?>
@@ -776,3 +814,4 @@ document.addEventListener('DOMContentLoaded', function() {
 </script>
 
 <?php include 'includes/footer.php'; ?>
+ 

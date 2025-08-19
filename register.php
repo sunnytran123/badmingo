@@ -28,7 +28,6 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         } else {
             $message = "❌ Có lỗi xảy ra. Vui lòng thử lại.";
         }
-
     }
 }
 ?>
@@ -60,35 +59,38 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         h2 {
             text-align: center;
             margin-bottom: 20px;
-            background: linear-gradient(90deg,#00dbde,#fc00ff);
+            background: linear-gradient(135deg, #007bff, #ff6200);
+
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
             font-weight: bold;
         }
-        input {
+        input, button {
             width: 100%;
             padding: 14px;
             margin: 10px 0;
             border: none;
             border-radius: 8px;
+            font-size: 15px;
+            box-sizing: border-box;
+        }
+        input {
             background: rgba(255,255,255,0.2);
             color: #fff;
-            font-size: 14px;
         }
-        input::placeholder { color: #ddd; }
+        input::placeholder {
+            color: #ddd;
+        }
         button {
-            width: 100%;
-            padding: 14px;
-            border: none;
-            border-radius: 8px;
-            background: linear-gradient(90deg,#00dbde,#fc00ff);
+            background: linear-gradient(135deg, #007bff, #ff6200);
             color: white;
-            font-size: 16px;
             font-weight: bold;
             cursor: pointer;
             transition: transform 0.2s ease;
         }
-        button:hover { transform: scale(1.05); }
+        button:hover {
+            transform: scale(1.05);
+        }
         .message {
             text-align: center;
             color: #ff6b6b;
@@ -100,7 +102,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             font-size: 14px;
         }
         .switch-link a {
-            color: #00dbde;
+            color: #007bff;
             text-decoration: none;
             font-weight: bold;
         }
