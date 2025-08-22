@@ -86,7 +86,6 @@ $stmt->execute();
 $result = $stmt->get_result();
 $products = $result->fetch_all(MYSQLI_ASSOC);
 
-
 ?>
 
 <h2 class="section-title">Cửa hàng thể thao</h2>
@@ -164,7 +163,7 @@ $products = $result->fetch_all(MYSQLI_ASSOC);
                         <i class="fas fa-shopping-cart"></i>
                     </button>
                     <button class="btn-buy-now" 
-                        onclick="buyNow(<?php echo $product['product_id']; ?>, '<?php echo htmlspecialchars($product['product_name']); ?>', <?php echo $product['price']; ?>)">
+                        onclick="buyNow(<?php echo $product['product_id']; ?>, '<?php echo htmlspecialchars($product['product_name']); ?>', <?php echo $product['price']; ?>, <?php echo $product['stock']; ?>)">
                         <i class="fas fa-credit-card"></i> Mua ngay
                     </button>
                 </div>
@@ -196,6 +195,12 @@ $products = $result->fetch_all(MYSQLI_ASSOC);
     <div class="cart-header">
         <h3>Giỏ hàng</h3>
         <button onclick="closeCart()" class="close-cart">&times;</button>
+    </div>
+    <div class="cart-items-header">
+        <label class="filter-checkbox">
+            <input type="checkbox" id="select-all" onchange="toggleSelectAll()">
+            Chọn tất cả
+        </label>
     </div>
     <div id="cart-items" class="cart-items">
         <!-- Các sản phẩm trong giỏ hàng sẽ hiển thị ở đây -->
@@ -306,7 +311,7 @@ $products = $result->fetch_all(MYSQLI_ASSOC);
 /* CSS cho sản phẩm */
 .products {
     display: grid;
-    grid-template-columns: repeat(3, 300px); /* Điều chỉnh để vừa 250px với gap 15px */
+    grid-template-columns: repeat(3, 300px);
     gap: 15px;
     margin-bottom: 40px;
     flex: 1;
@@ -319,8 +324,8 @@ $products = $result->fetch_all(MYSQLI_ASSOC);
     box-shadow: 0 4px 15px rgba(0,0,0,0.1);
     transition: transform 0.3s ease, box-shadow 0.3s ease;
     text-align: center;
-    min-height: 380px; /* Tăng chiều cao tối thiểu */
-    max-height: none;  /* Bỏ giới hạn chiều cao */
+    min-height: 380px;
+    max-height: none;
 }
 
 .product:hover {
@@ -330,7 +335,7 @@ $products = $result->fetch_all(MYSQLI_ASSOC);
 
 .product img {
     width: 100%;
-    height: 300px; /* Giảm chiều cao hình ảnh để phù hợp */
+    height: 300px;
     object-fit: cover;
     transition: transform 0.3s ease;
 }
@@ -340,14 +345,14 @@ $products = $result->fetch_all(MYSQLI_ASSOC);
 }
 
 .product-info {
-    padding: 10px; /* Tăng padding */
-    min-height: 120px; /* Tăng chiều cao tối thiểu */
-    height: auto;      /* Bỏ giới hạn chiều cao */
-    overflow: visible; /* Cho phép hiển thị đầy đủ */
+    padding: 10px;
+    min-height: 120px;
+    height: auto;
+    overflow: visible;
 }
 
 .product-info h3 {
-    font-size: 12px; /* Giảm font-size */
+    font-size: 12px;
     font-weight: bold;
     margin-bottom: 2px;
     color: #333;
@@ -359,7 +364,7 @@ $products = $result->fetch_all(MYSQLI_ASSOC);
 
 .description {
     color: #666;
-    font-size: 10px; /* Giảm font-size */
+    font-size: 10px;
     margin-bottom: 2px;
     min-height: 24px;
     line-height: 1.1;
@@ -373,13 +378,13 @@ $products = $result->fetch_all(MYSQLI_ASSOC);
 .price {
     color: #dc3545;
     font-weight: bold;
-    font-size: 12px; /* Giảm font-size */
+    font-size: 12px;
     margin-bottom: 2px;
 }
 
 .stock {
     color: #28a745;
-    font-size: 10px; /* Giảm font-size */
+    font-size: 10px;
     margin-bottom: 2px;
 }
 
@@ -392,7 +397,7 @@ $products = $result->fetch_all(MYSQLI_ASSOC);
 .btn-add-cart {
     background: #007bff;
     color: white;
-    width: 40px;   /* ngắn lại */
+    width: 40px;
     height: 30px;
     padding: 0;
     border: none;
@@ -402,22 +407,18 @@ $products = $result->fetch_all(MYSQLI_ASSOC);
     display: flex;
     align-items: center;
     justify-content: center;
-    font-size: 14px; /* icon to rõ */
-}
-
-.btn-add-cart {
-    background: #007bff;
-    color: white;
+    font-size: 14px;
 }
 
 .btn-add-cart:hover {
     background: #0056b3;
     transform: translateY(-2px);
 }
+
 .btn-buy-now {
     background: #28a745;
     color: white;
-    flex: 1;        /* dài ra */
+    flex: 1;
     height: 30px;
     border: none;
     border-radius: 4px;
@@ -429,10 +430,6 @@ $products = $result->fetch_all(MYSQLI_ASSOC);
     gap: 5px;
     font-size: 12px;
     transition: background 0.3s ease, transform 0.2s ease;
-}
-.btn-buy-now {
-    background: #28a745;
-    color: white;
 }
 
 .btn-buy-now:hover {
@@ -481,6 +478,11 @@ $products = $result->fetch_all(MYSQLI_ASSOC);
     cursor: pointer;
     padding: 0;
     width: auto;
+}
+
+.cart-items-header {
+    padding: 10px 20px;
+    border-bottom: 1px solid #eee;
 }
 
 .cart-items {
@@ -652,7 +654,8 @@ function loadCart() {
                 id: item.product_id,
                 name: item.product_name,
                 price: parseFloat(item.price),
-                quantity: parseInt(item.quantity)
+                quantity: parseInt(item.quantity),
+                selected: false // Thêm thuộc tính selected
             }));
             updateCartDisplay();
         } else {
@@ -667,17 +670,21 @@ function updateCartDisplay() {
     const cartItems = document.getElementById('cart-items');
     const cartCount = document.getElementById('cart-count');
     const cartTotalElement = document.getElementById('cart-total');
+    const selectAllCheckbox = document.getElementById('select-all');
     
     cartItems.innerHTML = '';
     cartTotal = 0;
     
     if (cart.length === 0) {
         cartItems.innerHTML = '<p style="text-align: center; color: #666; margin-top: 50px;">Giỏ hàng trống</p>';
+        selectAllCheckbox.checked = false;
     } else {
         cart.forEach((item, index) => {
             const itemElement = document.createElement('div');
             itemElement.className = 'cart-item';
             itemElement.innerHTML = `
+                <input type="checkbox" class="cart-item-checkbox" 
+                       onchange="toggleItemSelection(${index})" ${item.selected ? 'checked' : ''}>
                 <img src="images/sport1.webp" 
                      alt="${item.name}" 
                      onerror="this.src='https://via.placeholder.com/60x60?text=${encodeURIComponent(item.name)}'">
@@ -693,12 +700,28 @@ function updateCartDisplay() {
                 </div>
             `;
             cartItems.appendChild(itemElement);
-            cartTotal += item.price * item.quantity;
+            if (item.selected) {
+                cartTotal += item.price * item.quantity;
+            }
         });
+        selectAllCheckbox.checked = cart.every(item => item.selected);
     }
     
     cartCount.textContent = cart.reduce((total, item) => total + item.quantity, 0);
     cartTotalElement.textContent = formatPrice(cartTotal);
+}
+
+// Chọn/bỏ chọn tất cả
+function toggleSelectAll() {
+    const selectAllCheckbox = document.getElementById('select-all');
+    cart.forEach(item => item.selected = selectAllCheckbox.checked);
+    updateCartDisplay();
+}
+
+// Chọn/bỏ chọn từng sản phẩm
+function toggleItemSelection(index) {
+    cart[index].selected = !cart[index].selected;
+    updateCartDisplay();
 }
 
 // Thêm vào giỏ hàng (gọi AJAX tới cart.php)
@@ -719,12 +742,14 @@ function addToCart(productId, productName, price) {
     });
 }
 
-// Mua ngay (thêm vào giỏ rồi chuyển tới thanh toán)
-function buyNow(productId, productName, price) {
-    addToCart(productId, productName, price);
-    setTimeout(function() {
-        window.location.href = 'thanhtoan.php';
-    }, 500);
+// Mua ngay (chuyển thẳng tới thanh toán với sản phẩm được chọn)
+function buyNow(productId, productName, price, stock) {
+    const quantity = 1; // Hardcoded to 1 for buy now
+    if (stock < quantity) {
+        alert('Sản phẩm hết hàng!');
+        return;
+    }
+    window.location.href = `thanhtoan.php?product_id=${productId}&quantity=${quantity}`;
 }
 
 // Cập nhật số lượng
@@ -773,11 +798,13 @@ function closeCart() {
 
 // Thanh toán
 function checkout() {
-    if (cart.length === 0) {
-        alert('Giỏ hàng trống!');
+    const selectedItems = cart.filter(item => item.selected);
+    if (selectedItems.length === 0) {
+        alert('Vui lòng chọn ít nhất một sản phẩm để thanh toán!');
         return;
     }
-    window.location.href = 'thanhtoan.php';
+    const selectedIds = selectedItems.map(item => item.id).join(',');
+    window.location.href = `thanhtoan.php?selected_ids=${selectedIds}`;
 }
 
 // Format giá tiền
@@ -830,4 +857,4 @@ document.addEventListener('DOMContentLoaded', function() {
 });
 </script>
 
-<?php include 'includes/footer.php'; ?>
+<?php include 'includes/footer.php'; ?><?php 
