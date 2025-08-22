@@ -280,7 +280,7 @@ if (session_status() === PHP_SESSION_NONE) {
         <div class="sidebar-menu">
             <a href="index.php">Trang chủ</a>
             <a href="booking.php">Đặt sân</a>
-            <a href="shop.php">Cửa hàng</a>
+            <a href="t.php">Cửa hàng</a>
             <a href="contact.php">Liên hệ</a>
             <div class="user-icon" id="userIcon" style="position:relative;">
                 <i class="fas fa-user-circle"></i>

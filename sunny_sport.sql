@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: 127.0.0.1
--- Generation Time: Aug 19, 2025 at 06:35 PM
+-- Generation Time: Aug 22, 2025 at 07:41 AM
 -- Server version: 10.4.32-MariaDB
 -- PHP Version: 8.1.25
 
@@ -329,6 +329,10 @@ CREATE TABLE `notifications` (
 CREATE TABLE `orders` (
   `order_id` int(11) NOT NULL COMMENT 'Mã đơn hàng',
   `user_id` int(11) DEFAULT NULL COMMENT 'Mã người dùng',
+  `recipient_name` varchar(255) DEFAULT NULL COMMENT 'Tên người nhận',
+  `shipping_address` text DEFAULT NULL COMMENT 'Địa chỉ giao hàng',
+  `phone_number` varchar(20) DEFAULT NULL COMMENT 'Số điện thoại nhận hàng',
+  `notes` text DEFAULT NULL COMMENT 'Ghi chú đơn hàng',
   `total_amount` decimal(10,2) NOT NULL COMMENT 'Tổng tiền (VNĐ)',
   `status` enum('pending','completed','cancelled') DEFAULT 'pending' COMMENT 'Trạng thái: pending (chờ), completed (hoàn thành), cancelled (hủy)',
   `created_at` timestamp NOT NULL DEFAULT current_timestamp() COMMENT 'Thời gian tạo'
@@ -338,17 +342,10 @@ CREATE TABLE `orders` (
 -- Dumping data for table `orders`
 --
 
-INSERT INTO `orders` (`order_id`, `user_id`, `total_amount`, `status`, `created_at`) VALUES
-(1, NULL, 2800000.00, 'pending', '2025-08-16 01:00:00'),
-(2, NULL, 1500000.00, 'completed', '2025-08-16 01:05:00'),
-(3, NULL, 600000.00, 'pending', '2025-08-16 01:10:00'),
-(4, NULL, 450000.00, 'completed', '2025-08-16 01:15:00'),
-(5, NULL, 200000.00, 'pending', '2025-08-16 01:20:00'),
-(6, NULL, 2200000.00, 'completed', '2025-08-16 01:25:00'),
-(7, NULL, 1800000.00, 'pending', '2025-08-16 01:30:00'),
-(8, NULL, 350000.00, 'completed', '2025-08-16 01:35:00'),
-(9, NULL, 800000.00, 'pending', '2025-08-16 01:40:00'),
-(10, NULL, 300000.00, 'completed', '2025-08-16 01:45:00');
+INSERT INTO `orders` (`order_id`, `user_id`, `recipient_name`, `shipping_address`, `phone_number`, `notes`, `total_amount`, `status`, `created_at`) VALUES
+(12, 11, NULL, NULL, NULL, NULL, 7000000.00, 'pending', '2025-08-20 01:35:31'),
+(13, 11, NULL, NULL, NULL, NULL, 2500000.00, 'pending', '2025-08-20 02:08:29'),
+(14, 11, NULL, NULL, NULL, NULL, 2500000.00, 'pending', '2025-08-22 04:38:30');
 
 -- --------------------------------------------------------
 
@@ -369,16 +366,10 @@ CREATE TABLE `order_items` (
 --
 
 INSERT INTO `order_items` (`order_item_id`, `order_id`, `product_id`, `quantity`, `price`) VALUES
-(1, 1, 1, 1, 2500000.00),
-(2, 1, 3, 1, 300000.00),
-(3, 2, 2, 1, 1500000.00),
-(4, 3, 3, 2, 300000.00),
-(5, 4, 4, 1, 450000.00),
-(6, 5, 5, 2, 100000.00),
-(7, 6, 6, 1, 2200000.00),
-(8, 7, 7, 1, 1800000.00),
-(9, 8, 8, 1, 350000.00),
-(10, 9, 9, 1, 800000.00);
+(12, 12, 1, 1, 2500000.00),
+(13, 12, 2, 3, 1500000.00),
+(14, 13, 1, 1, 2500000.00),
+(15, 14, 1, 1, 2500000.00);
 
 -- --------------------------------------------------------
 
@@ -527,10 +518,10 @@ INSERT INTO `transactions` (`transaction_id`, `user_id`, `booking_id`, `order_id
 (2, NULL, 2, NULL, 150000.00, 'payment', 'cash', 'received', 'completed', '2025-08-16 01:05:00', 'TXN_202508160002'),
 (3, NULL, 3, NULL, 108000.00, 'payment', 'online', 'received', 'pending', '2025-08-16 01:10:00', 'TXN_202508160003'),
 (4, NULL, 4, NULL, 150000.00, 'payment', 'cash', 'received', 'completed', '2025-08-16 01:15:00', 'TXN_202508160004'),
-(5, NULL, NULL, 1, 2800000.00, 'payment', 'bank_transfer', 'pending', 'pending', '2025-08-16 01:20:00', 'TXN_202508160005'),
-(6, NULL, NULL, 2, 1500000.00, 'payment', 'online', 'received', 'completed', '2025-08-16 01:25:00', 'TXN_202508160006'),
-(7, NULL, NULL, 3, 600000.00, 'payment', 'bank_transfer', 'pending', 'pending', '2025-08-16 01:30:00', 'TXN_202508160007'),
-(8, NULL, NULL, 4, 450000.00, 'payment', 'cash', 'received', 'completed', '2025-08-16 01:35:00', 'TXN_202508160008'),
+(5, NULL, NULL, NULL, 2800000.00, 'payment', 'bank_transfer', 'pending', 'pending', '2025-08-16 01:20:00', 'TXN_202508160005'),
+(6, NULL, NULL, NULL, 1500000.00, 'payment', 'online', 'received', 'completed', '2025-08-16 01:25:00', 'TXN_202508160006'),
+(7, NULL, NULL, NULL, 600000.00, 'payment', 'bank_transfer', 'pending', 'pending', '2025-08-16 01:30:00', 'TXN_202508160007'),
+(8, NULL, NULL, NULL, 450000.00, 'payment', 'cash', 'received', 'completed', '2025-08-16 01:35:00', 'TXN_202508160008'),
 (9, NULL, 5, NULL, 252000.00, 'payment', 'online', 'received', 'pending', '2025-08-16 01:40:00', 'TXN_202508160009'),
 (10, NULL, 6, NULL, 160000.00, 'payment', 'cash', 'received', 'completed', '2025-08-16 01:45:00', 'TXN_202508160010');
 
@@ -716,7 +707,7 @@ ALTER TABLE `bookings`
 -- AUTO_INCREMENT for table `cart_items`
 --
 ALTER TABLE `cart_items`
-  MODIFY `cart_item_id` int(11) NOT NULL AUTO_INCREMENT;
+  MODIFY `cart_item_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=4;
 
 --
 -- AUTO_INCREMENT for table `chat_history`
@@ -776,13 +767,13 @@ ALTER TABLE `notifications`
 -- AUTO_INCREMENT for table `orders`
 --
 ALTER TABLE `orders`
-  MODIFY `order_id` int(11) NOT NULL AUTO_INCREMENT COMMENT 'Mã đơn hàng', AUTO_INCREMENT=11;
+  MODIFY `order_id` int(11) NOT NULL AUTO_INCREMENT COMMENT 'Mã đơn hàng', AUTO_INCREMENT=15;
 
 --
 -- AUTO_INCREMENT for table `order_items`
 --
 ALTER TABLE `order_items`
-  MODIFY `order_item_id` int(11) NOT NULL AUTO_INCREMENT COMMENT 'Mã chi tiết đơn hàng', AUTO_INCREMENT=11;
+  MODIFY `order_item_id` int(11) NOT NULL AUTO_INCREMENT COMMENT 'Mã chi tiết đơn hàng', AUTO_INCREMENT=16;
 
 --
 -- AUTO_INCREMENT for table `products`
