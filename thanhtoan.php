@@ -100,6 +100,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
     $shipping_address = trim("$address_detail, $ward, $district, $province");
 
+    // Tính phí ship cho validation
+    $shipping_fee = ($total >= 500000) ? 0 : 30000;
+    $grand_total = $total + $shipping_fee;
+
     // Validate dữ liệu trước khi bind
     if (empty($recipient_name) || empty($phone_number) || empty($province) || empty($district) || empty($ward) || empty($address_detail)) {
         $error_message = "Vui lòng điền đầy đủ thông tin giao hàng!";
@@ -111,7 +115,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         try {
             $stmt = $conn->prepare("INSERT INTO orders (user_id, recipient_name, shipping_address, phone_number, notes, total_amount, status, payment_method) VALUES (?, ?, ?, ?, ?, ?, 'pending', ?)");
             if (!$stmt) die("Lỗi chuẩn bị truy vấn tạo đơn hàng: " . $conn->error);
-            $stmt->bind_param("issssds", $user_id, $recipient_name, $shipping_address, $phone_number, $notes, $total, $payment_method);
+            $stmt->bind_param("issssds", $user_id, $recipient_name, $shipping_address, $phone_number, $notes, $grand_total, $payment_method);
             $stmt->execute();
             $order_id = $conn->insert_id;
 
@@ -132,6 +136,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $stmt->execute();
             }
 
+            // Redirect với thông báo thành công
             header("Location: thanhtoan.php?success=1&order_id=$order_id");
             exit;
         } catch (mysqli_sql_exception $e) {
@@ -150,43 +155,336 @@ include 'includes/header.php';
     <meta charset="UTF-8">
     <title>Thanh Toán - Sunny Sport</title>
     <style>
-        /* Đồng bộ CSS từ t.php */
-        body { font-family: Arial, sans-serif; margin: 40px; background: #f8f9fa; }
-        .checkout-container { display: flex; flex-direction: column; gap: 20px; max-width: 800px; margin: auto; }
-        .cart-summary { background: #fff; padding: 20px; border-radius: 8px; box-shadow: 0 4px 10px rgba(0,0,0,0.1); }
-        .cart-summary h2 { font-size: 20px; color: #333; margin-bottom: 15px; }
-        .cart-summary ul { list-style: none; padding: 0; margin: 0; }
-        .cart-summary li { margin-bottom: 10px; font-size: 14px; color: #333; }
-        .cart-summary .total { font-size: 18px; font-weight: 600; color: #dc3545; margin-top: 15px; }
-        .checkout-form { background: #fff; padding: 20px; border-radius: 8px; box-shadow: 0 4px 10px rgba(0,0,0,0.1); }
-        .form-section { margin-bottom: 20px; }
-        .form-section h3 { font-size: 16px; color: #333; margin-bottom: 10px; }
-        label { display: block; font-size: 14px; color: #333; margin-bottom: 5px; }
-        input, select, textarea { width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px; font-size: 14px; box-sizing: border-box; }
-        textarea { resize: vertical; min-height: 80px; }
-        button { background: #28a745; color: #fff; padding: 12px; border: none; border-radius: 6px; font-weight: 600; cursor: pointer; width: 100%; transition: background 0.3s ease, transform 0.2s ease; }
-        button:hover { background: #1e7e34; transform: translateY(-2px); }
-        .error-message { color: #dc3545; font-size: 14px; margin-top: 10px; text-align: center; }
-        .payment-method { margin-bottom: 20px; }
-        .payment-method label { display: inline-block; margin-right: 20px; font-size: 14px; color: #333; }
+        body { font-family: Arial, sans-serif; margin: 0; background: #f8f9fa; }
+        .checkout-container {
+            max-width: 900px;
+            margin: 40px auto;
+            display: flex;
+            gap: 30px;
+            flex-direction: row;
+            align-items: flex-start;
+        }
+        .cart-summary, .checkout-form {
+            background: #fff;
+            border-radius: 15px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+            padding: 30px;
+            width: 100%;
+        }
+        .cart-summary {
+            max-width: 400px;
+            min-width: 320px;
+            background: #fff;
+            border-radius: 15px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.08);
+            padding: 30px 25px;
+            width: 100%;
+        }
+        .cart-summary h2 {
+            font-size: 24px;
+            color: #222;
+            margin-bottom: 25px;
+            font-weight: bold;
+            letter-spacing: 0.5px;
+            text-align: left;
+            border-bottom: 2px solid #28a745;
+            padding-bottom: 10px;
+        }
+        .cart-summary ul {
+            list-style: none;
+            padding: 0;
+            margin: 0 0 25px 0;
+        }
+        .cart-item {
+            display: flex;
+            align-items: flex-start;
+            gap: 20px;
+            margin-bottom: 25px;
+            padding: 15px;
+            background: #f8f9fa;
+            border-radius: 12px;
+            border: 1px solid #e9ecef;
+        }
+        .cart-item img {
+            width: 120px;
+            height: 120px;
+            object-fit: cover;
+            border-radius: 12px;
+            border: 2px solid #e9ecef;
+            background: #fff;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+        .cart-item-info {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            gap: 3px;
+        }
+        .cart-item-name {
+            font-weight: bold;
+            font-size: 18px;
+            color: #222;
+            margin-bottom: 8px;
+            line-height: 1.3;
+        }
+        .cart-item-attr {
+            font-size: 15px;
+            color: #555;
+            margin-bottom: 4px;
+            font-weight: 500;
+        }
+        .cart-summary-total {
+            border-top: 2px solid #e3e7ed;
+            padding-top: 20px;
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 10px;
+            margin-top: 10px;
+        }
+        .cart-summary-row {
+            display: flex;
+            justify-content: space-between;
+            font-size: 16px;
+            margin-bottom: 12px;
+            color: #222;
+            padding: 5px 0;
+        }
+        .cart-summary-row span:last-child {
+            font-weight: 500;
+        }
+        .cart-summary-grand {
+            font-size: 22px;
+            font-weight: bold;
+            color: #28a745;
+            margin-top: 15px;
+            padding-top: 15px;
+            border-top: 2px solid #28a745;
+        }
+        .cart-summary-grand span:first-child {
+            color: #28a745;
+        }
+        .cart-summary-grand span:last-child {
+            color: #28a745;
+        }
+        .checkout-form {
+            flex: 1;
+            min-width: 320px;
+        }
+        .form-section h3 {
+            font-size: 18px;
+            color: #007bff;
+            margin-bottom: 15px;
+            font-weight: bold;
+        }
+        label {
+            display: block;
+            font-size: 14px;
+            color: #333;
+            margin-bottom: 6px;
+            font-weight: 500;
+        }
+        input, select, textarea {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 6px;
+            font-size: 14px;
+            margin-bottom: 15px;
+            box-sizing: border-box;
+            background: #f8f9fa;
+            transition: border 0.2s;
+        }
+        input:focus, select:focus, textarea:focus {
+            border-color: #007bff;
+            outline: none;
+        }
+        textarea {
+            resize: vertical;
+            min-height: 80px;
+        }
+        button[type="submit"] {
+            background: #28a745;
+            color: #fff;
+            padding: 15px;
+            border: none;
+            border-radius: 8px;
+            font-weight: 600;
+            font-size: 16px;
+            cursor: pointer;
+            width: 100%;
+            transition: background 0.3s, transform 0.2s;
+            margin-top: 10px;
+            box-shadow: 0 2px 8px rgba(40,167,69,0.08);
+        }
+        button[type="submit"]:hover {
+            background: #1e7e34;
+            transform: translateY(-2px);
+        }
+        .error-message {
+            background: #ffeaea;
+            color: #dc3545;
+            font-size: 14px;
+            margin-bottom: 15px;
+            padding: 10px 15px;
+            border-radius: 8px;
+            text-align: center;
+            border: 1px solid #dc3545;
+        }
+        .payment-method {
+            margin-bottom: 20px;
+        }
+        .payment-method h3 {
+            font-size: 16px;
+            color: #007bff;
+            margin-bottom: 10px;
+            font-weight: bold;
+        }
+        .payment-method label {
+            display: inline-flex;
+            align-items: center;
+            margin-right: 25px;
+            font-size: 14px;
+            color: #333;
+            cursor: pointer;
+            gap: 6px;
+        }
+        .payment-method input[type="radio"] {
+            accent-color: #28a745;
+            margin-right: 6px;
+        }
+        .payment-method-summary {
+            margin-top: 20px;
+            padding-top: 20px;
+            border-top: 2px solid #e3e7ed;
+        }
+        .payment-method-summary h3 {
+            font-size: 18px;
+            color: #007bff;
+            margin-bottom: 15px;
+            font-weight: bold;
+        }
+        .payment-method-summary {
+            margin-top: 20px;
+            padding-top: 20px;
+            border-top: 2px solid #e3e7ed;
+        }
+        .payment-method-summary h3 {
+            font-size: 18px;
+            color: #007bff;
+            margin-bottom: 15px;
+            font-weight: bold;
+        }
+        .payment-method-summary .payment-options {
+            display: flex;
+            flex-direction: row;
+            gap: 15px;
+            flex-wrap: wrap;
+        }
+        .payment-method-summary label {
+            display: flex;
+            align-items: center;
+            justify-content: flex-start;
+            font-size: 14px;
+            color: #333;
+            cursor: pointer;
+            padding: 8px 12px;
+            border-radius: 8px;
+            transition: background-color 0.2s;
+            white-space: nowrap;
+            flex: 0 0 auto;
+            line-height: 1;
+        }
+        .payment-method-summary label:hover {
+            background-color: #f8f9fa;
+        }
+        .payment-method-summary input[type="radio"] {
+            accent-color: #28a745;
+            margin-right: 8px;
+            transform: scale(1.1);
+            vertical-align: middle;
+            margin-top: 0;
+            margin-bottom: 0;
+        }
+        @media (max-width: 900px) {
+            .checkout-container { flex-direction: column; gap: 20px; }
+            .cart-summary, .checkout-form { max-width: 100%; min-width: 0; }
+        }
+        @media (max-width: 600px) {
+            .checkout-container { margin: 10px; }
+            .cart-summary, .checkout-form { padding: 15px; }
+            button[type="submit"] { font-size: 15px; padding: 12px; }
+        }
         @keyframes slideIn { from { transform: translateX(100%); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
         @keyframes slideOut { from { transform: translateX(0); opacity: 1; } to { transform: translateX(100%); opacity: 0; } }
-        @media (max-width: 768px) {
-            .checkout-container { flex-direction: column; }
-            .cart-summary, .checkout-form { width: 100%; }
-        }
     </style>
 </head>
 <body>
+    <?php if (isset($_GET['success']) && $_GET['success'] == '1'): ?>
+        <div style="max-width: 900px; margin: 40px auto; background: #d4edda; border: 1px solid #c3e6cb; border-radius: 10px; padding: 20px; text-align: center;">
+            <h2 style="color: #155724; margin-bottom: 10px;">✅ Đặt hàng thành công!</h2>
+            <p style="color: #155724; font-size: 16px; margin-bottom: 15px;">
+                Cảm ơn bạn đã đặt hàng. Mã đơn hàng của bạn là: <strong>#<?php echo isset($_GET['order_id']) ? $_GET['order_id'] : 'N/A'; ?></strong>
+            </p>
+            <p style="color: #155724; font-size: 14px;">
+                Chúng tôi sẽ liên hệ với bạn sớm nhất để xác nhận đơn hàng.
+            </p>
+            <div style="margin-top: 20px;">
+                <a href="shop.php" style="background: #28a745; color: white; padding: 10px 20px; text-decoration: none; border-radius: 5px; margin-right: 10px;">Tiếp tục mua sắm</a>
+                <a href="index.php" style="background: #007bff; color: white; padding: 10px 20px; text-decoration: none; border-radius: 5px;">Về trang chủ</a>
+            </div>
+        </div>
+    <?php else: ?>
     <div class="checkout-container">
         <div class="cart-summary">
-            <h2>Sản phẩm</h2>
+            <h2>Đơn hàng của bạn</h2>
             <ul>
-                <?php foreach ($cart as $item): ?>
-                    <li><?php echo htmlspecialchars($item['product_name']); ?> x <?php echo $item['quantity']; ?> - <span style="color: #dc3545;"><?php echo number_format($item['price'] * $item['quantity'], 0, ',', '.'); ?>đ</span></li>
+                <?php foreach ($cart as $item): 
+                    // Lấy hình ảnh chính của sản phẩm
+                    $imgStmt = $conn->prepare("SELECT image_url FROM product_images WHERE product_id = ? AND is_primary = 1 LIMIT 1");
+                    $imgStmt->bind_param("i", $item['product_id']);
+                    $imgStmt->execute();
+                    $imgResult = $imgStmt->get_result();
+                    $imgRow = $imgResult->fetch_assoc();
+                    $imgSrc = !empty($imgRow['image_url']) ? 'images/' . $imgRow['image_url'] : 'images/sport1.webp';
+                ?>
+                <li class="cart-item">
+                    <img src="<?php echo $imgSrc; ?>" alt="<?php echo htmlspecialchars($item['product_name']); ?>">
+                    <div class="cart-item-info">
+                        <div class="cart-item-name"><?php echo htmlspecialchars($item['product_name']); ?></div>
+                        <div class="cart-item-attr">Số lượng: <?php echo $item['quantity']; ?></div>
+                        <div class="cart-item-attr">Đơn giá: <?php echo number_format($item['price'], 0, ',', '.'); ?> VNĐ</div>
+                    </div>
+                </li>
                 <?php endforeach; ?>
             </ul>
-            <p class="total">Tổng cộng: <?php echo number_format($total, 0, ',', '.'); ?>đ</p>
+            <?php
+            // Tính phí ship
+            $shipping_fee = ($total >= 500000) ? 0 : 30000;
+            $grand_total = $total + $shipping_fee;
+            ?>
+            <div class="cart-summary-total">
+                <div class="cart-summary-row">
+                    <span>Tạm tính</span>
+                    <span><?php echo number_format($total, 0, ',', '.'); ?> VNĐ</span>
+                </div>
+                <div class="cart-summary-row">
+                    <span>Phí vận chuyển</span>
+                    <?php if ($shipping_fee == 0): ?>
+                        <span style="color: #28a745; font-weight: bold;">Miễn phí</span>
+                    <?php else: ?>
+                        <span><?php echo number_format($shipping_fee, 0, ',', '.'); ?> VNĐ</span>
+                    <?php endif; ?>
+                </div>
+                <?php if ($total < 500000): ?>
+                <div class="cart-summary-row" style="font-size: 14px; color: #666; font-style: italic;">
+                    <span>Mua thêm <?php echo number_format(500000 - $total, 0, ',', '.'); ?> VNĐ để được miễn phí ship</span>
+                </div>
+                <?php endif; ?>
+                <div class="cart-summary-row cart-summary-grand">
+                    <span>Tổng cộng</span>
+                    <span><?php echo number_format($grand_total, 0, ',', '.'); ?> VNĐ</span>
+                </div>
+            </div>
         </div>
         
         <form method="POST" class="checkout-form">
@@ -222,20 +520,21 @@ include 'includes/header.php';
                 <label for="notes">Ghi chú (tùy chọn):</label>
                 <textarea id="notes" name="notes"></textarea>
             </div>
-            
-            <div class="payment-method">
+            <div class="payment-method-summary">
                 <h3>Hình thức thanh toán</h3>
-                <label>
-                    <input type="radio" name="payment_method" value="cod" checked> Thanh toán khi nhận hàng
-                </label>
-                <label>
-                    <input type="radio" name="payment_method" value="card"> Thanh toán bằng thẻ
-                </label>
+                <div class="payment-options">
+                    <label>
+                        <input type="radio" name="payment_method" value="cod" checked> Thanh toán khi nhận hàng
+                    </label>
+                    <label>
+                        <input type="radio" name="payment_method" value="card"> Thanh toán bằng thẻ
+                    </label>
+                </div>
             </div>
-            
             <button type="submit">Xác Nhận Và Đặt Hàng</button>
         </form>
     </div>
+    <?php endif; ?>
 
     <script>
         // Script API địa chỉ từ provinces.open-api.vn
@@ -304,6 +603,7 @@ include 'includes/header.php';
                 });
         });
     </script>
-
+</body>
+</html>
 <?php include 'includes/footer.php'; ?>
 <?php ob_end_flush(); // Kết thúc output buffering ?>
