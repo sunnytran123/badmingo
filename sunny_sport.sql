@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: 127.0.0.1
--- Generation Time: Aug 22, 2025 at 07:41 AM
+-- Generation Time: Aug 27, 2025 at 09:09 AM
 -- Server version: 10.4.32-MariaDB
 -- PHP Version: 8.1.25
 
@@ -38,24 +38,18 @@ CREATE TABLE `bookings` (
   `total_price` decimal(10,2) NOT NULL COMMENT 'Tổng giá (VNĐ)',
   `discount` decimal(5,2) DEFAULT 0.00 COMMENT 'Giảm giá (%)',
   `status` enum('pending','confirmed','cancelled') DEFAULT 'pending' COMMENT 'Trạng thái: pending (chờ), confirmed (xác nhận), cancelled (hủy)',
-  `created_at` timestamp NOT NULL DEFAULT current_timestamp() COMMENT 'Thời gian tạo'
+  `created_at` timestamp NOT NULL DEFAULT current_timestamp() COMMENT 'Thời gian tạo',
+  `fullname` varchar(100) DEFAULT NULL COMMENT 'Họ và tên người đặt',
+  `phone` varchar(15) DEFAULT NULL COMMENT 'Số điện thoại người đặt'
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='Bảng lưu thông tin đặt sân';
 
 --
 -- Dumping data for table `bookings`
 --
 
-INSERT INTO `bookings` (`booking_id`, `user_id`, `court_id`, `booking_date`, `start_time`, `end_time`, `payment_method`, `total_price`, `discount`, `status`, `created_at`) VALUES
-(1, NULL, 1, '2025-08-20', '06:00:00', '07:00:00', 'prepaid', 135000.00, 10.00, 'pending', '2025-08-16 01:00:00'),
-(2, NULL, 2, '2025-08-20', '07:00:00', '08:00:00', 'ondelivery', 150000.00, 0.00, 'confirmed', '2025-08-16 01:05:00'),
-(3, NULL, 3, '2025-08-21', '08:00:00', '09:00:00', 'prepaid', 108000.00, 10.00, 'pending', '2025-08-16 01:10:00'),
-(4, NULL, 4, '2025-08-21', '15:00:00', '16:00:00', 'ondelivery', 150000.00, 0.00, 'confirmed', '2025-08-16 01:15:00'),
-(5, NULL, 5, '2025-08-22', '16:00:00', '18:00:00', 'prepaid', 252000.00, 10.00, 'pending', '2025-08-16 01:20:00'),
-(6, NULL, 6, '2025-08-22', '09:00:00', '10:00:00', 'ondelivery', 160000.00, 0.00, 'confirmed', '2025-08-16 01:25:00'),
-(7, NULL, 7, '2025-08-23', '10:00:00', '11:00:00', 'prepaid', 108000.00, 10.00, 'pending', '2025-08-16 01:30:00'),
-(8, NULL, 8, '2025-08-23', '17:00:00', '18:00:00', 'ondelivery', 180000.00, 0.00, 'confirmed', '2025-08-16 01:35:00'),
-(9, NULL, 9, '2025-08-24', '18:00:00', '19:00:00', 'prepaid', 135000.00, 10.00, 'pending', '2025-08-16 01:40:00'),
-(10, NULL, 10, '2025-08-24', '07:00:00', '08:00:00', 'ondelivery', 120000.00, 0.00, 'confirmed', '2025-08-16 01:45:00');
+INSERT INTO `bookings` (`booking_id`, `user_id`, `court_id`, `booking_date`, `start_time`, `end_time`, `payment_method`, `total_price`, `discount`, `status`, `created_at`, `fullname`, `phone`) VALUES
+(11, 11, 1, '2025-08-26', '18:00:00', '19:00:00', 'ondelivery', 150000.00, 0.00, 'pending', '2025-08-26 10:38:09', NULL, NULL),
+(12, 11, 1, '2025-08-26', '22:00:00', '22:30:00', 'prepaid', 67500.00, 10.00, 'pending', '2025-08-26 14:57:49', NULL, NULL);
 
 -- --------------------------------------------------------
 
@@ -335,6 +329,7 @@ CREATE TABLE `orders` (
   `notes` text DEFAULT NULL COMMENT 'Ghi chú đơn hàng',
   `total_amount` decimal(10,2) NOT NULL COMMENT 'Tổng tiền (VNĐ)',
   `status` enum('pending','completed','cancelled') DEFAULT 'pending' COMMENT 'Trạng thái: pending (chờ), completed (hoàn thành), cancelled (hủy)',
+  `payment_method` enum('cod','card') DEFAULT 'cod' COMMENT 'Phương thức thanh toán: cod (khi nhận hàng), card (bằng thẻ)',
   `created_at` timestamp NOT NULL DEFAULT current_timestamp() COMMENT 'Thời gian tạo'
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='Bảng lưu thông tin đơn hàng';
 
@@ -342,10 +337,19 @@ CREATE TABLE `orders` (
 -- Dumping data for table `orders`
 --
 
-INSERT INTO `orders` (`order_id`, `user_id`, `recipient_name`, `shipping_address`, `phone_number`, `notes`, `total_amount`, `status`, `created_at`) VALUES
-(12, 11, NULL, NULL, NULL, NULL, 7000000.00, 'pending', '2025-08-20 01:35:31'),
-(13, 11, NULL, NULL, NULL, NULL, 2500000.00, 'pending', '2025-08-20 02:08:29'),
-(14, 11, NULL, NULL, NULL, NULL, 2500000.00, 'pending', '2025-08-22 04:38:30');
+INSERT INTO `orders` (`order_id`, `user_id`, `recipient_name`, `shipping_address`, `phone_number`, `notes`, `total_amount`, `status`, `payment_method`, `created_at`) VALUES
+(12, 11, NULL, NULL, NULL, NULL, 7000000.00, 'pending', 'cod', '2025-08-20 01:35:31'),
+(13, 11, NULL, NULL, NULL, NULL, 2500000.00, 'pending', 'cod', '2025-08-20 02:08:29'),
+(14, 11, NULL, NULL, NULL, NULL, 2500000.00, 'pending', 'cod', '2025-08-22 04:38:30'),
+(15, 11, 'Trần Phương Thùyyy', '12345 nguyen van thiet, 13753, 359, 36', '09140908700', '', 2500000.00, 'pending', 'cod', '2025-08-22 05:48:53'),
+(16, 11, 'Trần Phương Thùy', '54332, 1339, 43, 4', '0914090876', 'aa', 1500000.00, 'pending', 'cod', '2025-08-22 09:40:12'),
+(17, 11, 'Trần Phương Thùy', '54332, 1339, 43, 4', '0914090876', 'aa', 1500000.00, 'pending', 'cod', '2025-08-22 09:42:22'),
+(18, 11, 'Trần Phương Thùy', 'aaa, 1, 1, 1', '0914090876', '', 100000.00, 'pending', 'cod', '2025-08-22 09:45:37'),
+(19, 11, 'Trần Phương Thùy', 'tằn tân, Xã Mường Bằng, Huyện Mai Sơn, Tỉnh Sơn La', '0914090876', '', 1500000.00, 'pending', 'cod', '2025-08-22 10:09:50'),
+(20, 11, 'Trần Phương Thùy', '2818 hjo gom, Phường Ngọc Châu, Thành phố Hải Dương, Tỉnh Hải Dương', '0914090876', '1111', 1500000.00, 'pending', 'cod', '2025-08-23 15:18:40'),
+(21, 11, 'Trần Phương Thùy', '111 dsfa áaa, Phường Quang Trung, Thành phố Hà Giang, Tỉnh Hà Giang', '0914090876', '', 2200000.00, 'pending', 'cod', '2025-08-23 15:23:27'),
+(22, 11, 'Trần Phương Thùy', '12345 nguyen van thiet, Phường Tân Tiến, Thành phố Bắc Giang, Tỉnh Bắc Giang', '0914090876', '', 300000.00, 'pending', 'cod', '2025-08-23 15:29:51'),
+(23, 11, 'Trần Phương Thùy', 'tran van on, Xã Vĩnh Phương, Thành phố Nha Trang, Tỉnh Khánh Hòa', '0914090876', '', 800000.00, 'pending', 'card', '2025-08-23 15:31:25');
 
 -- --------------------------------------------------------
 
@@ -369,7 +373,16 @@ INSERT INTO `order_items` (`order_item_id`, `order_id`, `product_id`, `quantity`
 (12, 12, 1, 1, 2500000.00),
 (13, 12, 2, 3, 1500000.00),
 (14, 13, 1, 1, 2500000.00),
-(15, 14, 1, 1, 2500000.00);
+(15, 14, 1, 1, 2500000.00),
+(16, 15, 1, 1, 2500000.00),
+(17, 16, 2, 1, 1500000.00),
+(18, 17, 2, 1, 1500000.00),
+(19, 18, 5, 1, 100000.00),
+(20, 19, 2, 1, 1500000.00),
+(21, 20, 2, 1, 1500000.00),
+(22, 21, 6, 1, 2200000.00),
+(23, 22, 3, 1, 300000.00),
+(24, 23, 9, 1, 800000.00);
 
 -- --------------------------------------------------------
 
@@ -514,16 +527,16 @@ CREATE TABLE `transactions` (
 --
 
 INSERT INTO `transactions` (`transaction_id`, `user_id`, `booking_id`, `order_id`, `amount`, `transaction_type`, `payment_method`, `payment_status`, `status`, `created_at`, `transaction_code`) VALUES
-(1, NULL, 1, NULL, 135000.00, 'payment', 'bank_transfer', 'pending', 'pending', '2025-08-16 01:00:00', 'TXN_202508160001'),
-(2, NULL, 2, NULL, 150000.00, 'payment', 'cash', 'received', 'completed', '2025-08-16 01:05:00', 'TXN_202508160002'),
-(3, NULL, 3, NULL, 108000.00, 'payment', 'online', 'received', 'pending', '2025-08-16 01:10:00', 'TXN_202508160003'),
-(4, NULL, 4, NULL, 150000.00, 'payment', 'cash', 'received', 'completed', '2025-08-16 01:15:00', 'TXN_202508160004'),
+(1, NULL, NULL, NULL, 135000.00, 'payment', 'bank_transfer', 'pending', 'pending', '2025-08-16 01:00:00', 'TXN_202508160001'),
+(2, NULL, NULL, NULL, 150000.00, 'payment', 'cash', 'received', 'completed', '2025-08-16 01:05:00', 'TXN_202508160002'),
+(3, NULL, NULL, NULL, 108000.00, 'payment', 'online', 'received', 'pending', '2025-08-16 01:10:00', 'TXN_202508160003'),
+(4, NULL, NULL, NULL, 150000.00, 'payment', 'cash', 'received', 'completed', '2025-08-16 01:15:00', 'TXN_202508160004'),
 (5, NULL, NULL, NULL, 2800000.00, 'payment', 'bank_transfer', 'pending', 'pending', '2025-08-16 01:20:00', 'TXN_202508160005'),
 (6, NULL, NULL, NULL, 1500000.00, 'payment', 'online', 'received', 'completed', '2025-08-16 01:25:00', 'TXN_202508160006'),
 (7, NULL, NULL, NULL, 600000.00, 'payment', 'bank_transfer', 'pending', 'pending', '2025-08-16 01:30:00', 'TXN_202508160007'),
 (8, NULL, NULL, NULL, 450000.00, 'payment', 'cash', 'received', 'completed', '2025-08-16 01:35:00', 'TXN_202508160008'),
-(9, NULL, 5, NULL, 252000.00, 'payment', 'online', 'received', 'pending', '2025-08-16 01:40:00', 'TXN_202508160009'),
-(10, NULL, 6, NULL, 160000.00, 'payment', 'cash', 'received', 'completed', '2025-08-16 01:45:00', 'TXN_202508160010');
+(9, NULL, NULL, NULL, 252000.00, 'payment', 'online', 'received', 'pending', '2025-08-16 01:40:00', 'TXN_202508160009'),
+(10, NULL, NULL, NULL, 160000.00, 'payment', 'cash', 'received', 'completed', '2025-08-16 01:45:00', 'TXN_202508160010');
 
 -- --------------------------------------------------------
 
@@ -701,7 +714,7 @@ ALTER TABLE `users`
 -- AUTO_INCREMENT for table `bookings`
 --
 ALTER TABLE `bookings`
-  MODIFY `booking_id` int(11) NOT NULL AUTO_INCREMENT COMMENT 'Mã đặt sân', AUTO_INCREMENT=11;
+  MODIFY `booking_id` int(11) NOT NULL AUTO_INCREMENT COMMENT 'Mã đặt sân', AUTO_INCREMENT=13;
 
 --
 -- AUTO_INCREMENT for table `cart_items`
@@ -767,13 +780,13 @@ ALTER TABLE `notifications`
 -- AUTO_INCREMENT for table `orders`
 --
 ALTER TABLE `orders`
-  MODIFY `order_id` int(11) NOT NULL AUTO_INCREMENT COMMENT 'Mã đơn hàng', AUTO_INCREMENT=15;
+  MODIFY `order_id` int(11) NOT NULL AUTO_INCREMENT COMMENT 'Mã đơn hàng', AUTO_INCREMENT=24;
 
 --
 -- AUTO_INCREMENT for table `order_items`
 --
 ALTER TABLE `order_items`
-  MODIFY `order_item_id` int(11) NOT NULL AUTO_INCREMENT COMMENT 'Mã chi tiết đơn hàng', AUTO_INCREMENT=16;
+  MODIFY `order_item_id` int(11) NOT NULL AUTO_INCREMENT COMMENT 'Mã chi tiết đơn hàng', AUTO_INCREMENT=25;
 
 --
 -- AUTO_INCREMENT for table `products`

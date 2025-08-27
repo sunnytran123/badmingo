@@ -1,4 +1,9 @@
 <?php
+if (session_status() === PHP_SESSION_NONE) { session_start(); }
+if (!isset($_SESSION['user_id'])) {
+    header('Location: login.php');
+    exit();
+}
 include 'includes/header.php';
 include 'config/database.php';
 
@@ -7,7 +12,6 @@ $error_message = '';
 
 // Xử lý khi submit form
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    if (session_status() === PHP_SESSION_NONE) { session_start(); }
     $user_id = $_SESSION['user_id'] ?? null;
     $date = $_POST['date'] ?? '';
     $court = intval($_POST['court'] ?? 0);
@@ -50,8 +54,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 if ($discount) $total_price = $total_price * (1 - $discount / 100);
 
                 // Lưu vào bookings
-                $stmt = $conn->prepare("INSERT INTO bookings (user_id, court_id, booking_date, start_time, end_time, payment_method, total_price, discount, status) VALUES (?, ?, ?, ?, ?, ?, ?, ?, 'pending')");
-                $stmt->bind_param("iissssdd", $user_id, $court, $date, $start_time, $end_time, $payment_method, $total_price, $discount);
+                $stmt = $conn->prepare("INSERT INTO bookings (user_id, court_id, booking_date, start_time, end_time, payment_method, total_price, discount, status, fullname, phone) VALUES (?, ?, ?, ?, ?, ?, ?, ?, 'pending', ?, ?)");
+                $stmt->bind_param("iissssddss", $user_id, $court, $date, $start_time, $end_time, $payment_method, $total_price, $discount, $fullname, $phone);
                 $stmt->execute();
 
                 if ($stmt->affected_rows > 0) {
@@ -65,16 +69,35 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 }
 ?>
 
+<style>
+.alert {
+    padding: 16px;
+    border-radius: 6px;
+    margin-bottom: 16px;
+    font-size: 16px;
+}
+.alert-success {
+    background: #e6ffed;
+    color: #256029;
+    border: 1px solid #b7eb8f;
+}
+.alert-danger {
+    background: #fff1f0;
+    color: #a8071a;
+    border: 1px solid #ffa39e;
+}
+</style>
+
 <section class="min-h-screen bg-gray-100 py-12">
     <div class="max-w-2xl mx-auto bg-white p-8 rounded-lg shadow-lg">
         <h2 class="text-3xl font-bold text-center text-gray-800 mb-8">Đặt Sân Cầu Lông</h2>
         <?php if ($success_message): ?>
-            <div class="mb-6 p-4 bg-green-100 border border-green-400 text-green-700 rounded text-center">
-                <?php echo $success_message; ?>
+            <div class="alert alert-success mb-4" role="alert">
+                <strong>Thành công!</strong> <?php echo $success_message; ?>
             </div>
         <?php elseif ($error_message): ?>
-            <div class="mb-6 p-4 bg-red-100 border border-red-400 text-red-700 rounded text-center">
-                <?php echo $error_message; ?>
+            <div class="alert alert-danger mb-4" role="alert">
+                <strong>Lỗi!</strong> <?php echo $error_message; ?>
             </div>
         <?php endif; ?>
         <form action="" method="POST" class="space-y-6" id="bookingForm">
