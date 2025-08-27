@@ -86,19 +86,66 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     color: #a8071a;
     border: 1px solid #ffa39e;
 }
+/* Modal popup */
+.modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.45);
+    display: none;
+    align-items: center;
+    justify-content: center;
+    z-index: 10000;
+}
+.modal {
+    width: calc(100% - 32px);
+    max-width: 420px;
+    background: #fff;
+    border-radius: 12px;
+    box-shadow: 0 20px 50px rgba(0,0,0,0.25);
+    padding: 18px 18px 16px 18px;
+    animation: modalIn 0.22s ease-out;
+}
+.modal-header { display: flex; align-items: center; justify-content: center; gap: 10px; }
+.modal-title { font-size: 18px; font-weight: 700; color: #111827; text-align: center; }
+.modal-close { margin-left: auto; background: transparent; border: none; font-size: 20px; cursor: pointer; color: #6B7280; }
+.modal-body { margin-top: 6px; font-size: 14px; color: #374151; }
+.modal-actions { margin-top: 14px; display: flex; justify-content: flex-end; gap: 10px; }
+.btn { padding: 8px 12px; border-radius: 8px; font-size: 14px; cursor: pointer; border: 1px solid transparent; }
+.btn-primary { background: #4F46E5; color: #fff; }
+.btn-primary:hover { background: #4338CA; }
+.btn-outline { background: #fff; color: #374151; border-color: #D1D5DB; }
+.btn-outline:hover { background: #F9FAFB; }
+.modal-success .modal-header { color: #065F46; }
+.modal-error .modal-header { color: #991B1B; }
+@keyframes modalIn { from { opacity: 0; transform: translateY(-6px); } to { opacity: 1; transform: translateY(0); } }
 </style>
 
 <section class="min-h-screen bg-gray-100 py-12">
     <div class="max-w-2xl mx-auto bg-white p-8 rounded-lg shadow-lg">
         <h2 class="text-3xl font-bold text-center text-gray-800 mb-8">Đặt Sân Cầu Lông</h2>
-        <?php if ($success_message): ?>
-            <div class="alert alert-success mb-4" role="alert">
-                <strong>Thành công!</strong> <?php echo $success_message; ?>
+        <!-- Modal container -->
+        <div id="modal-overlay" class="modal-overlay" role="dialog" aria-modal="true" aria-hidden="true">
+            <div id="modal" class="modal" role="document">
+                <div class="modal-header">
+                    <div id="modal-title" class="modal-title">Thông báo</div>
+                </div>
+                <div id="modal-body" class="modal-body"></div>
+                <div class="modal-actions">
+                    <button id="modal-ok" class="btn btn-primary">OK</button>
+                </div>
             </div>
-        <?php elseif ($error_message): ?>
-            <div class="alert alert-danger mb-4" role="alert">
-                <strong>Lỗi!</strong> <?php echo $error_message; ?>
-            </div>
+        </div>
+        <?php if ($success_message || $error_message): ?>
+            <script>
+                document.addEventListener('DOMContentLoaded', function() {
+                    const msg = <?php echo json_encode($success_message ?: $error_message); ?>;
+                    const type = <?php echo json_encode($success_message ? 'success' : 'error'); ?>;
+                    if (msg) openModal(msg, type);
+                });
+            </script>
         <?php endif; ?>
         <form action="" method="POST" class="space-y-6" id="bookingForm">
             <!-- Chọn ngày -->
@@ -204,14 +251,41 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             </div>
         </form>
 
-        <!-- Script kiểm tra thời gian -->
+        <!-- Script kiểm tra thời gian & modal popup -->
         <script>
+            const overlay = document.getElementById('modal-overlay');
+            const modal = document.getElementById('modal');
+            const modalTitle = document.getElementById('modal-title');
+            const modalBody = document.getElementById('modal-body');
+            // const modalClose = document.getElementById('modal-close');
+            const modalOk = document.getElementById('modal-ok');
+
+            function openModal(message, type = 'info') {
+                modal.classList.remove('modal-success', 'modal-error');
+                if (type === 'success') modal.classList.add('modal-success');
+                if (type === 'error') modal.classList.add('modal-error');
+                modalTitle.textContent = type === 'success' ? 'Thành công' : (type === 'error' ? 'Thông báo' : 'Thông báo');
+                modalBody.textContent = message;
+                overlay.style.display = 'flex';
+                overlay.style.alignItems = 'center';
+                overlay.style.justifyContent = 'center';
+                overlay.setAttribute('aria-hidden', 'false');
+            }
+            function closeModal() {
+                overlay.style.display = 'none';
+                overlay.setAttribute('aria-hidden', 'true');
+            }
+            // modalClose.addEventListener('click', closeModal);
+            modalOk.addEventListener('click', closeModal);
+            overlay.addEventListener('click', function(e){ if (e.target === overlay) closeModal(); });
+            document.addEventListener('keydown', function(e){ if (e.key === 'Escape') closeModal(); });
+
             document.getElementById('bookingForm').addEventListener('submit', function(e) {
                 const startTime = document.getElementById('start_time').value;
                 const endTime = document.getElementById('end_time').value;
                 if (startTime >= endTime) {
                     e.preventDefault();
-                    alert('Giờ kết thúc phải sau giờ bắt đầu!');
+                    openModal('Giờ kết thúc phải sau giờ bắt đầu!', 'error');
                 }
             });
 
@@ -260,6 +334,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                                 if (opt.value <= nowTime) opt.disabled = true;
                             }
                         }
+                    })
+                    .catch(() => {
+                        openModal('Không thể tải khung giờ đã đặt. Vui lòng thử lại!', 'error');
                     });
             }
         </script>
