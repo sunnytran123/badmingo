@@ -294,7 +294,7 @@ if (session_status() === PHP_SESSION_NONE) {
         bottom: 110px;
         right: 32px;
         z-index: 9999;
-        width: 370px;
+        width: 400px;
         max-width: 95vw;
         background: #fff;
         border-radius: 18px;
@@ -342,7 +342,8 @@ if (session_status() === PHP_SESSION_NONE) {
         padding: 16px;
         background: #F3F4F6;
         min-height: 120px;
-        max-height: 320px;
+        height: 400px;
+        max-height: 75vh;        
         overflow-y: auto;
         display: flex;
         flex-direction: column;
@@ -359,8 +360,58 @@ if (session_status() === PHP_SESSION_NONE) {
         border: 1px solid #E5E7EB;
         transition: background 0.15s;
     }
-    .bubble-chat-option:hover {
-        background: #E0E7FF;
+    .bubble-chat-option:hover { background: #E0E7FF; }
+
+    .bubble-chat-input {
+        display: flex;
+        gap: 8px;
+        padding: 12px 16px;
+        border-top: 1px solid #E5E7EB;
+        background: #fff;
+    }
+    .bubble-chat-input input {
+        flex: 1;
+        padding: 12px 14px;
+        border: 1px solid #E5E7EB;
+        border-radius: 12px;
+        font-size: 16px;
+        min-height: 46px;
+        outline: none;
+    }
+    .bubble-chat-send {
+        background: #6366F1;
+        color: #fff;
+        border: none;
+        width: 44px;
+        height: 44px;
+        border-radius: 50%;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+        box-shadow: 0 6px 14px rgba(99,102,241,0.2);
+    }
+    .bubble-chat-send:hover { background: #4F46E5; }
+
+    .cart-toggle {
+        position: fixed;
+        bottom: 110px; /* Đẩy lên trên bubble chat (bubble chat đang bottom: 32px) */
+        right: 30px;
+        background: #007bff;
+        color: white;
+        border: none;
+        border-radius: 50%;
+        width: 60px;
+        height: 60px;
+        font-size: 20px;
+        cursor: pointer;
+        box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+        transition: all 0.3s ease;
+        z-index: 1001; /* Đảm bảo nổi hơn bubble chat */
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 5px;
     }
     </style>
 </head>
@@ -440,13 +491,85 @@ document.addEventListener('DOMContentLoaded', function() {
         <button class="bubble-chat-close" aria-label="Đóng" onclick="document.getElementById('bubble-chat-window').style.display='none'">&times;</button>
     </div>
     <div class="bubble-chat-body" id="bubble-chat-body">
-        <div class="bubble-chat-option" onclick="window.location.href='booking.php'">Đặt sân cầu lông</div>
-        <div class="bubble-chat-option" onclick="window.location.href='shop.php'">Mua vợt, phụ kiện</div>
+        <div class="bubble-chat-option" data-seed="Tôi muốn đặt sân cầu lông">Đặt sân cầu lông</div>
+        <div class="bubble-chat-option" data-seed="Tôi muốn mua vợt/phụ kiện">Mua vợt, phụ kiện</div>
+    </div>
+    <div class="bubble-chat-input">
+        <input id="bubble-chat-text" type="text" placeholder="Nhập câu hỏi của bạn..." />
+        <button id="bubble-chat-send" class="bubble-chat-send" title="Gửi"><i class="fas fa-paper-plane"></i></button>
     </div>
 </div>
 <script>
-document.getElementById('bubble-chat-btn').onclick = function() {
+(function(){
     var win = document.getElementById('bubble-chat-window');
-    win.style.display = win.style.display === 'flex' ? 'none' : 'flex';
-};
+    var body = document.getElementById('bubble-chat-body');
+    var input = document.getElementById('bubble-chat-text');
+    var sendBtn = document.getElementById('bubble-chat-send');
+
+    // Config: đổi URL này thành endpoint Python của bạn
+    var CHAT_API_URL = 'http://localhost:8000/chat';
+
+    var messages = []; // lưu lịch sử hội thoại {role, content}
+
+    document.getElementById('bubble-chat-btn').onclick = function() {
+        win.style.display = win.style.display === 'flex' ? 'none' : 'flex';
+        if (win.style.display === 'flex') { input.focus(); }
+    };
+
+    function appendBubble(text, role, elId) {
+        var div = document.createElement('div');
+        if (elId) div.id = elId;
+        div.style.background = role === 'user' ? '#EEF2FF' : '#FFFFFF';
+        div.style.border = '1px solid #E5E7EB';
+        div.style.borderRadius = '10px';
+        div.style.padding = '10px 12px';
+        div.style.fontSize = '14px';
+        div.textContent = text;
+        body.appendChild(div);
+        body.scrollTop = body.scrollHeight;
+        return div;
+    }
+
+    function sendToAI(prompt) {
+        messages.push({ role: 'user', content: prompt });
+        appendBubble(prompt, 'user');
+        var typing = appendBubble('Đang nhập...', 'assistant', 'bubble-typing');
+        fetch(CHAT_API_URL, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ messages: messages })
+        }).then(function(r){ return r.json(); })
+        .then(function(data){
+            var reply = data.reply || 'Xin lỗi, hiện chưa phản hồi được.';
+            var t = document.getElementById('bubble-typing');
+            if (t) t.remove();
+            appendBubble(reply, 'assistant');
+            messages.push({ role: 'assistant', content: reply });
+        }).catch(function(){
+            var t = document.getElementById('bubble-typing');
+            if (t) t.remove();
+            appendBubble('Có lỗi khi kết nối server. Vui lòng thử lại.', 'assistant');
+        });
+    }
+
+    body.addEventListener('click', function(e){
+        var opt = e.target.closest('.bubble-chat-option');
+        if (!opt) return;
+        var seed = opt.getAttribute('data-seed') || '';
+        if (seed) sendToAI(seed);
+    });
+
+    sendBtn.addEventListener('click', function(){
+        var text = input.value.trim();
+        if (!text) return;
+        sendToAI(text);
+        input.value = '';
+    });
+    input.addEventListener('keydown', function(e){
+        if (e.key === 'Enter') {
+            e.preventDefault();
+            sendBtn.click();
+        }
+    });
+})();
 </script>
