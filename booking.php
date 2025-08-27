@@ -29,6 +29,26 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         if ($bookingDateTime < $now) {
             $error_message = 'Không thể đặt sân cho thời gian đã qua!';
         } else {
+            // Ràng buộc tối thiểu
+            $today = date('Y-m-d');
+            if ($date === $today) {
+                $nowMinutes = intval(date('H')) * 60 + intval(date('i'));
+                $minStartMinutes = (int)(ceil($nowMinutes / 30) * 30);
+                $minStartHour = floor($minStartMinutes / 60);
+                $minStartMin = $minStartMinutes % 60;
+                $minStartStr = sprintf('%02d:%02d', $minStartHour, $minStartMin);
+                if (strtotime($start_time) < strtotime($minStartStr)) {
+                    $error_message = 'Giờ bắt đầu phải từ khung tiếp theo trong hôm nay!';
+                }
+            }
+            if (!$error_message) {
+                $minDurationMinutes = 30;
+                $actualDurationMinutes = (strtotime($end_time) - strtotime($start_time)) / 60;
+                if ($actualDurationMinutes < $minDurationMinutes) {
+                    $error_message = 'Thời lượng tối thiểu là 30 phút!';
+                }
+            }
+            if (!$error_message) {
             // Kiểm tra trùng giờ đã đặt
             $stmt = $conn->prepare("SELECT COUNT(*) FROM bookings WHERE booking_date = ? AND court_id = ? AND status != 'cancelled' AND ((start_time < ? AND end_time > ?) OR (start_time < ? AND end_time > ?))");
             $stmt->bind_param("sissss", $date, $court, $end_time, $start_time, $start_time, $end_time);
@@ -63,6 +83,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 } else {
                     $error_message = 'Lỗi đặt sân!';
                 }
+            }
             }
         }
     }
@@ -257,7 +278,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             const modal = document.getElementById('modal');
             const modalTitle = document.getElementById('modal-title');
             const modalBody = document.getElementById('modal-body');
-            // const modalClose = document.getElementById('modal-close');
             const modalOk = document.getElementById('modal-ok');
 
             function openModal(message, type = 'info') {
@@ -275,36 +295,80 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 overlay.style.display = 'none';
                 overlay.setAttribute('aria-hidden', 'true');
             }
-            // modalClose.addEventListener('click', closeModal);
             modalOk.addEventListener('click', closeModal);
             overlay.addEventListener('click', function(e){ if (e.target === overlay) closeModal(); });
             document.addEventListener('keydown', function(e){ if (e.key === 'Escape') closeModal(); });
 
+            const startSelect = document.getElementById('start_time');
+            const endSelect = document.getElementById('end_time');
+            const dateInput = document.getElementById('date');
+
+            function toMinutes(hhmm) {
+                const [h, m] = hhmm.split(':').map(Number);
+                return h * 60 + m;
+            }
+            function toHHMM(minutes) {
+                const h = Math.floor(minutes / 60);
+                const m = minutes % 60;
+                return `${String(h).padStart(2,'0')}:${String(m).padStart(2,'0')}`;
+            }
+            function next30SlotNow() {
+                const now = new Date();
+                const minutes = now.getHours() * 60 + now.getMinutes();
+                const rounded = Math.ceil(minutes / 30) * 30;
+                return toHHMM(rounded);
+            }
+            function enforceEndMin() {
+                const startVal = startSelect.value;
+                if (!startVal) return;
+                const minEndMin = toMinutes(startVal) + 30;
+                for (let opt of endSelect.options) {
+                    opt.disabled = toMinutes(opt.value) < minEndMin;
+                }
+                if (toMinutes(endSelect.value) < minEndMin) {
+                    // pick first enabled option >= min
+                    for (let opt of endSelect.options) {
+                        if (!opt.disabled) { endSelect.value = opt.value; break; }
+                    }
+                }
+            }
+
             document.getElementById('bookingForm').addEventListener('submit', function(e) {
-                const startTime = document.getElementById('start_time').value;
-                const endTime = document.getElementById('end_time').value;
-                if (startTime >= endTime) {
+                const startTime = startSelect.value;
+                const endTime = endSelect.value;
+                const selectedDate = dateInput.value;
+                const todayISO = new Date().toISOString().slice(0,10);
+                if (toMinutes(endTime) - toMinutes(startTime) < 30) {
                     e.preventDefault();
-                    openModal('Giờ kết thúc phải sau giờ bắt đầu!', 'error');
+                    openModal('Thời lượng tối thiểu là 30 phút!', 'error');
+                    return;
+                }
+                if (selectedDate === todayISO) {
+                    const minStart = next30SlotNow();
+                    if (toMinutes(startTime) < toMinutes(minStart)) {
+                        e.preventDefault();
+                        openModal('Giờ bắt đầu phải từ khung 30 phút kế tiếp hôm nay!', 'error');
+                        return;
+                    }
                 }
             });
 
-            document.getElementById('date').addEventListener('change', fetchBookedSlots);
+            dateInput.addEventListener('change', fetchBookedSlots);
             document.getElementById('court').addEventListener('change', fetchBookedSlots);
+            startSelect.addEventListener('change', function(){ enforceEndMin(); });
 
             function fetchBookedSlots() {
-                const date = document.getElementById('date').value;
+                const date = dateInput.value;
                 const court = document.getElementById('court').value;
                 if (!date || !court) return;
 
                 fetch(`get_booked_slots.php?date=${date}&court=${court}`)
                     .then(res => res.json())
                     .then(data => {
-                        const startSelect = document.getElementById('start_time');
-                        const endSelect = document.getElementById('end_time');
                         // Enable all first
                         for (let opt of startSelect.options) opt.disabled = false;
                         for (let opt of endSelect.options) opt.disabled = false;
+
                         // Disable booked slots
                         data.forEach(slot => {
                             for (let opt of startSelect.options) {
@@ -319,21 +383,22 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                             }
                         });
 
-                        // Disable giờ đã qua nếu là hôm nay
-                        const selectedDate = document.getElementById('date').value;
+                        // Ràng buộc hôm nay: start phải từ khung 30' kế tiếp
                         const today = new Date();
-                        const nowHour = today.getHours();
-                        const nowMinute = today.getMinutes();
-                        const nowTime = ("0" + nowHour).slice(-2) + ":" + ("0" + nowMinute).slice(-2);
-
-                        if (selectedDate === today.toISOString().slice(0,10)) {
+                        const todayISO = today.toISOString().slice(0,10);
+                        if (date === todayISO) {
+                            const minStart = next30SlotNow();
                             for (let opt of startSelect.options) {
-                                if (opt.value < nowTime) opt.disabled = true;
+                                if (opt.value < minStart) opt.disabled = true;
                             }
+                            // End không được <= minStart
                             for (let opt of endSelect.options) {
-                                if (opt.value <= nowTime) opt.disabled = true;
+                                if (opt.value <= minStart) opt.disabled = true;
                             }
                         }
+
+                        // Áp ràng buộc end >= start + 30'
+                        enforceEndMin();
                     })
                     .catch(() => {
                         openModal('Không thể tải khung giờ đã đặt. Vui lòng thử lại!', 'error');
