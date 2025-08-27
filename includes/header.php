@@ -266,6 +266,102 @@ if (session_status() === PHP_SESSION_NONE) {
             gap: 10px;
         }
     }
+
+    /* Bubble Chat */
+    #bubble-chat-btn {
+        position: fixed;
+        bottom: 32px;
+        right: 32px;
+        z-index: 9999;
+        background: linear-gradient(135deg, #6366F1 0%, #5B21B6 100%);
+        color: #fff;
+        border-radius: 50%;
+        width: 62px;
+        height: 62px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        box-shadow: 0 8px 24px rgba(99,102,241,0.18);
+        cursor: pointer;
+        font-size: 28px;
+        border: none;
+        transition: box-shadow 0.2s;
+    }
+    #bubble-chat-btn:hover { box-shadow: 0 12px 32px rgba(99,102,241,0.28); }
+
+    #bubble-chat-window {
+        position: fixed;
+        bottom: 110px;
+        right: 32px;
+        z-index: 9999;
+        width: 370px;
+        max-width: 95vw;
+        background: #fff;
+        border-radius: 18px;
+        box-shadow: 0 8px 32px rgba(99,102,241,0.18);
+        display: none;
+        flex-direction: column;
+        overflow: hidden;
+        animation: bubbleIn 0.22s;
+    }
+    @keyframes bubbleIn { from { opacity: 0; transform: translateY(30px); } to { opacity: 1; transform: translateY(0); } }
+    .bubble-chat-header {
+        background: linear-gradient(135deg, #6366F1 0%, #5B21B6 100%);
+        color: #fff;
+        padding: 14px 18px;
+        font-size: 18px;
+        font-weight: 700;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        white-space: nowrap;
+        gap: 8px;
+    }
+    .bubble-chat-title {
+        font-weight: 700;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+    }
+    .bubble-chat-close {
+        background: none;
+        border: none;
+        color: #fff;
+        font-size: 16px;
+        width: 28px;
+        height: 28px;
+        line-height: 1;
+        border-radius: 6px;
+        cursor: pointer;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        flex: 0 0 auto;
+    }
+    .bubble-chat-body {
+        padding: 16px;
+        background: #F3F4F6;
+        min-height: 120px;
+        max-height: 320px;
+        overflow-y: auto;
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+    }
+    .bubble-chat-option {
+        background: #fff;
+        border-radius: 10px;
+        padding: 12px 16px;
+        margin-bottom: 6px;
+        cursor: pointer;
+        font-size: 15px;
+        color: #4F46E5;
+        border: 1px solid #E5E7EB;
+        transition: background 0.15s;
+    }
+    .bubble-chat-option:hover {
+        background: #E0E7FF;
+    }
     </style>
 </head>
 <body>
@@ -281,7 +377,7 @@ if (session_status() === PHP_SESSION_NONE) {
             <a href="index.php">Trang chủ</a>
             <a href="booking.php">Đặt sân</a>
             <a href="t.php">Cửa hàng</a>
-            <a href="contact.php">Liên hệ</a>
+            <!-- <a href="contact.php">Liên hệ</a> -->
             <div class="user-icon" id="userIcon" style="position:relative;">
                 <i class="fas fa-user-circle"></i>
                 <?php if (isset($_SESSION['user_id'])): ?>
@@ -332,4 +428,25 @@ document.addEventListener('DOMContentLoaded', function() {
         };
     <?php endif; ?>
 });
+</script>
+
+<!-- Bubble Chat -->
+<button id="bubble-chat-btn" title="Chat hỗ trợ">
+    💬
+</button>
+<div id="bubble-chat-window">
+    <div class="bubble-chat-header">
+        <span class="bubble-chat-title">Chat Sunny Sport</span>
+        <button class="bubble-chat-close" aria-label="Đóng" onclick="document.getElementById('bubble-chat-window').style.display='none'">&times;</button>
+    </div>
+    <div class="bubble-chat-body" id="bubble-chat-body">
+        <div class="bubble-chat-option" onclick="window.location.href='booking.php'">Đặt sân cầu lông</div>
+        <div class="bubble-chat-option" onclick="window.location.href='shop.php'">Mua vợt, phụ kiện</div>
+    </div>
+</div>
+<script>
+document.getElementById('bubble-chat-btn').onclick = function() {
+    var win = document.getElementById('bubble-chat-window');
+    win.style.display = win.style.display === 'flex' ? 'none' : 'flex';
+};
 </script>

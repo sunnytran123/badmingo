@@ -91,22 +91,16 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 ?>
 
 <style>
-.alert {
-    padding: 16px;
-    border-radius: 6px;
-    margin-bottom: 16px;
-    font-size: 16px;
+/* Inputs modern focus */
+input[type="date"], select, input[type="text"], input[type="tel"] {
+    transition: box-shadow 0.15s ease, border-color 0.15s ease;
 }
-.alert-success {
-    background: #e6ffed;
-    color: #256029;
-    border: 1px solid #b7eb8f;
+input[type="date"]:focus, select:focus, input[type="text"]:focus, input[type="tel"]:focus {
+    outline: none;
+    border-color: #6366F1;
+    box-shadow: 0 0 0 3px rgba(99,102,241,0.25);
 }
-.alert-danger {
-    background: #fff1f0;
-    color: #a8071a;
-    border: 1px solid #ffa39e;
-}
+
 /* Modal popup */
 .modal-overlay {
     position: fixed;
@@ -114,7 +108,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     left: 0;
     right: 0;
     bottom: 0;
-    background: rgba(0, 0, 0, 0.45);
+    background: rgba(17, 24, 39, 0.55);
+    backdrop-filter: blur(6px);
     display: none;
     align-items: center;
     justify-content: center;
@@ -123,22 +118,26 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 .modal {
     width: calc(100% - 32px);
     max-width: 420px;
-    background: #fff;
-    border-radius: 12px;
-    box-shadow: 0 20px 50px rgba(0,0,0,0.25);
+    background: #ffffff;
+    border: 1px solid #E5E7EB;
+    border-radius: 14px;
+    box-shadow: 0 24px 60px rgba(0,0,0,0.2);
     padding: 18px 18px 16px 18px;
     animation: modalIn 0.22s ease-out;
 }
-.modal-header { display: flex; align-items: center; justify-content: center; gap: 10px; }
+.modal-header { display: flex; align-items: center; justify-content: center; gap: 10px; padding-bottom: 6px; border-bottom: 1px solid #F3F4F6; }
 .modal-title { font-size: 18px; font-weight: 700; color: #111827; text-align: center; }
-.modal-close { margin-left: auto; background: transparent; border: none; font-size: 20px; cursor: pointer; color: #6B7280; }
-.modal-body { margin-top: 6px; font-size: 14px; color: #374151; }
-.modal-actions { margin-top: 14px; display: flex; justify-content: flex-end; gap: 10px; }
-.btn { padding: 8px 12px; border-radius: 8px; font-size: 14px; cursor: pointer; border: 1px solid transparent; }
-.btn-primary { background: #4F46E5; color: #fff; }
-.btn-primary:hover { background: #4338CA; }
+.modal-icon { width: 28px; height: 28px; border-radius: 999px; display: inline-flex; align-items: center; justify-content: center; font-size: 16px; }
+.modal-body { margin-top: 10px; font-size: 14px; color: #374151; line-height: 1.6; text-align: center; }
+.modal-actions { margin-top: 16px; display: flex; justify-content: center; gap: 10px; }
+.btn { padding: 9px 14px; border-radius: 10px; font-size: 14px; cursor: pointer; border: 1px solid transparent; transition: transform 0.1s ease, box-shadow 0.15s ease, background 0.15s ease; }
+.btn-primary { background: linear-gradient(135deg, #4F46E5 0%, #5B21B6 100%); color: #fff; box-shadow: 0 8px 16px rgba(79,70,229,0.25); }
+.btn-primary:hover { transform: translateY(-1px); box-shadow: 0 10px 18px rgba(79,70,229,0.32); }
+.btn-primary:active { transform: translateY(0); }
 .btn-outline { background: #fff; color: #374151; border-color: #D1D5DB; }
 .btn-outline:hover { background: #F9FAFB; }
+.modal-success .modal-icon { background: #ECFDF5; color: #065F46; }
+.modal-error .modal-icon { background: #FEF2F2; color: #991B1B; }
 .modal-success .modal-header { color: #065F46; }
 .modal-error .modal-header { color: #991B1B; }
 @keyframes modalIn { from { opacity: 0; transform: translateY(-6px); } to { opacity: 1; transform: translateY(0); } }
@@ -151,6 +150,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         <div id="modal-overlay" class="modal-overlay" role="dialog" aria-modal="true" aria-hidden="true">
             <div id="modal" class="modal" role="document">
                 <div class="modal-header">
+                    <div id="modal-icon" class="modal-icon" aria-hidden="true">!</div>
                     <div id="modal-title" class="modal-title">Thông báo</div>
                 </div>
                 <div id="modal-body" class="modal-body"></div>
@@ -278,12 +278,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             const modal = document.getElementById('modal');
             const modalTitle = document.getElementById('modal-title');
             const modalBody = document.getElementById('modal-body');
+            const modalIcon = document.getElementById('modal-icon');
             const modalOk = document.getElementById('modal-ok');
 
             function openModal(message, type = 'info') {
                 modal.classList.remove('modal-success', 'modal-error');
-                if (type === 'success') modal.classList.add('modal-success');
-                if (type === 'error') modal.classList.add('modal-error');
+                if (type === 'success') { modal.classList.add('modal-success'); modalIcon.textContent = '✔'; }
+                else if (type === 'error') { modal.classList.add('modal-error'); modalIcon.textContent = '!'; }
+                else { modalIcon.textContent = 'i'; }
                 modalTitle.textContent = type === 'success' ? 'Thành công' : (type === 'error' ? 'Thông báo' : 'Thông báo');
                 modalBody.textContent = message;
                 overlay.style.display = 'flex';
@@ -326,7 +328,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     opt.disabled = toMinutes(opt.value) < minEndMin;
                 }
                 if (toMinutes(endSelect.value) < minEndMin) {
-                    // pick first enabled option >= min
                     for (let opt of endSelect.options) {
                         if (!opt.disabled) { endSelect.value = opt.value; break; }
                     }
@@ -365,11 +366,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 fetch(`get_booked_slots.php?date=${date}&court=${court}`)
                     .then(res => res.json())
                     .then(data => {
-                        // Enable all first
                         for (let opt of startSelect.options) opt.disabled = false;
                         for (let opt of endSelect.options) opt.disabled = false;
 
-                        // Disable booked slots
                         data.forEach(slot => {
                             for (let opt of startSelect.options) {
                                 if (opt.value >= slot.start_time && opt.value < slot.end_time) {
@@ -383,7 +382,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                             }
                         });
 
-                        // Ràng buộc hôm nay: start phải từ khung 30' kế tiếp
                         const today = new Date();
                         const todayISO = today.toISOString().slice(0,10);
                         if (date === todayISO) {
@@ -391,13 +389,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                             for (let opt of startSelect.options) {
                                 if (opt.value < minStart) opt.disabled = true;
                             }
-                            // End không được <= minStart
                             for (let opt of endSelect.options) {
                                 if (opt.value <= minStart) opt.disabled = true;
                             }
                         }
 
-                        // Áp ràng buộc end >= start + 30'
                         enforceEndMin();
                     })
                     .catch(() => {

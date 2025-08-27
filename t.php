@@ -565,7 +565,7 @@ $products = $result->fetch_all(MYSQLI_ASSOC);
 
 .cart-toggle {
     position: fixed;
-    bottom: 30px;
+    bottom: 110px; /* Đẩy lên trên bubble chat (bubble chat đang bottom: 32px) */
     right: 30px;
     background: #007bff;
     color: white;
@@ -577,7 +577,7 @@ $products = $result->fetch_all(MYSQLI_ASSOC);
     cursor: pointer;
     box-shadow: 0 4px 15px rgba(0,0,0,0.2);
     transition: all 0.3s ease;
-    z-index: 999;
+    z-index: 1001; /* Đảm bảo nổi hơn bubble chat */
     display: flex;
     align-items: center;
     justify-content: center;
@@ -857,4 +857,4 @@ document.addEventListener('DOMContentLoaded', function() {
 });
 </script>
 
-<?php include 'includes/footer.php'; ?><?php 
+<?php include 'includes/footer.php'; ?>
