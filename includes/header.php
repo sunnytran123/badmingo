@@ -42,6 +42,7 @@ if (session_status() === PHP_SESSION_NONE) {
         display: flex;
         align-items: center;
         gap: 10px;
+        white-space: nowrap; /* Ngăn không cho logo và tên shop xuống dòng */
     }
     .header-content img {
         max-width: 50px;
@@ -434,7 +435,7 @@ if (session_status() === PHP_SESSION_NONE) {
                 <?php if (isset($_SESSION['user_id'])): ?>
                     <span><?php echo htmlspecialchars($_SESSION['username']); ?></span>
                     <div id="userDropdown" class="user-dropdown" style="display:none;position:absolute;top:40px;right:0;background:#fff;box-shadow:0 2px 8px rgba(0,0,0,0.15);border-radius:8px;min-width:180px;z-index:999;">
-                        <a href="history.php" style="display:block;padding:12px 20px;color:#333;text-decoration:none;border-bottom:1px solid #eee;">Lịch sử giao dịch</a>
+                        <a href="history.php" style="display:block;padding:12px 20px;color:#333;text-decoration:none;border-bottom:1px solid #eee;white-space: nowrap;">Lịch sử giao dịch</a>
                         <a href="#" id="logoutBtn" style="display:block;padding:12px 20px;color:#dc3545;text-decoration:none;">Đăng xuất</a>
                     </div>
                 <?php endif; ?>
