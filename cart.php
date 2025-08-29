@@ -126,17 +126,21 @@ if ($action == 'update') {
 
 if ($action == 'get') {
 	if (isset($hasVariantCol) && $hasVariantCol) {
-		// Return variant-aware items with resolved price
-		$stmt = $conn->prepare("SELECT ci.product_id, ci.variant_id, ci.size, ci.color, COALESCE(pv.price, p.price) AS price, p.product_name, ci.quantity
+		// Return variant-aware items with resolved price and primary image
+		$stmt = $conn->prepare("SELECT ci.cart_item_id, ci.product_id, ci.variant_id, ci.size, ci.color,
+			COALESCE(pv.price, p.price) AS price, p.product_name, ci.quantity, pi.image_url
 			FROM cart_items ci
 			JOIN products p ON ci.product_id = p.product_id
 			LEFT JOIN product_variants pv ON ci.variant_id = pv.variant_id AND pv.product_id = p.product_id
+			LEFT JOIN product_images pi ON pi.product_id = p.product_id AND pi.is_primary = 1
 			WHERE ci.user_id=?");
 		$stmt->bind_param("i", $user_id);
 	} else {
-		$stmt = $conn->prepare("SELECT ci.product_id, NULL as variant_id, NULL as size, NULL as color, p.price, p.product_name, ci.quantity
+		$stmt = $conn->prepare("SELECT ci.cart_item_id, ci.product_id, NULL as variant_id, NULL as size, NULL as color,
+			p.price, p.product_name, ci.quantity, pi.image_url
 			FROM cart_items ci
 			JOIN products p ON ci.product_id = p.product_id
+			LEFT JOIN product_images pi ON pi.product_id = p.product_id AND pi.is_primary = 1
 			WHERE ci.user_id=?");
 		$stmt->bind_param("i", $user_id);
 	}

@@ -191,6 +191,8 @@ $products = $result->fetch_all(MYSQLI_ASSOC);
 .product-info h3 { font-size:12px; font-weight:bold; margin-bottom:2px; color:#333; min-height:24px; display:flex; align-items:center; justify-content:center; }
 .price { color:#dc3545; font-weight:bold; font-size:12px; margin-bottom:2px; }
 .stock { color:#28a745; font-size:10px; margin-bottom:2px; }
+.cart-toggle { position: fixed; bottom: 110px; right: 30px; background: #007bff; color: white; border: none; border-radius: 50%; width: 60px; height: 60px; font-size: 20px; cursor: pointer; box-shadow: 0 4px 15px rgba(0,0,0,0.2); transition: all 0.3s ease; display:flex; align-items:center; justify-content:center; }
+.cart-toggle:hover { background: #0056b3; transform: scale(1.1); }
 @media (max-width: 768px) {
 	.shop-container { flex-direction:column; }
 	.product-filter { width:100%; min-height:auto; }
@@ -198,4 +200,148 @@ $products = $result->fetch_all(MYSQLI_ASSOC);
 }
 </style>
 
-<?php include 'includes/footer.php'; ?> 
+<style>
+.cart-sidebar { position: fixed; top: 0; right: -400px; width: 400px; height: 100vh; background: #fff; box-shadow: -5px 0 15px rgba(0,0,0,0.1); transition: right 0.3s ease; z-index: 1000; display: flex; flex-direction: column; }
+.cart-sidebar.open { right: 0; }
+.cart-header { background: #007bff; color: #fff; padding: 16px 20px; display: flex; justify-content: space-between; align-items: center; }
+.cart-header h3 { margin: 0; font-size: 18px; }
+.close-cart { background: none; border: none; color: #fff; font-size: 18px; width: 28px; height: 28px; line-height: 1; cursor: pointer; display:inline-flex; align-items:center; justify-content:center; }
+ .cart-items-header { padding: 10px 20px; border-bottom: 1px solid #eee; }
+ .cart-items { flex: 1; padding: 16px 20px; overflow-y: auto; }
+ .cart-item { display: grid; grid-template-columns: 24px 60px 1fr auto; align-items: center; gap: 12px; padding: 12px 0; border-bottom: 1px solid #eee; }
+ .cart-item img { width: 60px; height: 60px; object-fit: cover; border-radius: 6px; }
+ .cart-item-name { font-weight: 600; font-size: 14px; }
+ .cart-item-meta { color: #666; font-size: 12px; margin-top: 4px; }
+ .qty-stepper { display: inline-flex; align-items: center; border: 1px solid #d1d5db; border-radius: 6px; overflow: hidden; background:#fff; }
+ .qty-btn { width: 32px; height: 32px; display:flex; align-items:center; justify-content:center; background:#ffffff; border:none; border-left: 1px solid #d1d5db; border-right: 1px solid #d1d5db; cursor:pointer; font-size:16px; line-height:1; color:#111827; }
+ .qty-btn:first-child { border-left: none; }
+ .qty-btn:last-child { border-right: none; }
+ .qty-btn:hover { background:#f2f4f7; }
+ .qty-input { width: 44px; text-align:center; border: none; outline: none; font-size:14px; color:#111827; background:#fff; }
+ .cart-footer { padding: 16px 20px; border-top: 1px solid #eee; background: #f8f9fa; }
+ .btn-checkout { width: 100%; background: #28a745; color: #fff; padding: 12px; border: none; border-radius: 8px; font-weight: 600; cursor: pointer; }
+ .btn-checkout:hover { background: #1e7e34; }
+ #cart-count { background: #dc3545; color: #fff; border-radius: 50%; width: 20px; height: 20px; font-size: 12px; display: flex; align-items: center; justify-content: center; position: absolute; top: -5px; right: -5px; }
+</style>
+
+<div id="cart-sidebar" class="cart-sidebar">
+    <div class="cart-header">
+        <h3>Giỏ hàng</h3>
+        <button onclick="closeCart()" class="close-cart">&times;</button>
+    </div>
+    <div class="cart-items-header">
+    <label class="filter-checkbox"><input type="checkbox" id="select-all"> Chọn tất cả</label>
+</div>
+<div id="cart-items" class="cart-items"></div>
+    <div class="cart-footer">
+        <div class="cart-total"><strong>Tổng cộng: <span id="cart-total">0đ</span></strong></div>
+        <button onclick="checkout()" class="btn-checkout">Thanh toán</button>
+    </div>
+</div>
+
+<button id="cart-toggle" class="cart-toggle" onclick="toggleCart()" style="z-index:10001;">
+    <i class="fas fa-shopping-cart"></i>
+    <span id="cart-count">0</span>
+</button>
+
+<script>
+function toggleCart(){
+    var el = document.getElementById('cart-sidebar');
+    el.classList.toggle('open');
+}
+function closeCart(){
+    var el = document.getElementById('cart-sidebar');
+    el.classList.remove('open');
+}
+function formatPrice(n){ try { return new Intl.NumberFormat('vi-VN').format(n); } catch(e){ return n; } }
+function recalcTotals(){
+    var total = 0;
+    document.querySelectorAll('#cart-items .cart-item').forEach(function(row){
+        var cb = row.querySelector('.ci-check');
+        if (cb && cb.checked) {
+            var price = parseFloat(row.getAttribute('data-price')||'0');
+            var qtyEl = row.querySelector('.qty-input');
+            var qty = parseInt(qtyEl && qtyEl.value ? qtyEl.value : '1');
+            total += price * qty;
+        }
+    });
+    var totalEl = document.getElementById('cart-total');
+    if (totalEl) totalEl.textContent = formatPrice(total) + 'đ';
+}
+function loadCart(){
+    fetch('cart.php', { method: 'POST', headers: { 'Content-Type':'application/x-www-form-urlencoded' }, body: 'action=get' })
+    .then(function(r){ return r.json(); })
+    .then(function(data){
+        if (!data.success) return;
+        var items = data.items || [];
+        var wrap = document.getElementById('cart-items');
+        wrap.innerHTML = '';
+        items.forEach(function(it){
+            var price = parseFloat(it.price || 0);
+            var qty = parseInt(it.quantity || 0);
+            var div = document.createElement('div');
+            div.className = 'cart-item';
+            div.setAttribute('data-price', price);
+            var meta = [];
+            if (it.color) meta.push('Màu: ' + it.color);
+            if (it.size) meta.push('Size: ' + it.size);
+            var imgSrc = it.image_url ? ('images/' + it.image_url) : 'images/sport1.webp';
+            div.innerHTML =
+                '<input type="checkbox" class="ci-check" data-id="'+ (it.cart_item_id||'') +'">' +
+                '<img src="'+ imgSrc +'" alt="">' +
+                '<div><div class="cart-item-name">' + (it.product_name || '') + '</div>' +
+                '<div class="cart-item-meta">' + meta.join(' • ') + '</div>' +
+                '<div class="qty-stepper" data-pid="'+ it.product_id +'" data-vid="'+ (it.variant_id||'') +'" data-color="'+ (it.color||'') +'" data-size="'+ (it.size||'') +'">' +
+                    '<button class="qty-btn" data-delta="-1">-</button>' +
+                    '<input class="qty-input" type="text" value="'+ qty +'" readonly>' +
+                    '<button class="qty-btn" data-delta="1">+</button>' +
+                '</div></div>' +
+                '<div class="cart-item-price">' + formatPrice(price) + 'đ</div>';
+            wrap.appendChild(div);
+        });
+        var cc = document.getElementById('cart-count'); if (cc) cc.textContent = items.length;
+        recalcTotals();
+    }).catch(function(){});
+}
+function checkout(){ window.location.href = 'thanhtoan.php'; }
+
+document.addEventListener('DOMContentLoaded', function(){
+    loadCart();
+    var selectAll = document.getElementById('select-all');
+    if (selectAll) {
+        selectAll.addEventListener('change', function(){
+            document.querySelectorAll('#cart-items .ci-check').forEach(function(cb){ cb.checked = selectAll.checked; });
+            recalcTotals();
+        });
+    }
+    document.getElementById('cart-items').addEventListener('click', function(e){
+        var btn = e.target.closest('.qty-btn');
+        if (btn) {
+            var stepper = btn.closest('.qty-stepper');
+            var delta = parseInt(btn.getAttribute('data-delta')) || 0;
+            var input = stepper.querySelector('.qty-input');
+            var qty = Math.max(1, (parseInt(input.value)||1) + delta);
+            input.value = qty;
+            var pid = parseInt(stepper.getAttribute('data-pid'));
+            var vid = stepper.getAttribute('data-vid');
+            var color = stepper.getAttribute('data-color');
+            var size = stepper.getAttribute('data-size');
+            var body = new URLSearchParams();
+            body.append('action','update');
+            body.append('product_id', pid);
+            body.append('quantity', qty);
+            if (vid) body.append('variant_id', vid);
+            if (color) body.append('color', color);
+            if (size) body.append('size', size);
+            fetch('cart.php', { method:'POST', headers:{'Content-Type':'application/x-www-form-urlencoded'}, body: body.toString() })
+              .then(function(r){ return r.json(); })
+              .then(function(){ loadCart(); });
+            return;
+        }
+        var cb = e.target.closest('.ci-check');
+        if (cb) { recalcTotals(); return; }
+    });
+});
+</script>
+
+<?php include 'includes/footer.php'; ?>  
