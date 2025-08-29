@@ -287,7 +287,7 @@ function loadCart(){
             if (it.size) meta.push('Size: ' + it.size);
             var imgSrc = it.image_url ? ('images/' + it.image_url) : 'images/sport1.webp';
             div.innerHTML =
-                '<input type="checkbox" class="ci-check" data-id="'+ (it.cart_item_id||'') +'">' +
+                '<input type="checkbox" class="ci-check" data-id="'+ (it.cart_item_id||'') +'" data-pid="'+ it.product_id +'">' +
                 '<img src="'+ imgSrc +'" alt="">' +
                 '<div><div class="cart-item-name">' + (it.product_name || '') + '</div>' +
                 '<div class="cart-item-meta">' + meta.join(' • ') + '</div>' +
@@ -303,7 +303,15 @@ function loadCart(){
         recalcTotals();
     }).catch(function(){});
 }
-function checkout(){ window.location.href = 'thanhtoan.php'; }
+function checkout(){
+    var selected = Array.from(document.querySelectorAll('#cart-items .ci-check:checked'))
+                  .map(function(cb){ return parseInt(cb.getAttribute('data-pid')||'0'); })
+                  .filter(function(v){ return v>0; });
+    if (selected.length === 0) { alert('Vui lòng chọn ít nhất một sản phẩm để thanh toán!'); return; }
+    var params = new URLSearchParams();
+    params.set('selected_ids', selected.join(','));
+    window.location.href = 'thanhtoan.php?' + params.toString();
+}
 
 document.addEventListener('DOMContentLoaded', function(){
     loadCart();
