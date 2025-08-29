@@ -7,6 +7,7 @@ if (session_status() === PHP_SESSION_NONE) {
 <html lang="vi">
 <!-- Font Awesome 5 -->
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -428,7 +429,7 @@ if (session_status() === PHP_SESSION_NONE) {
         <div class="sidebar-menu">
             <a href="index.php">Trang chủ</a>
             <a href="booking.php">Đặt sân</a>
-            <a href="t.php">Cửa hàng</a>
+            <a href="shop_list.php">Cửa hàng</a>
             <!-- <a href="contact.php">Liên hệ</a> -->
             <div class="user-icon" id="userIcon" style="position:relative;">
                 <i class="fas fa-user-circle"></i>
@@ -574,3 +575,4 @@ document.addEventListener('DOMContentLoaded', function() {
     });
 })();
 </script>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>

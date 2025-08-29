@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: 127.0.0.1
--- Generation Time: Aug 27, 2025 at 09:09 AM
+-- Generation Time: Aug 29, 2025 at 12:18 PM
 -- Server version: 10.4.32-MariaDB
 -- PHP Version: 8.1.25
 
@@ -49,7 +49,11 @@ CREATE TABLE `bookings` (
 
 INSERT INTO `bookings` (`booking_id`, `user_id`, `court_id`, `booking_date`, `start_time`, `end_time`, `payment_method`, `total_price`, `discount`, `status`, `created_at`, `fullname`, `phone`) VALUES
 (11, 11, 1, '2025-08-26', '18:00:00', '19:00:00', 'ondelivery', 150000.00, 0.00, 'pending', '2025-08-26 10:38:09', NULL, NULL),
-(12, 11, 1, '2025-08-26', '22:00:00', '22:30:00', 'prepaid', 67500.00, 10.00, 'pending', '2025-08-26 14:57:49', NULL, NULL);
+(12, 11, 1, '2025-08-26', '22:00:00', '22:30:00', 'prepaid', 67500.00, 10.00, 'pending', '2025-08-26 14:57:49', NULL, NULL),
+(13, 11, 4, '2025-08-28', '14:00:00', '17:00:00', 'prepaid', 405000.00, 10.00, 'pending', '2025-08-27 07:14:42', 'Nguyễn Văn P', '0914928282'),
+(14, 11, 3, '2025-08-30', '06:00:00', '06:30:00', 'ondelivery', 75000.00, 0.00, 'pending', '2025-08-27 07:38:44', 'Nguyễn Văn P', '0914928282'),
+(15, 11, 1, '2025-08-27', '15:00:00', '15:30:00', 'prepaid', 67500.00, 10.00, 'pending', '2025-08-27 07:45:11', 'Nguyễn Văn P', '0914928282'),
+(16, 11, 1, '2025-08-29', '06:00:00', '06:30:00', 'ondelivery', 75000.00, 0.00, 'pending', '2025-08-27 07:59:15', 'Minh Hào', '0927271827');
 
 -- --------------------------------------------------------
 
@@ -349,7 +353,8 @@ INSERT INTO `orders` (`order_id`, `user_id`, `recipient_name`, `shipping_address
 (20, 11, 'Trần Phương Thùy', '2818 hjo gom, Phường Ngọc Châu, Thành phố Hải Dương, Tỉnh Hải Dương', '0914090876', '1111', 1500000.00, 'pending', 'cod', '2025-08-23 15:18:40'),
 (21, 11, 'Trần Phương Thùy', '111 dsfa áaa, Phường Quang Trung, Thành phố Hà Giang, Tỉnh Hà Giang', '0914090876', '', 2200000.00, 'pending', 'cod', '2025-08-23 15:23:27'),
 (22, 11, 'Trần Phương Thùy', '12345 nguyen van thiet, Phường Tân Tiến, Thành phố Bắc Giang, Tỉnh Bắc Giang', '0914090876', '', 300000.00, 'pending', 'cod', '2025-08-23 15:29:51'),
-(23, 11, 'Trần Phương Thùy', 'tran van on, Xã Vĩnh Phương, Thành phố Nha Trang, Tỉnh Khánh Hòa', '0914090876', '', 800000.00, 'pending', 'card', '2025-08-23 15:31:25');
+(23, 11, 'Trần Phương Thùy', 'tran van on, Xã Vĩnh Phương, Thành phố Nha Trang, Tỉnh Khánh Hòa', '0914090876', '', 800000.00, 'pending', 'card', '2025-08-23 15:31:25'),
+(24, 11, 'Phan Minh Thắng', 'đối diện cà phê lê vy 2, Phường 9, Thành phố Vĩnh Long, Tỉnh Vĩnh Long', '0834029049', '', 700000.00, 'pending', 'cod', '2025-08-29 09:08:26');
 
 -- --------------------------------------------------------
 
@@ -362,27 +367,31 @@ CREATE TABLE `order_items` (
   `order_id` int(11) DEFAULT NULL COMMENT 'Mã đơn hàng',
   `product_id` int(11) DEFAULT NULL COMMENT 'Mã sản phẩm',
   `quantity` int(11) NOT NULL COMMENT 'Số lượng',
-  `price` decimal(10,2) NOT NULL COMMENT 'Giá mỗi sản phẩm (VNĐ)'
+  `price` decimal(10,2) NOT NULL COMMENT 'Giá mỗi sản phẩm (VNĐ)',
+  `variant_id` int(11) DEFAULT NULL,
+  `size` varchar(50) DEFAULT NULL,
+  `color` varchar(50) DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='Bảng lưu chi tiết sản phẩm trong đơn hàng';
 
 --
 -- Dumping data for table `order_items`
 --
 
-INSERT INTO `order_items` (`order_item_id`, `order_id`, `product_id`, `quantity`, `price`) VALUES
-(12, 12, 1, 1, 2500000.00),
-(13, 12, 2, 3, 1500000.00),
-(14, 13, 1, 1, 2500000.00),
-(15, 14, 1, 1, 2500000.00),
-(16, 15, 1, 1, 2500000.00),
-(17, 16, 2, 1, 1500000.00),
-(18, 17, 2, 1, 1500000.00),
-(19, 18, 5, 1, 100000.00),
-(20, 19, 2, 1, 1500000.00),
-(21, 20, 2, 1, 1500000.00),
-(22, 21, 6, 1, 2200000.00),
-(23, 22, 3, 1, 300000.00),
-(24, 23, 9, 1, 800000.00);
+INSERT INTO `order_items` (`order_item_id`, `order_id`, `product_id`, `quantity`, `price`, `variant_id`, `size`, `color`) VALUES
+(12, 12, 1, 1, 2500000.00, NULL, NULL, NULL),
+(13, 12, 2, 3, 1500000.00, NULL, NULL, NULL),
+(14, 13, 1, 1, 2500000.00, NULL, NULL, NULL),
+(15, 14, 1, 1, 2500000.00, NULL, NULL, NULL),
+(16, 15, 1, 1, 2500000.00, NULL, NULL, NULL),
+(17, 16, 2, 1, 1500000.00, NULL, NULL, NULL),
+(18, 17, 2, 1, 1500000.00, NULL, NULL, NULL),
+(19, 18, 5, 1, 100000.00, NULL, NULL, NULL),
+(20, 19, 2, 1, 1500000.00, NULL, NULL, NULL),
+(21, 20, 2, 1, 1500000.00, NULL, NULL, NULL),
+(22, 21, 6, 1, 2200000.00, NULL, NULL, NULL),
+(23, 22, 3, 1, 300000.00, NULL, NULL, NULL),
+(24, 23, 9, 1, 800000.00, NULL, NULL, NULL),
+(25, 24, 8, 2, 350000.00, NULL, NULL, NULL);
 
 -- --------------------------------------------------------
 
@@ -396,7 +405,7 @@ CREATE TABLE `products` (
   `category_id` int(11) DEFAULT NULL COMMENT 'Mã danh mục sản phẩm',
   `description` text DEFAULT NULL COMMENT 'Mô tả sản phẩm',
   `price` decimal(10,2) NOT NULL COMMENT 'Giá sản phẩm (VNĐ)',
-  `stock` int(11) NOT NULL DEFAULT 0 COMMENT 'Số lượng tồn kho',
+  `stock` int(11) NOT NULL DEFAULT 0 COMMENT 'Số lượng tồn kho tổng (tính từ variants nếu có)',
   `created_at` timestamp NOT NULL DEFAULT current_timestamp() COMMENT 'Thời gian tạo'
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='Bảng lưu thông tin sản phẩm';
 
@@ -470,7 +479,49 @@ INSERT INTO `product_images` (`image_id`, `product_id`, `image_url`, `alt_text`,
 (7, 7, 'asics-skyelite.jpg', 'Giày Asics Sky Elite FF', 1, '2025-08-16 01:30:00'),
 (8, 8, 'yonex-shorts.jpg', 'Quần cầu lông Yonex', 1, '2025-08-16 01:35:00'),
 (9, 9, 'lining-bag.jpg', 'Túi đựng vợt Lining 6 cây', 1, '2025-08-16 01:40:00'),
-(10, 10, 'yonex-bg65.jpg', 'Dây đan lưới Yonex BG65', 1, '2025-08-16 01:45:00');
+(10, 10, 'yonex-bg65.jpg', 'Dây đan lưới Yonex BG65', 1, '2025-08-16 01:45:00'),
+(11, 1, 'YonexAstrox99Pro.jpg', 'Vợt Yonex Astrox 99 Pro', 0, '2025-08-15 18:00:00'),
+(12, 1, 'Astrox_99_Pro_Cherry', 'Vợt Yonex Astrox 99 Pro', 0, '2025-08-15 18:00:00'),
+(13, 2, 'lining-attack-side.jpg', 'Giày Lining Attack 2025', 0, '2025-08-15 18:05:00'),
+(14, 2, 'lining-attack.webp', 'Giày Lining Attack 2025', 0, '2025-08-15 18:05:00'),
+(15, 4, 'lining-shirt-front.jpg', 'Áo thi đấu Lining Pro', 0, '2025-08-15 18:15:00'),
+(16, 4, 'lining-shirt-back.jpg', 'Áo thi đấu Lining Pro', 0, '2025-08-15 18:15:00'),
+(17, 6, 'yonex-nanoflare-side.jpg', 'Vợt Yonex Nanoflare 800', 0, '2025-08-15 18:25:00'),
+(18, 7, 'asics-skyelite-side.webp', 'Giày Asics Sky Elite FF', 0, '2025-08-15 18:30:00');
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `product_variants`
+--
+
+CREATE TABLE `product_variants` (
+  `variant_id` int(11) NOT NULL COMMENT 'Mã biến thể',
+  `product_id` int(11) DEFAULT NULL COMMENT 'Mã sản phẩm',
+  `size` varchar(50) DEFAULT NULL COMMENT 'Kích thước (e.g., S, M, L, 39, 40)',
+  `color` varchar(50) DEFAULT NULL COMMENT 'Màu sắc (e.g., Red, Blue, Black)',
+  `stock` int(11) NOT NULL DEFAULT 0 COMMENT 'Số lượng tồn kho cho biến thể',
+  `price` decimal(10,2) DEFAULT NULL COMMENT 'Giá cho biến thể (nếu khác giá gốc)',
+  `created_at` timestamp NOT NULL DEFAULT current_timestamp() COMMENT 'Thời gian tạo'
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='Bảng lưu biến thể sản phẩm (kích thước, màu sắc)';
+
+--
+-- Dumping data for table `product_variants`
+--
+
+INSERT INTO `product_variants` (`variant_id`, `product_id`, `size`, `color`, `stock`, `price`, `created_at`) VALUES
+(1, 2, '39', 'Black', 5, 1500000.00, '2025-08-29 07:53:02'),
+(2, 2, '40', 'Black', 10, 1500000.00, '2025-08-29 07:53:02'),
+(3, 2, '41', 'Red', 5, 1500000.00, '2025-08-29 07:53:02'),
+(4, 4, 'M', 'Blue', 20, 450000.00, '2025-08-29 07:53:02'),
+(5, 4, 'L', 'Blue', 15, 450000.00, '2025-08-29 07:53:02'),
+(6, 4, 'XL', 'White', 15, 450000.00, '2025-08-29 07:53:02'),
+(7, 7, '39', 'White', 5, 1800000.00, '2025-08-29 07:53:02'),
+(8, 7, '40', 'White', 5, 1800000.00, '2025-08-29 07:53:02'),
+(9, 7, '41', 'Black', 5, 1800000.00, '2025-08-29 07:53:02'),
+(10, 8, 'M', 'Black', 20, 350000.00, '2025-08-29 07:53:02'),
+(11, 8, 'L', 'Black', 10, 350000.00, '2025-08-29 07:53:02'),
+(12, 8, 'XL', 'Grey', 10, 350000.00, '2025-08-29 07:53:02');
 
 -- --------------------------------------------------------
 
@@ -683,6 +734,13 @@ ALTER TABLE `product_images`
   ADD KEY `product_id` (`product_id`);
 
 --
+-- Indexes for table `product_variants`
+--
+ALTER TABLE `product_variants`
+  ADD PRIMARY KEY (`variant_id`),
+  ADD KEY `product_id` (`product_id`);
+
+--
 -- Indexes for table `settings`
 --
 ALTER TABLE `settings`
@@ -714,7 +772,7 @@ ALTER TABLE `users`
 -- AUTO_INCREMENT for table `bookings`
 --
 ALTER TABLE `bookings`
-  MODIFY `booking_id` int(11) NOT NULL AUTO_INCREMENT COMMENT 'Mã đặt sân', AUTO_INCREMENT=13;
+  MODIFY `booking_id` int(11) NOT NULL AUTO_INCREMENT COMMENT 'Mã đặt sân', AUTO_INCREMENT=17;
 
 --
 -- AUTO_INCREMENT for table `cart_items`
@@ -780,13 +838,13 @@ ALTER TABLE `notifications`
 -- AUTO_INCREMENT for table `orders`
 --
 ALTER TABLE `orders`
-  MODIFY `order_id` int(11) NOT NULL AUTO_INCREMENT COMMENT 'Mã đơn hàng', AUTO_INCREMENT=24;
+  MODIFY `order_id` int(11) NOT NULL AUTO_INCREMENT COMMENT 'Mã đơn hàng', AUTO_INCREMENT=25;
 
 --
 -- AUTO_INCREMENT for table `order_items`
 --
 ALTER TABLE `order_items`
-  MODIFY `order_item_id` int(11) NOT NULL AUTO_INCREMENT COMMENT 'Mã chi tiết đơn hàng', AUTO_INCREMENT=25;
+  MODIFY `order_item_id` int(11) NOT NULL AUTO_INCREMENT COMMENT 'Mã chi tiết đơn hàng', AUTO_INCREMENT=26;
 
 --
 -- AUTO_INCREMENT for table `products`
@@ -804,7 +862,13 @@ ALTER TABLE `product_categories`
 -- AUTO_INCREMENT for table `product_images`
 --
 ALTER TABLE `product_images`
-  MODIFY `image_id` int(11) NOT NULL AUTO_INCREMENT COMMENT 'Mã hình ảnh', AUTO_INCREMENT=11;
+  MODIFY `image_id` int(11) NOT NULL AUTO_INCREMENT COMMENT 'Mã hình ảnh', AUTO_INCREMENT=19;
+
+--
+-- AUTO_INCREMENT for table `product_variants`
+--
+ALTER TABLE `product_variants`
+  MODIFY `variant_id` int(11) NOT NULL AUTO_INCREMENT COMMENT 'Mã biến thể', AUTO_INCREMENT=13;
 
 --
 -- AUTO_INCREMENT for table `settings`
@@ -898,6 +962,12 @@ ALTER TABLE `products`
 --
 ALTER TABLE `product_images`
   ADD CONSTRAINT `product_images_ibfk_1` FOREIGN KEY (`product_id`) REFERENCES `products` (`product_id`) ON DELETE CASCADE;
+
+--
+-- Constraints for table `product_variants`
+--
+ALTER TABLE `product_variants`
+  ADD CONSTRAINT `product_variants_ibfk_1` FOREIGN KEY (`product_id`) REFERENCES `products` (`product_id`) ON DELETE CASCADE;
 
 --
 -- Constraints for table `transactions`

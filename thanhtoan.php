@@ -11,13 +11,14 @@ if ($user_id == 0) {
 
 // Xử lý success: Redirect ngay về t.php
 if (isset($_GET['success'])) {
-    header("Location: t.php");
+    header("Location: shop_list.php");
     exit;
 }
 
 // Kiểm tra nếu là mua ngay
 $product_id = isset($_GET['product_id']) ? intval($_GET['product_id']) : 0;
 $quantity = isset($_GET['quantity']) ? intval($_GET['quantity']) : 1;
+$variant_id = isset($_GET['variant_id']) ? intval($_GET['variant_id']) : 0;
 
 // Kiểm tra nếu là thanh toán từ giỏ hàng
 $selected_ids = isset($_GET['selected_ids']) ? explode(',', $_GET['selected_ids']) : [];
@@ -28,27 +29,71 @@ $cart = [];
 $total = 0;
 
 if ($product_id > 0) {
-    // Xử lý "Mua ngay": Lấy trực tiếp từ products, không dùng cart_items
-    $stmt = $conn->prepare("SELECT product_id, product_name, price, stock FROM products WHERE product_id = ?");
-    if (!$stmt) die("Lỗi chuẩn bị truy vấn sản phẩm: " . $conn->error);
-    $stmt->bind_param("i", $product_id);
-    $stmt->execute();
-    $result = $stmt->get_result();
-    $item = $result->fetch_assoc();
-    if ($item && $item['stock'] >= $quantity) {
+    // Xử lý "Mua ngay": ưu tiên biến thể nếu có
+    // Kiểm tra sản phẩm có biến thể không
+    $hasVariants = false;
+    $checkStmt = $conn->prepare("SELECT COUNT(*) AS cnt FROM product_variants WHERE product_id = ?");
+    if ($checkStmt) {
+        $checkStmt->bind_param("i", $product_id);
+        $checkStmt->execute();
+        $checkRes = $checkStmt->get_result();
+        $hasVariants = ($checkRes && ($row = $checkRes->fetch_assoc()) && intval($row['cnt']) > 0);
+    }
+
+    if ($hasVariants) {
+        if ($variant_id <= 0) {
+            die("Vui lòng chọn màu và size trước khi thanh toán!");
+        }
+        // Lấy biến thể
+        $vStmt = $conn->prepare("SELECT variant_id, size, color, stock, COALESCE(price, p.price) AS price, pv.product_id, p.product_name
+            FROM product_variants pv
+            JOIN products p ON pv.product_id = p.product_id
+            WHERE pv.product_id = ? AND pv.variant_id = ?");
+        if (!$vStmt) die("Lỗi chuẩn bị truy vấn biến thể: " . $conn->error);
+        $vStmt->bind_param("ii", $product_id, $variant_id);
+        $vStmt->execute();
+        $vRes = $vStmt->get_result();
+        $variant = $vRes->fetch_assoc();
+        if (!$variant) {
+            die("Biến thể không tồn tại!");
+        }
+        if (intval($variant['stock']) < $quantity) {
+            die("Biến thể không đủ hàng!");
+        }
         $cart[] = [
-            'product_id' => $item['product_id'],
-            'product_name' => $item['product_name'],
-            'price' => $item['price'],
+            'product_id' => $variant['product_id'],
+            'product_name' => $variant['product_name'],
+            'price' => floatval($variant['price']),
             'quantity' => $quantity,
-            'stock' => $item['stock']
+            'stock' => intval($variant['stock']),
+            'variant_id' => intval($variant['variant_id']),
+            'size' => $variant['size'],
+            'color' => $variant['color']
         ];
-        $total = $item['price'] * $quantity;
+        $total = floatval($variant['price']) * $quantity;
     } else {
-        die("Sản phẩm không đủ hàng hoặc không tồn tại!");
+        // Không có biến thể: lấy trực tiếp từ products
+        $stmt = $conn->prepare("SELECT product_id, product_name, price, stock FROM products WHERE product_id = ?");
+        if (!$stmt) die("Lỗi chuẩn bị truy vấn sản phẩm: " . $conn->error);
+        $stmt->bind_param("i", $product_id);
+        $stmt->execute();
+        $result = $stmt->get_result();
+        $item = $result->fetch_assoc();
+        if ($item && $item['stock'] >= $quantity) {
+            $cart[] = [
+                'product_id' => $item['product_id'],
+                'product_name' => $item['product_name'],
+                'price' => $item['price'],
+                'quantity' => $quantity,
+                'stock' => $item['stock']
+            ];
+            $total = $item['price'] * $quantity;
+        } else {
+            die("Sản phẩm không đủ hàng hoặc không tồn tại!");
+        }
     }
 } elseif (!empty($selected_ids)) {
-    // Xử lý giỏ hàng
+    // Xử lý giỏ hàng (hiện tại chưa hỗ trợ lưu/ép buộc biến thể từ giỏ)
     $placeholders = implode(',', array_fill(0, count($selected_ids), '?'));
     $stmt = $conn->prepare("SELECT ci.product_id, p.product_name, p.price, ci.quantity, p.stock
         FROM cart_items ci
@@ -119,11 +164,40 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $stmt->execute();
             $order_id = $conn->insert_id;
 
+            // Kiểm tra cột mở rộng cho order_items
+            $hasVariantCol = false; $hasSizeCol = false; $hasColorCol = false;
+            if ($res = $conn->query("SHOW COLUMNS FROM order_items LIKE 'variant_id'")) { $hasVariantCol = $res->num_rows > 0; }
+            if ($res = $conn->query("SHOW COLUMNS FROM order_items LIKE 'size'")) { $hasSizeCol = $res->num_rows > 0; }
+            if ($res = $conn->query("SHOW COLUMNS FROM order_items LIKE 'color'")) { $hasColorCol = $res->num_rows > 0; }
+
             foreach ($cart as $item) {
-                $stmt = $conn->prepare("INSERT INTO order_items (order_id, product_id, quantity, price) VALUES (?, ?, ?, ?)");
-                if (!$stmt) die("Lỗi chuẩn bị truy vấn chi tiết đơn hàng: " . $conn->error);
-                $stmt->bind_param("iiid", $order_id, $item['product_id'], $item['quantity'], $item['price']);
-                $stmt->execute();
+                if ($hasVariantCol || $hasSizeCol || $hasColorCol) {
+                    // Cố gắng chèn với các cột mở rộng nếu tồn tại
+                    $columns = "order_id, product_id, quantity, price";
+                    $placeholders = "?, ?, ?, ?";
+                    $types = "iiid";
+                    $values = [$order_id, intval($item['product_id']), intval($item['quantity']), floatval($item['price'])];
+                    if ($hasVariantCol) { $columns = "order_id, product_id, variant_id, quantity, price"; $placeholders = "?, ?, ?, ?, ?"; $types = "iiiid"; array_splice($values, 2, 0, [intval($item['variant_id'] ?? 0)]); }
+                    // size/color không ảnh hưởng bind khi không tồn tại; nếu muốn lưu, cần cột tồn tại
+                    if ($hasSizeCol && $hasColorCol && $hasVariantCol) {
+                        // order_id, product_id, variant_id, size, color, quantity, price
+                        $columns = "order_id, product_id, variant_id, size, color, quantity, price";
+                        $placeholders = "?, ?, ?, ?, ?, ?, ?";
+                        $types = "iiissid";
+                        $values = [$order_id, intval($item['product_id']), intval($item['variant_id'] ?? 0), strval($item['size'] ?? ''), strval($item['color'] ?? ''), intval($item['quantity']), floatval($item['price'])];
+                    }
+                    $sql = "INSERT INTO order_items ($columns) VALUES ($placeholders)";
+                    $stmt = $conn->prepare($sql);
+                    if (!$stmt) die("Lỗi chuẩn bị chi tiết đơn hàng (mở rộng): " . $conn->error);
+                    $stmt->bind_param($types, ...$values);
+                    $stmt->execute();
+                } else {
+                    // Schema cũ
+                    $stmt = $conn->prepare("INSERT INTO order_items (order_id, product_id, quantity, price) VALUES (?, ?, ?, ?)");
+                    if (!$stmt) die("Lỗi chuẩn bị truy vấn chi tiết đơn hàng: " . $conn->error);
+                    $stmt->bind_param("iiid", $order_id, $item['product_id'], $item['quantity'], $item['price']);
+                    $stmt->execute();
+                }
             }
 
             // Xóa giỏ hàng chỉ nếu thanh toán từ giỏ
@@ -363,17 +437,6 @@ include 'includes/header.php';
             margin-bottom: 15px;
             font-weight: bold;
         }
-        .payment-method-summary {
-            margin-top: 20px;
-            padding-top: 20px;
-            border-top: 2px solid #e3e7ed;
-        }
-        .payment-method-summary h3 {
-            font-size: 18px;
-            color: #007bff;
-            margin-bottom: 15px;
-            font-weight: bold;
-        }
         .payment-method-summary .payment-options {
             display: flex;
             flex-direction: row;
@@ -451,6 +514,9 @@ include 'includes/header.php';
                     <img src="<?php echo $imgSrc; ?>" alt="<?php echo htmlspecialchars($item['product_name']); ?>">
                     <div class="cart-item-info">
                         <div class="cart-item-name"><?php echo htmlspecialchars($item['product_name']); ?></div>
+                        <?php if (!empty($item['color']) || !empty($item['size'])): ?>
+                        <div class="cart-item-attr">Màu: <?php echo htmlspecialchars($item['color'] ?? '-'); ?> | Size: <?php echo htmlspecialchars($item['size'] ?? '-'); ?></div>
+                        <?php endif; ?>
                         <div class="cart-item-attr">Số lượng: <?php echo $item['quantity']; ?></div>
                         <div class="cart-item-attr">Đơn giá: <?php echo number_format($item['price'], 0, ',', '.'); ?> VNĐ</div>
                     </div>
