@@ -29,7 +29,7 @@ if ($filter_type === 'booking') {
     $totalPages = ceil($totalTransactions / $limit);
 
     // List
-    $sql = "SELECT booking_id AS ref_id, NULL AS order_id, booking_date AS created_at, total_price AS amount, payment_method, status, CONCAT('BOOK-', booking_id) AS code
+    $sql = "SELECT booking_id AS ref_id, NULL AS order_id, booking_date AS created_at, start_time, end_time, total_price AS amount, payment_method, status, CONCAT('BOOK-', booking_id) AS code
             FROM bookings
             WHERE user_id = ?
             ORDER BY created_at DESC, booking_id DESC
@@ -44,9 +44,12 @@ if ($filter_type === 'booking') {
             'created_at' => $r['created_at'],
             'booking_id' => $r['ref_id'],
             'order_id' => null,
+            'start_time' => $r['start_time'],
+            'end_time' => $r['end_time'],
             'amount' => $r['amount'],
             'payment_method' => $r['payment_method'],
-            'payment_status' => $r['status'],
+            'payment_status' => $r['payment_method'] === 'card' ? $r['status'] : '',
+            'status' => $r['status'],
             'transaction_code' => $r['code']
         ];
     }
@@ -99,12 +102,12 @@ if ($filter_type === 'booking') {
     $totalPages = ceil($totalTransactions / $limit);
 
     // List via UNION ALL inside subquery for ORDER BY + LIMIT
-    $sql = "SELECT created_at, booking_id, order_id, amount, payment_method, status, code FROM (
-                SELECT b.created_at AS created_at, b.booking_id AS booking_id, NULL AS order_id, b.total_price AS amount, b.payment_method AS payment_method, b.status AS status, CONCAT('BOOK-', b.booking_id) AS code
+    $sql = "SELECT created_at, booking_id, order_id, start_time, end_time, amount, payment_method, status, code FROM (
+                SELECT b.booking_date AS created_at, b.booking_id AS booking_id, NULL AS order_id, b.start_time, b.end_time, b.total_price AS amount, b.payment_method AS payment_method, b.status AS status, CONCAT('BOOK-', b.booking_id) AS code
                 FROM bookings b
                 WHERE b.user_id = ?
                 UNION ALL
-                SELECT o.created_at AS created_at, NULL AS booking_id, o.order_id AS order_id, o.total_amount AS amount, o.payment_method AS payment_method, o.status AS status, CONCAT('ORD-', o.order_id) AS code
+                SELECT o.created_at AS created_at, NULL AS booking_id, o.order_id AS order_id, NULL AS start_time, NULL AS end_time, o.total_amount AS amount, o.payment_method AS payment_method, o.status AS status, CONCAT('ORD-', o.order_id) AS code
                 FROM orders o
                 WHERE o.user_id = ?
             ) x
@@ -150,24 +153,50 @@ if ($filter_type === 'booking') {
             <table style="width:100%; border-collapse:collapse;">
                 <thead>
                     <tr style="background:#f8f9fa; border-bottom:2px solid #eee;">
-                        <th style="padding:12px; text-align:left;">Ngày</th>
-                        <th style="padding:12px; text-align:left;">Loại</th>
-                        <th style="padding:12px; text-align:left;">Số tiền</th>
-                        <th style="padding:12px; text-align:left;">Phương thức</th>
-                        <th style="padding:12px; text-align:left;">Trạng thái</th>
-                        <th style="padding:12px; text-align:left;">Mã</th>
+                        <th style="padding:12px;">Ngày</th>
+                        <th style="padding:12px;">Loại</th>
+                        <th style="padding:12px;">Giờ</th>
+                        <th style="padding:12px;">Số tiền</th>
+                        <th style="padding:12px;">Phương thức</th>
+                        <th style="padding:12px;">Trạng thái</th>
+                        <th style="padding:12px;">Mã</th>
                     </tr>
                 </thead>
                 <tbody>
                     <?php foreach($transactions as $trans): ?>
                         <tr style="border-bottom:1px solid #eee;">
-                            <td style="padding:12px;"><?php echo date('d/m/Y H:i', strtotime($trans['created_at'])); ?></td>
+                            <td style="padding:12px;"><?php echo date('d/m/Y', strtotime($trans['created_at'])); ?></td>
                             <td style="padding:12px;"><?php echo !empty($trans['booking_id']) ? 'Đặt sân' : (!empty($trans['order_id']) ? 'Mua hàng' : 'Khác'); ?></td>
+                            <td style="padding:12px; color:#666;"><?php
+    if (!empty($trans['booking_id'])) {
+        echo (!empty($trans['start_time']) || !empty($trans['end_time'])) ? (substr($trans['start_time'],0,5) . ' - ' . substr($trans['end_time'],0,5)) : '-';
+    } elseif (!empty($trans['order_id'])) {
+        echo date('H:i', strtotime($trans['created_at']));
+    } else {
+        echo '-';
+    }
+?></td>
                             <td style="padding:12px; color:#dc3545; font-weight:bold;"><?php echo number_format($trans['amount'], 0, ',', '.') . 'đ'; ?></td>
-                            <td style="padding:12px;"><?php echo ucfirst($trans['payment_method']); ?></td>
-                            <td style="padding:12px; color:<?php echo ($trans['payment_status'] ?? $trans['status']) == 'completed' ? '#28a745' : (($trans['payment_status'] ?? $trans['status']) == 'pending' ? '#ffc107' : '#dc3545'); ?>;">
-                                <?php echo ucfirst($trans['payment_status'] ?? $trans['status']); ?>
-                            </td>
+                            <td style="padding:12px;"><?php echo ($trans['payment_method']==='prepaid'?'Prepaid':($trans['payment_method']==='ondelivery'?'Ondelivery':ucfirst($trans['payment_method']))); ?></td>
+                            <td style="padding:12px; color:<?php
+                                $isBooking = !empty($trans['booking_id']);
+                                $pm = strtolower($trans['payment_method']);
+                                $st = strtolower($trans['payment_status'] ?? $trans['status']);
+                                if ($isBooking) {
+                                    if ($pm === 'prepaid') {
+                                        echo ($st === 'pending' ? '#ffc107' : ($st === 'completed' ? '#28a745' : '#dc3545'));
+                                    } else { echo '#28a745'; }
+                                } else {
+                                    echo ($st === 'completed' ? '#28a745' : ($st === 'pending' ? '#ffc107' : '#dc3545'));
+                                }
+                            ?>;"><?php
+                                if ($isBooking) {
+                                    if ($pm === 'prepaid') { echo ucfirst($st ?: 'pending'); }
+                                    else { echo 'Completed'; }
+                                } else {
+                                    echo ucfirst($st);
+                                }
+                            ?></td>
                             <td style="padding:12px;"><?php echo $trans['transaction_code'] ?? $trans['code'] ?? ''; ?></td>
                         </tr>
                     <?php endforeach; ?>
@@ -178,16 +207,15 @@ if ($filter_type === 'booking') {
 </div>
 
 <!-- Phân trang -->
-<div class="pagination" style="text-align:center; margin-bottom:40px; display:flex; justify-content:center; align-items:center;">
-    <?php if ($totalPages > 1): ?>
-        <?php for ($i = 1; $i <= $totalPages; $i++): ?>
-            <a href="?filter_type=<?php echo $filter_type; ?>&page=<?php echo $i; ?>"
-               style="display:inline-block;padding:8px 16px;margin:0 2px;border-radius:5px;
-               background:<?php echo $i==$page?'#007bff':'#f8f9fa'; ?>;color:<?php echo $i==$page?'#fff':'#333'; ?>;text-decoration:none;">
-                <?php echo $i; ?>
-            </a>
-        <?php endfor; ?>
-    <?php endif; ?>
+<div class="pagination" style="text-align:center; margin-bottom:60px; margin-top:20px; display:flex; justify-content:center; align-items:center;">
+    <a href="?filter_type=order&amp;page=1" style="display:inline-block;padding:8px 16px;margin:0 2px;border-radius:5px;
+           background:#f8f9fa;color:#333;text-decoration:none;">
+        1
+    </a>
+    <a href="?filter_type=order&amp;page=2" style="display:inline-block;padding:8px 16px;margin:0 2px;border-radius:5px;
+           background:#007bff;color:#fff;text-decoration:none;">
+        2
+    </a>
 </div>
 
 <style>
@@ -202,6 +230,7 @@ if ($filter_type === 'booking') {
 .filter-group select { padding:8px; border:1px solid #d1d5db; border-radius:6px; }
 .filter-submit { background:#007bff; color:white; padding:8px 15px; border:none; border-radius:6px; font-weight:600; cursor:pointer; transition:background 0.3s ease; width:100%; }
 .filter-submit:hover { background:#0056b3; }
+table th, table td { text-align:center; }
 @media (max-width: 768px) {
     .shop-container { flex-direction:column; }
     .product-filter { width:100%; min-height:auto; }
