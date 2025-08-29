@@ -22,7 +22,7 @@ $variant_id = isset($_GET['variant_id']) ? intval($_GET['variant_id']) : 0;
 
 // Kiểm tra nếu là thanh toán từ giỏ hàng
 $selected_ids = isset($_GET['selected_ids']) ? explode(',', $_GET['selected_ids']) : [];
-$selected_ids = array_map('intval', $selected_ids);
+$selected_ids = array_values(array_filter(array_map('intval', $selected_ids), function($v){ return $v > 0; }));
 
 // Lấy sản phẩm
 $cart = [];
@@ -45,7 +45,7 @@ if ($product_id > 0) {
             die("Vui lòng chọn màu và size trước khi thanh toán!");
         }
         // Lấy biến thể
-        $vStmt = $conn->prepare("SELECT variant_id, size, color, stock, COALESCE(price, p.price) AS price, pv.product_id, p.product_name
+        $vStmt = $conn->prepare("SELECT pv.variant_id, pv.size, pv.color, pv.stock, COALESCE(pv.price, p.price) AS price, pv.product_id, p.product_name
             FROM product_variants pv
             JOIN products p ON pv.product_id = p.product_id
             WHERE pv.product_id = ? AND pv.variant_id = ?");
@@ -93,12 +93,17 @@ if ($product_id > 0) {
         }
     }
 } elseif (!empty($selected_ids)) {
-    // Xử lý giỏ hàng (hiện tại chưa hỗ trợ lưu/ép buộc biến thể từ giỏ)
+    // Xử lý giỏ hàng theo product_id đã chọn, kèm biến thể nếu có
     $placeholders = implode(',', array_fill(0, count($selected_ids), '?'));
-    $stmt = $conn->prepare("SELECT ci.product_id, p.product_name, p.price, ci.quantity, p.stock
-        FROM cart_items ci
-        JOIN products p ON ci.product_id = p.product_id
-        WHERE ci.user_id = ? AND ci.product_id IN ($placeholders)");
+    $sql = "SELECT ci.product_id, ci.variant_id, ci.size, ci.color,
+                   COALESCE(pv.price, p.price) AS price,
+                   COALESCE(pv.stock, p.stock) AS stock,
+                   p.product_name, ci.quantity
+            FROM cart_items ci
+            JOIN products p ON ci.product_id = p.product_id
+            LEFT JOIN product_variants pv ON ci.variant_id = pv.variant_id AND pv.product_id = p.product_id
+            WHERE ci.user_id = ? AND ci.product_id IN ($placeholders)";
+    $stmt = $conn->prepare($sql);
     if (!$stmt) die("Lỗi chuẩn bị truy vấn giỏ hàng: " . $conn->error);
     $params = array_merge([$user_id], $selected_ids);
     $stmt->bind_param(str_repeat('i', count($params)), ...$params);
@@ -106,15 +111,15 @@ if ($product_id > 0) {
     $result = $stmt->get_result();
     $allSufficient = true;
     while ($item = $result->fetch_assoc()) {
-        if ($item['stock'] >= $item['quantity']) {
+        if (intval($item['stock']) >= intval($item['quantity'])) {
             $cart[] = $item;
-            $total += $item['price'] * $item['quantity'];
+            $total += floatval($item['price']) * intval($item['quantity']);
         } else {
             $allSufficient = false;
         }
     }
     if (!$allSufficient || empty($cart)) {
-        die("Một hoặc nhiều sản phẩm không đủ hàng!");
+        die("Một hoặc nhiều sản phẩm không đủ hàng hoặc không tìm thấy sản phẩm đã chọn!");
     }
 }
 

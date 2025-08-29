@@ -4,7 +4,6 @@ if (!isset($_SESSION['user_id'])) {
     header('Location: login.php');
     exit();
 }
-include 'includes/header.php';
 include 'config/database.php';
 
 $success_message = '';
@@ -78,17 +77,20 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     $stmt->bind_param("iissssddss", $user_id, $court, $date, $start_time, $end_time, $payment_method, $total_price, $discount, $fullname, $phone);
                     $stmt->execute();
 
-                    if ($stmt->affected_rows > 0) {
-                        $success_message = 'Đặt sân thành công! Cảm ơn bạn đã sử dụng dịch vụ Sunny Sport.';
-                    } else {
-                        $error_message = 'Lỗi đặt sân!';
-                    }
+                                    if ($stmt->affected_rows > 0) {
+                    header('Location: booking.php');
+                    exit();
+                } else {
+                    $error_message = 'Lỗi đặt sân!';
+                }
                 }
             }
         }
     }
 }
 ?>
+
+<?php include 'includes/header.php'; ?>
 
 <h2 class="section-title">Đặt sân cầu lông</h2>
 
@@ -323,7 +325,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     left: 0; 
     right: 0; 
     bottom: 0; 
-    background: rgba(0,0,0,0.55); 
+    background: transparent; 
     display: none; 
     align-items: center; 
     justify-content: center; 
