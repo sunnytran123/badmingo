@@ -153,7 +153,7 @@ $products = $result->fetch_all(MYSQLI_ASSOC);
 </div>
 
 <!-- Phân trang -->
-<div class="pagination" style="text-align:center; margin-bottom:40px;">
+<div class="pagination" style="text-align:center; margin-bottom:40px; display:flex; justify-content:center; align-items:center;">
 	<?php if ($totalPages > 1): ?>
 		<?php for ($i = 1; $i <= $totalPages; $i++): ?>
 			<a href="?<?php
