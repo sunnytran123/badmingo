@@ -16,7 +16,7 @@ if (session_status() === PHP_SESSION_NONE) {
     * {margin:0; padding:0; box-sizing: border-box;}
     body {font-family: "Segoe UI", sans-serif; background: #f8f9fa; color: #333;}
     .sidebar {
-        background: linear-gradient(90deg, #007bff, #ff6200); /* Giữ nguyên gradient */
+        background: linear-gradient(90deg, #007bff, #ff6200);
         padding: 15px; 
         display: flex;
         align-items: center;
@@ -28,12 +28,12 @@ if (session_status() === PHP_SESSION_NONE) {
     .sidebar-content {
         display: flex;
         align-items: center;
-        gap: 20px; /* Tăng khoảng cách giữa các phần tử */
-        justify-content: space-between; /* Phân bố đều các phần tử */
+        gap: 20px;
+        justify-content: space-between;
         padding-left: 20px;
-        padding-right: 20px; /* Thêm padding bên phải */
-        width: 100%; /* Sử dụng toàn bộ độ rộng */
-        max-width: 1200px; /* Tăng max-width để phù hợp với nội dung */
+        padding-right: 20px;
+        width: 100%;
+        max-width: 1200px;
         margin: 0 auto;
     }
     .sidebar-content a {
@@ -43,7 +43,7 @@ if (session_status() === PHP_SESSION_NONE) {
         display: flex;
         align-items: center;
         gap: 10px;
-        white-space: nowrap; /* Ngăn không cho logo và tên shop xuống dòng */
+        white-space: nowrap;
     }
     .header-content img {
         max-width: 50px;
@@ -69,11 +69,11 @@ if (session_status() === PHP_SESSION_NONE) {
         border-radius: 5px;
     }
     .sidebar-menu a:hover {
-        background: #ff8c00; /* Cam nhạt khi hover */
+        background: #ff8c00;
         color: white;
     }
     .user-icon {
-        padding: 10px 20px; /* Giống padding của .sidebar-menu a */
+        padding: 10px 20px;
         color: white;
         text-decoration: none;
         font-weight: 500;
@@ -85,7 +85,23 @@ if (session_status() === PHP_SESSION_NONE) {
         gap: 5px;
     }
     .user-icon:hover {
-        background: #ff8c00; /* Giống hover của .sidebar-menu a */
+        background: #ff8c00;
+        color: white;
+    }
+    .logout-icon {
+        padding: 10px 20px;
+        color: white;
+        text-decoration: none;
+        font-weight: 500;
+        transition: 0.3s;
+        border-radius: 5px;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        gap: 5px;
+    }
+    .logout-icon:hover {
+        background: #ff8c00;
         color: white;
     }
     .container {
@@ -97,8 +113,8 @@ if (session_status() === PHP_SESSION_NONE) {
         font-size: 24px;
         font-weight: bold;
         margin-bottom: 15px;
-        color: #007bff; /* Xanh dương đậm */
-        border-left: 5px solid #007bff; /* Xanh dương đậm */
+        color: #007bff;
+        border-left: 5px solid #007bff;
         padding-left: 10px;
     }
     .news {
@@ -141,13 +157,13 @@ if (session_status() === PHP_SESSION_NONE) {
         border-radius: 6px;
     }
     button {
-        background: #007bff; /* Xanh dương đậm */
+        background: #007bff;
         color: white;
         border: none;
         cursor: pointer;
     }
     button:hover {
-        background: #0056b3; /* Xanh dương tối hơn khi hover */
+        background: #0056b3;
     }
     .products {
         display: grid;
@@ -170,7 +186,7 @@ if (session_status() === PHP_SESSION_NONE) {
         padding: 15px;
     }
     .price {
-        color: #dc3545; /* Giữ màu đỏ cho giá */
+        color: #dc3545;
         font-weight: bold;
     }
     .chatbox {
@@ -201,17 +217,17 @@ if (session_status() === PHP_SESSION_NONE) {
     }
     .chat-input button {
         padding: 10px 15px;
-        background: #007bff; /* Xanh dương đậm */
+        background: #007bff;
         color: white;
         border: none;
         border-radius: 6px;
         cursor: pointer;
     }
     .chat-input button:hover {
-        background: #0056b3; /* Xanh dương tối hơn */
+        background: #0056b3;
     }
     .shop-intro {
-        background: linear-gradient(135deg, #007bff, #ff6200); /* Gradient xanh dương và cam */
+        background: linear-gradient(135deg, #007bff, #ff6200);
         color: #fff;
         padding: 40px;
         border-radius: 8px;
@@ -268,8 +284,6 @@ if (session_status() === PHP_SESSION_NONE) {
             gap: 10px;
         }
     }
-
-    /* Bubble Chat */
     #bubble-chat-btn {
         position: fixed;
         bottom: 32px;
@@ -290,7 +304,6 @@ if (session_status() === PHP_SESSION_NONE) {
         transition: box-shadow 0.2s;
     }
     #bubble-chat-btn:hover { box-shadow: 0 12px 32px rgba(99,102,241,0.28); }
-
     #bubble-chat-window {
         position: fixed;
         bottom: 110px;
@@ -363,7 +376,6 @@ if (session_status() === PHP_SESSION_NONE) {
         transition: background 0.15s;
     }
     .bubble-chat-option:hover { background: #E0E7FF; }
-
     .bubble-chat-input {
         display: flex;
         gap: 8px;
@@ -394,10 +406,9 @@ if (session_status() === PHP_SESSION_NONE) {
         box-shadow: 0 6px 14px rgba(99,102,241,0.2);
     }
     .bubble-chat-send:hover { background: #4F46E5; }
-
     .cart-toggle {
         position: fixed;
-        bottom: 110px; /* Đẩy lên trên bubble chat (bubble chat đang bottom: 32px) */
+        bottom: 110px;
         right: 30px;
         background: #007bff;
         color: white;
@@ -409,7 +420,7 @@ if (session_status() === PHP_SESSION_NONE) {
         cursor: pointer;
         box-shadow: 0 4px 15px rgba(0,0,0,0.2);
         transition: all 0.3s ease;
-        z-index: 1001; /* Đảm bảo nổi hơn bubble chat */
+        z-index: 1001;
         display: flex;
         align-items: center;
         justify-content: center;
@@ -430,58 +441,26 @@ if (session_status() === PHP_SESSION_NONE) {
             <a href="index.php">Trang chủ</a>
             <a href="booking.php">Đặt sân</a>
             <a href="shop_list.php">Cửa hàng</a>
-            <!-- <a href="contact.php">Liên hệ</a> -->
-            <div class="user-icon" id="userIcon" style="position:relative;">
-                <i class="fas fa-user-circle"></i>
-                <?php if (isset($_SESSION['user_id'])): ?>
+            <a href="history.php">Lịch sử</a>
+            <?php if (isset($_SESSION['user_id'])): ?>
+                <a href="profile.php" class="user-icon">
+                    <i class="fas fa-user-circle"></i>
                     <span><?php echo htmlspecialchars($_SESSION['username']); ?></span>
-                    <div id="userDropdown" class="user-dropdown" style="display:none;position:absolute;top:40px;right:0;background:#fff;box-shadow:0 2px 8px rgba(0,0,0,0.15);border-radius:8px;min-width:180px;z-index:999;">
-                        <a href="history.php" style="display:block;padding:12px 20px;color:#333;text-decoration:none;border-bottom:1px solid #eee;white-space: nowrap;">Lịch sử giao dịch</a>
-                        <a href="#" id="logoutBtn" style="display:block;padding:12px 20px;color:#dc3545;text-decoration:none;">Đăng xuất</a>
-                    </div>
-                <?php endif; ?>
-            </div>
+                </a>
+                <a href="logout.php" class="logout-icon" onclick="return confirm('Bạn có chắc chắn muốn đăng xuất không?')">
+                    <i class="fas fa-sign-out-alt"></i>
+                </a>
+            <?php else: ?>
+                <a href="login.php" class="user-icon">
+                    <i class="fas fa-user-circle"></i>
+                    <span>Đăng nhập</span>
+                </a>
+            <?php endif; ?>
         </div>
     </div>
 </div>
 
 <div class="container">
-
-<style>
-.user-dropdown a:hover {
-    background: #f8f9fa;
-}
-</style>
-<script>
-document.addEventListener('DOMContentLoaded', function() {
-    var userIcon = document.getElementById('userIcon');
-    var userDropdown = document.getElementById('userDropdown');
-    var logoutBtn = document.getElementById('logoutBtn');
-
-    <?php if (!isset($_SESSION['user_id'])): ?>
-        userIcon.onclick = function() {
-            window.location.href = 'login.php';
-        };
-    <?php else: ?>
-        userIcon.onclick = function(e) {
-            e.stopPropagation();
-            userDropdown.style.display = userDropdown.style.display === 'block' ? 'none' : 'block';
-        };
-        document.body.onclick = function() {
-            userDropdown.style.display = 'none';
-        };
-        userDropdown.onclick = function(e) {
-            e.stopPropagation();
-        };
-        logoutBtn.onclick = function(e) {
-            e.preventDefault();
-            if (confirm('Bạn có chắc chắn muốn đăng xuất không?')) {
-                window.location.href = 'logout.php';
-            }
-        };
-    <?php endif; ?>
-});
-</script>
 
 <!-- Bubble Chat -->
 <button id="bubble-chat-btn" title="Chat hỗ trợ">
@@ -576,3 +555,5 @@ document.addEventListener('DOMContentLoaded', function() {
 })();
 </script>
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>
