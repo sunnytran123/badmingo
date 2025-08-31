@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: 127.0.0.1
--- Generation Time: Aug 29, 2025 at 12:18 PM
+-- Generation Time: Aug 31, 2025 at 04:17 AM
 -- Server version: 10.4.32-MariaDB
 -- PHP Version: 8.1.25
 
@@ -53,7 +53,10 @@ INSERT INTO `bookings` (`booking_id`, `user_id`, `court_id`, `booking_date`, `st
 (13, 11, 4, '2025-08-28', '14:00:00', '17:00:00', 'prepaid', 405000.00, 10.00, 'pending', '2025-08-27 07:14:42', 'Nguyễn Văn P', '0914928282'),
 (14, 11, 3, '2025-08-30', '06:00:00', '06:30:00', 'ondelivery', 75000.00, 0.00, 'pending', '2025-08-27 07:38:44', 'Nguyễn Văn P', '0914928282'),
 (15, 11, 1, '2025-08-27', '15:00:00', '15:30:00', 'prepaid', 67500.00, 10.00, 'pending', '2025-08-27 07:45:11', 'Nguyễn Văn P', '0914928282'),
-(16, 11, 1, '2025-08-29', '06:00:00', '06:30:00', 'ondelivery', 75000.00, 0.00, 'pending', '2025-08-27 07:59:15', 'Minh Hào', '0927271827');
+(16, 11, 1, '2025-08-29', '06:00:00', '06:30:00', 'ondelivery', 75000.00, 0.00, 'pending', '2025-08-27 07:59:15', 'Minh Hào', '0927271827'),
+(17, 11, 3, '2025-08-29', '19:00:00', '20:30:00', 'ondelivery', 225000.00, 0.00, 'pending', '2025-08-29 11:57:11', 'Phan Minh Thắng', '0843029049'),
+(18, 11, 4, '2025-09-01', '06:00:00', '09:00:00', 'prepaid', 405000.00, 10.00, 'pending', '2025-08-29 12:49:58', 'Hà Kiều', '0919156745'),
+(19, 11, 2, '2025-09-02', '06:00:00', '07:30:00', 'ondelivery', 225000.00, 0.00, 'pending', '2025-08-29 12:58:46', 'Hà Kiều', '0919156745');
 
 -- --------------------------------------------------------
 
@@ -66,8 +69,20 @@ CREATE TABLE `cart_items` (
   `user_id` int(11) NOT NULL,
   `product_id` int(11) NOT NULL,
   `quantity` int(11) NOT NULL DEFAULT 1,
-  `created_at` timestamp NOT NULL DEFAULT current_timestamp()
+  `created_at` timestamp NOT NULL DEFAULT current_timestamp(),
+  `variant_id` int(11) DEFAULT NULL,
+  `size` varchar(50) DEFAULT NULL,
+  `color` varchar(50) DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+--
+-- Dumping data for table `cart_items`
+--
+
+INSERT INTO `cart_items` (`cart_item_id`, `user_id`, `product_id`, `quantity`, `created_at`, `variant_id`, `size`, `color`) VALUES
+(4, 11, 6, 3, '2025-08-29 11:57:50', NULL, '', ''),
+(5, 11, 1, 3, '2025-08-29 12:06:27', NULL, '', ''),
+(6, 11, 3, 1, '2025-08-29 13:00:05', NULL, '', '');
 
 -- --------------------------------------------------------
 
@@ -354,7 +369,9 @@ INSERT INTO `orders` (`order_id`, `user_id`, `recipient_name`, `shipping_address
 (21, 11, 'Trần Phương Thùy', '111 dsfa áaa, Phường Quang Trung, Thành phố Hà Giang, Tỉnh Hà Giang', '0914090876', '', 2200000.00, 'pending', 'cod', '2025-08-23 15:23:27'),
 (22, 11, 'Trần Phương Thùy', '12345 nguyen van thiet, Phường Tân Tiến, Thành phố Bắc Giang, Tỉnh Bắc Giang', '0914090876', '', 300000.00, 'pending', 'cod', '2025-08-23 15:29:51'),
 (23, 11, 'Trần Phương Thùy', 'tran van on, Xã Vĩnh Phương, Thành phố Nha Trang, Tỉnh Khánh Hòa', '0914090876', '', 800000.00, 'pending', 'card', '2025-08-23 15:31:25'),
-(24, 11, 'Phan Minh Thắng', 'đối diện cà phê lê vy 2, Phường 9, Thành phố Vĩnh Long, Tỉnh Vĩnh Long', '0834029049', '', 700000.00, 'pending', 'cod', '2025-08-29 09:08:26');
+(24, 11, 'Phan Minh Thắng', 'đối diện cà phê lê vy 2, Phường 9, Thành phố Vĩnh Long, Tỉnh Vĩnh Long', '0834029049', '', 700000.00, 'pending', 'cod', '2025-08-29 09:08:26'),
+(25, 11, 'Trần Văn Tèo', 'ql1z, Xã Quảng Sơn, Huyện Đăk Glong, Tỉnh Đắk Nông', '0914090142', '', 1500000.00, 'pending', 'cod', '2025-08-29 13:14:53'),
+(26, 11, 'Út mén', 'ql54, Xã Đồn Đạc, Huyện Ba Chẽ, Tỉnh Quảng Ninh', '0914090842', '', 480000.00, 'pending', 'cod', '2025-08-29 13:18:09');
 
 -- --------------------------------------------------------
 
@@ -391,7 +408,9 @@ INSERT INTO `order_items` (`order_item_id`, `order_id`, `product_id`, `quantity`
 (22, 21, 6, 1, 2200000.00, NULL, NULL, NULL),
 (23, 22, 3, 1, 300000.00, NULL, NULL, NULL),
 (24, 23, 9, 1, 800000.00, NULL, NULL, NULL),
-(25, 24, 8, 2, 350000.00, NULL, NULL, NULL);
+(25, 24, 8, 2, 350000.00, NULL, NULL, NULL),
+(26, 25, 2, 1, 1500000.00, 2, '40', 'Black'),
+(27, 26, 4, 1, 450000.00, 4, 'M', 'Blue');
 
 -- --------------------------------------------------------
 
@@ -772,13 +791,13 @@ ALTER TABLE `users`
 -- AUTO_INCREMENT for table `bookings`
 --
 ALTER TABLE `bookings`
-  MODIFY `booking_id` int(11) NOT NULL AUTO_INCREMENT COMMENT 'Mã đặt sân', AUTO_INCREMENT=17;
+  MODIFY `booking_id` int(11) NOT NULL AUTO_INCREMENT COMMENT 'Mã đặt sân', AUTO_INCREMENT=20;
 
 --
 -- AUTO_INCREMENT for table `cart_items`
 --
 ALTER TABLE `cart_items`
-  MODIFY `cart_item_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=4;
+  MODIFY `cart_item_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=8;
 
 --
 -- AUTO_INCREMENT for table `chat_history`
@@ -838,13 +857,13 @@ ALTER TABLE `notifications`
 -- AUTO_INCREMENT for table `orders`
 --
 ALTER TABLE `orders`
-  MODIFY `order_id` int(11) NOT NULL AUTO_INCREMENT COMMENT 'Mã đơn hàng', AUTO_INCREMENT=25;
+  MODIFY `order_id` int(11) NOT NULL AUTO_INCREMENT COMMENT 'Mã đơn hàng', AUTO_INCREMENT=27;
 
 --
 -- AUTO_INCREMENT for table `order_items`
 --
 ALTER TABLE `order_items`
-  MODIFY `order_item_id` int(11) NOT NULL AUTO_INCREMENT COMMENT 'Mã chi tiết đơn hàng', AUTO_INCREMENT=26;
+  MODIFY `order_item_id` int(11) NOT NULL AUTO_INCREMENT COMMENT 'Mã chi tiết đơn hàng', AUTO_INCREMENT=28;
 
 --
 -- AUTO_INCREMENT for table `products`
