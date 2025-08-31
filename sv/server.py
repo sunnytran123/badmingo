@@ -93,3 +93,156 @@ def main_loop():
 
 if __name__ == "__main__":
     main_loop()
+
+
+
+
+# #include <WiFi.h>
+# #include <PubSubClient.h>
+# #include <ESP32Servo.h>
+#
+# // WiFi
+# // const char* ssid = "baocao";
+# // const char* password = "12345678";
+# const char *ssid = "Wokwi-GUEST";
+# const char *password = "";
+# // Public MQTT broker HiveMQ
+# const char* mqtt_server = "broker.hivemq.com";
+# const int mqtt_port = 1883;
+# const char* mqtt_topic = "badminton/device/control/sunny";
+#
+# WiFiClient espClient;
+# PubSubClient client(espClient);
+#
+# // LED pins (giả lập đèn sân)
+# const int led1 = 32;
+# const int led2 = 12;
+# const int led3 = 23;
+# const int led4 = 4;
+#
+# // Servo giả lập quạt
+# Servo servo1, servo2, servo3, servo4;
+#
+# void callback(char* topic, byte* message, unsigned int length) {
+#   String msg;
+#   for (int i = 0; i < length; i++) {
+#     msg += (char)message[i];
+#   }
+#   Serial.println("Received: " + msg);
+#
+#   if (msg == "1") {  // Bật sân 1
+#     digitalWrite(led1, HIGH);
+#     for (int pos = 0; pos <= 90; pos++) {
+#       servo1.write(pos);
+#       delay(15);
+#     }
+#     Serial.println("DEBUG: Đã bật sân 1");
+#   } else if (msg == "2") {
+#     digitalWrite(led2, HIGH);
+#     for (int pos = 0; pos <= 90; pos++) {
+#       servo2.write(pos);
+#       delay(15);
+#     }
+#     Serial.println("DEBUG: Đã bật sân 2");
+#   } else if (msg == "3") {
+#     digitalWrite(led3, HIGH);
+#     for (int pos = 0; pos <= 90; pos++) {
+#       servo3.write(pos);
+#       delay(15);
+#     }
+#     Serial.println("DEBUG: Đã bật sân 3");
+#   } else if (msg == "4") {
+#     digitalWrite(led4, HIGH);
+#     for (int pos = 0; pos <= 90; pos++) {
+#       servo4.write(pos);
+#       delay(15);
+#     }
+#     Serial.println("DEBUG: Đã bật sân 4");
+#   } else if (msg == "10") { // Tắt sân 1
+#     digitalWrite(led1, LOW);
+#     for (int pos = 90; pos >= 0; pos--) {
+#       servo1.write(pos);
+#       delay(15);
+#     }
+#     Serial.println("DEBUG: Đã tắt sân 1");
+#   } else if (msg == "20") {
+#     digitalWrite(led2, LOW);
+#     for (int pos = 90; pos >= 0; pos--) {
+#       servo2.write(pos);
+#       delay(15);
+#     }
+#     Serial.println("DEBUG: Đã tắt sân 2");
+#   } else if (msg == "30") {
+#     digitalWrite(led3, LOW);
+#     for (int pos = 90; pos >= 0; pos--) {
+#       servo3.write(pos);
+#       delay(15);
+#     }
+#     Serial.println("DEBUG: Đã tắt sân 3");
+#   } else if (msg == "40") {
+#     digitalWrite(led4, LOW);
+#     for (int pos = 90; pos >= 0; pos--) {
+#       servo4.write(pos);
+#       delay(15);
+#     }
+#     Serial.println("DEBUG: Đã tắt sân 4");
+#   } else {
+#     Serial.println("DEBUG: Lệnh không hợp lệ -> " + msg);
+#   }
+# }
+#
+#
+# void setup_wifi() {
+#   delay(10);
+#   Serial.println("Connecting to WiFi...");
+#   WiFi.begin(ssid, password);
+#
+#   while (WiFi.status() != WL_CONNECTED) {
+#     delay(500);
+#     Serial.print(".");
+#   }
+#   Serial.println("\nWiFi connected");
+# }
+#
+# void reconnect() {
+#   while (!client.connected()) {
+#     Serial.print("Attempting MQTT connection...");
+# // ESP32
+#   if (client.connect("ESP32_Sunny_001")) {
+#     Serial.println("MQTT connected, subscribing...");
+#     client.subscribe(mqtt_topic);
+#     Serial.print("Subscribed to: ");
+#     Serial.println(mqtt_topic);
+#   }
+#   else {
+#       Serial.print("failed, rc=");
+#       Serial.print(client.state());
+#       delay(2000);
+#     }
+#   }
+# }
+#
+# void setup() {
+#   Serial.begin(115200);
+#
+#   pinMode(led1, OUTPUT);
+#   pinMode(led2, OUTPUT);
+#   pinMode(led3, OUTPUT);
+#   pinMode(led4, OUTPUT);
+#
+#   servo1.attach(33);
+#   servo2.attach(13);
+#   servo3.attach(22);
+#   servo4.attach(2);
+#
+#   setup_wifi();
+#   client.setServer(mqtt_server, mqtt_port);
+#   client.setCallback(callback);
+# }
+#
+# void loop() {
+#   if (!client.connected()) {
+#     reconnect();
+#   }
+#   client.loop();
+# }
