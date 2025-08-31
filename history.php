@@ -7,6 +7,10 @@ if (!isset($_SESSION['user_id'])) {
     header('Location: login.php');
     exit();
 }
+if (isset($_SESSION['role']) && $_SESSION['role'] === 'admin') {
+    header('Location: admin.php');
+    exit();
+}
 
 $user_id = $_SESSION['user_id'];
 $filter_type = isset($_GET['filter_type']) ? $_GET['filter_type'] : 'all';

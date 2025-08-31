@@ -4,6 +4,10 @@ if (!isset($_SESSION['user_id'])) {
     header('Location: login.php');
     exit();
 }
+if (isset($_SESSION['role']) && $_SESSION['role'] === 'admin') {
+    header('Location: admin.php');
+    exit();
+}
 include 'config/database.php';
 
 $success_message = '';

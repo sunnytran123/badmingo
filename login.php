@@ -1,7 +1,16 @@
 <?php
 include 'config/database.php';
 session_start();
-
+// Nếu đã đăng nhập, redirect theo role
+if (isset($_SESSION['user_id']) && isset($_SESSION['role'])) {
+    if ($_SESSION['role'] === 'admin') {
+        header('Location: admin.php');
+        exit();
+    } else {
+        header('Location: shop_list.php');
+        exit();
+    }
+}
 $message = '';
 if ($_SERVER["REQUEST_METHOD"] == "POST") {
     $username = trim($_POST['username']);

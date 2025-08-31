@@ -1,6 +1,14 @@
 <?php
 ob_start(); // Bắt đầu output buffering để tránh lỗi header
-session_start();
+if (session_status() === PHP_SESSION_NONE) { session_start(); }
+if (!isset($_SESSION['user_id'])) {
+    header('Location: login.php');
+    exit();
+}
+if (isset($_SESSION['role']) && $_SESSION['role'] === 'admin') {
+    header('Location: admin.php');
+    exit();
+}
 include 'config/database.php';
 
 // Xử lý logic trước khi xuất bất kỳ HTML nào
