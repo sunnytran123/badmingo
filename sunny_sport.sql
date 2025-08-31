@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: 127.0.0.1
--- Generation Time: Aug 31, 2025 at 04:17 AM
+-- Generation Time: Aug 31, 2025 at 11:34 AM
 -- Server version: 10.4.32-MariaDB
 -- PHP Version: 8.1.25
 
@@ -56,7 +56,8 @@ INSERT INTO `bookings` (`booking_id`, `user_id`, `court_id`, `booking_date`, `st
 (16, 11, 1, '2025-08-29', '06:00:00', '06:30:00', 'ondelivery', 75000.00, 0.00, 'pending', '2025-08-27 07:59:15', 'Minh Hào', '0927271827'),
 (17, 11, 3, '2025-08-29', '19:00:00', '20:30:00', 'ondelivery', 225000.00, 0.00, 'pending', '2025-08-29 11:57:11', 'Phan Minh Thắng', '0843029049'),
 (18, 11, 4, '2025-09-01', '06:00:00', '09:00:00', 'prepaid', 405000.00, 10.00, 'pending', '2025-08-29 12:49:58', 'Hà Kiều', '0919156745'),
-(19, 11, 2, '2025-09-02', '06:00:00', '07:30:00', 'ondelivery', 225000.00, 0.00, 'pending', '2025-08-29 12:58:46', 'Hà Kiều', '0919156745');
+(19, 11, 2, '2025-09-02', '06:00:00', '07:30:00', 'ondelivery', 225000.00, 0.00, 'pending', '2025-08-29 12:58:46', 'Hà Kiều', '0919156745'),
+(20, 11, 4, '2025-08-31', '10:00:00', '10:30:00', 'ondelivery', 75000.00, 0.00, 'confirmed', '2025-08-31 02:35:17', 'Thắng', '0843029049');
 
 -- --------------------------------------------------------
 
@@ -357,10 +358,7 @@ CREATE TABLE `orders` (
 --
 
 INSERT INTO `orders` (`order_id`, `user_id`, `recipient_name`, `shipping_address`, `phone_number`, `notes`, `total_amount`, `status`, `payment_method`, `created_at`) VALUES
-(12, 11, NULL, NULL, NULL, NULL, 7000000.00, 'pending', 'cod', '2025-08-20 01:35:31'),
-(13, 11, NULL, NULL, NULL, NULL, 2500000.00, 'pending', 'cod', '2025-08-20 02:08:29'),
-(14, 11, NULL, NULL, NULL, NULL, 2500000.00, 'pending', 'cod', '2025-08-22 04:38:30'),
-(15, 11, 'Trần Phương Thùyyy', '12345 nguyen van thiet, 13753, 359, 36', '09140908700', '', 2500000.00, 'pending', 'cod', '2025-08-22 05:48:53'),
+(15, 11, 'Trần Phương Thùyyy', '12345 nguyen van thiet, 13753, 359, 36', '09140908700', '', 2500000.00, 'completed', 'cod', '2025-08-22 05:48:53'),
 (16, 11, 'Trần Phương Thùy', '54332, 1339, 43, 4', '0914090876', 'aa', 1500000.00, 'pending', 'cod', '2025-08-22 09:40:12'),
 (17, 11, 'Trần Phương Thùy', '54332, 1339, 43, 4', '0914090876', 'aa', 1500000.00, 'pending', 'cod', '2025-08-22 09:42:22'),
 (18, 11, 'Trần Phương Thùy', 'aaa, 1, 1, 1', '0914090876', '', 100000.00, 'pending', 'cod', '2025-08-22 09:45:37'),
@@ -395,10 +393,6 @@ CREATE TABLE `order_items` (
 --
 
 INSERT INTO `order_items` (`order_item_id`, `order_id`, `product_id`, `quantity`, `price`, `variant_id`, `size`, `color`) VALUES
-(12, 12, 1, 1, 2500000.00, NULL, NULL, NULL),
-(13, 12, 2, 3, 1500000.00, NULL, NULL, NULL),
-(14, 13, 1, 1, 2500000.00, NULL, NULL, NULL),
-(15, 14, 1, 1, 2500000.00, NULL, NULL, NULL),
 (16, 15, 1, 1, 2500000.00, NULL, NULL, NULL),
 (17, 16, 2, 1, 1500000.00, NULL, NULL, NULL),
 (18, 17, 2, 1, 1500000.00, NULL, NULL, NULL),
@@ -630,7 +624,7 @@ CREATE TABLE `users` (
 --
 
 INSERT INTO `users` (`user_id`, `username`, `password`, `full_name`, `phone`, `email`, `created_at`, `role`) VALUES
-(11, 'sunny', '$2y$10$fsdqxx5ZQTpWEhyzkej0z.YxC9X0j.6cFR3Ou03G1Dduqx6oxoo2O', 'Trần Phương Thùy', '0914090876', 'phuongthuy091203@gmail.com', '2025-08-18 11:31:41', 'client'),
+(11, 'sunny', '$2y$10$fsdqxx5ZQTpWEhyzkej0z.YxC9X0j.6cFR3Ou03G1Dduqx6oxoo2O', 'Trần Phương Thùy', '0914090876', 'phuongthuy091203@gmail.com', '2025-08-18 11:31:41', 'admin'),
 (12, 'sunny1', '$2y$10$A16Ghm4FAg1JP5tzew2FZ.8zK.8oqNCkV54NgKuxBeAIuDxPeB/52', 'Trần Phương Thùy', '0914090876', 'phuongthuy091209@gmail.com', '2025-08-18 11:33:54', 'client');
 
 --
@@ -791,7 +785,7 @@ ALTER TABLE `users`
 -- AUTO_INCREMENT for table `bookings`
 --
 ALTER TABLE `bookings`
-  MODIFY `booking_id` int(11) NOT NULL AUTO_INCREMENT COMMENT 'Mã đặt sân', AUTO_INCREMENT=20;
+  MODIFY `booking_id` int(11) NOT NULL AUTO_INCREMENT COMMENT 'Mã đặt sân', AUTO_INCREMENT=21;
 
 --
 -- AUTO_INCREMENT for table `cart_items`

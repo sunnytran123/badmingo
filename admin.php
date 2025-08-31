@@ -149,7 +149,9 @@ include 'includes/header.php';
             <h3>Quản lý Sản phẩm</h3>
             <a href="admin_add_product.php" class="filter-submit" style="display:inline-block; margin-bottom:20px;">Thêm Sản phẩm</a>
             <?php
-            $stmt = $conn->prepare("SELECT p.product_id, p.product_name, p.price, p.stock, c.category_name FROM products p LEFT JOIN product_categories c ON p.category_id = c.category_id ORDER BY p.product_id DESC");
+            $stmt = $conn->prepare("SELECT p.product_id, p.product_name, p.price, p.stock, c.category_name, 
+                                   (SELECT COUNT(*) FROM product_variants WHERE product_id = p.product_id) as variant_count 
+                                   FROM products p LEFT JOIN product_categories c ON p.category_id = c.category_id ORDER BY p.product_id DESC");
             $stmt->execute();
             $result = $stmt->get_result();
             ?>
@@ -161,6 +163,7 @@ include 'includes/header.php';
                         <th style="padding:12px;">Danh mục</th>
                         <th style="padding:12px;">Giá</th>
                         <th style="padding:12px;">Tồn kho</th>
+                        <th style="padding:12px;">Variants</th>
                         <th style="padding:12px;">Hành động</th>
                     </tr>
                 </thead>
@@ -172,6 +175,15 @@ include 'includes/header.php';
                             <td style="padding:12px;"><?php echo htmlspecialchars($row['category_name'] ?? 'Chưa có'); ?></td>
                             <td style="padding:12px;"><?php echo number_format($row['price'], 0, ',', '.'); ?> VNĐ</td>
                             <td style="padding:12px;"><?php echo $row['stock']; ?></td>
+                            <td style="padding:12px;">
+                                <?php if ($row['variant_count'] > 0): ?>
+                                    <span style="background:#28a745; color:white; padding:2px 6px; border-radius:3px; font-size:11px;">
+                                        <?php echo $row['variant_count']; ?> variants
+                                    </span>
+                                <?php else: ?>
+                                    <span style="color:#666; font-size:11px;">Không có</span>
+                                <?php endif; ?>
+                            </td>
                             <td style="padding:12px;">
                                 <a href="admin_edit_product.php?id=<?php echo $row['product_id']; ?>" style="color:#007bff; text-decoration:none;">Sửa</a> |
                                 <a href="admin_delete_product.php?id=<?php echo $row['product_id']; ?>" onclick="return confirm('Xóa sản phẩm này?');" style="color:#dc3545; text-decoration:none;">Xóa</a>
@@ -270,16 +282,146 @@ include 'includes/header.php';
             </table>
         <?php elseif ($section === 'events'): ?>
             <h3>Quản lý Sự kiện</h3>
-            <!-- CRUD events (tương tự products) -->
+            <a href="admin_add_event.php" class="filter-submit" style="display:inline-block; margin-bottom:20px;">Thêm Sự kiện</a>
+            <?php
+            $stmt = $conn->prepare("SELECT event_id, event_name, event_date, start_time, end_time, location, max_participants, current_participants, registration_fee, status FROM events ORDER BY event_date DESC");
+            $stmt->execute();
+            $result = $stmt->get_result();
+            ?>
+            <table style="width:100%; border-collapse:collapse;">
+                <thead>
+                    <tr style="background:#f8f9fa; border-bottom:2px solid #eee;">
+                        <th style="padding:12px;">ID</th>
+                        <th style="padding:12px;">Tên sự kiện</th>
+                        <th style="padding:12px;">Ngày</th>
+                        <th style="padding:12px;">Giờ</th>
+                        <th style="padding:12px;">Địa điểm</th>
+                        <th style="padding:12px;">Số người</th>
+                        <th style="padding:12px;">Phí</th>
+                        <th style="padding:12px;">Trạng thái</th>
+                        <th style="padding:12px;">Hành động</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <?php while ($row = $result->fetch_assoc()): ?>
+                        <tr style="border-bottom:1px solid #eee;">
+                            <td style="padding:12px;"><?php echo $row['event_id']; ?></td>
+                            <td style="padding:12px;"><?php echo htmlspecialchars($row['event_name']); ?></td>
+                            <td style="padding:12px;"><?php echo date('d/m/Y', strtotime($row['event_date'])); ?></td>
+                            <td style="padding:12px;"><?php echo $row['start_time'] ? substr($row['start_time'], 0, 5) : '-'; ?> - <?php echo $row['end_time'] ? substr($row['end_time'], 0, 5) : '-'; ?></td>
+                            <td style="padding:12px;"><?php echo htmlspecialchars($row['location']); ?></td>
+                            <td style="padding:12px;"><?php echo $row['current_participants']; ?>/<?php echo $row['max_participants']; ?></td>
+                            <td style="padding:12px;"><?php echo number_format($row['registration_fee'], 0, ',', '.'); ?> VNĐ</td>
+                            <td style="padding:12px;"><?php echo ucfirst($row['status']); ?></td>
+                            <td style="padding:12px;">
+                                <a href="admin_edit_event.php?id=<?php echo $row['event_id']; ?>" style="color:#007bff; text-decoration:none;">Sửa</a> |
+                                <a href="admin_delete_event.php?id=<?php echo $row['event_id']; ?>" onclick="return confirm('Xóa sự kiện này?');" style="color:#dc3545; text-decoration:none;">Xóa</a>
+                            </td>
+                        </tr>
+                    <?php endwhile; ?>
+                </tbody>
+            </table>
         <?php elseif ($section === 'forum'): ?>
             <h3>Quản lý Diễn đàn</h3>
-            <!-- Manage forum_categories, forum_threads, forum_posts -->
+            <div style="margin-bottom:20px;">
+                <h4>Danh mục diễn đàn</h4>
+                <?php
+                $stmt = $conn->prepare("SELECT category_id, category_name, description FROM forum_categories ORDER BY category_id");
+                $stmt->execute();
+                $result = $stmt->get_result();
+                ?>
+                <table style="width:100%; border-collapse:collapse; margin-bottom:20px;">
+                    <thead>
+                        <tr style="background:#f8f9fa; border-bottom:2px solid #eee;">
+                            <th style="padding:12px;">ID</th>
+                            <th style="padding:12px;">Tên danh mục</th>
+                            <th style="padding:12px;">Mô tả</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <?php while ($row = $result->fetch_assoc()): ?>
+                            <tr style="border-bottom:1px solid #eee;">
+                                <td style="padding:12px;"><?php echo $row['category_id']; ?></td>
+                                <td style="padding:12px;"><?php echo htmlspecialchars($row['category_name']); ?></td>
+                                <td style="padding:12px;"><?php echo htmlspecialchars($row['description']); ?></td>
+                            </tr>
+                        <?php endwhile; ?>
+                    </tbody>
+                </table>
+            </div>
+            
+            <div>
+                <h4>Chủ đề diễn đàn</h4>
+                <?php
+                $stmt = $conn->prepare("SELECT ft.thread_id, ft.title, fc.category_name, ft.created_at FROM forum_threads ft LEFT JOIN forum_categories fc ON ft.category_id = fc.category_id ORDER BY ft.created_at DESC LIMIT 20");
+                $stmt->execute();
+                $result = $stmt->get_result();
+                ?>
+                <table style="width:100%; border-collapse:collapse;">
+                    <thead>
+                        <tr style="background:#f8f9fa; border-bottom:2px solid #eee;">
+                            <th style="padding:12px;">ID</th>
+                            <th style="padding:12px;">Tiêu đề</th>
+                            <th style="padding:12px;">Danh mục</th>
+                            <th style="padding:12px;">Ngày tạo</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <?php while ($row = $result->fetch_assoc()): ?>
+                            <tr style="border-bottom:1px solid #eee;">
+                                <td style="padding:12px;"><?php echo $row['thread_id']; ?></td>
+                                <td style="padding:12px;"><?php echo htmlspecialchars($row['title']); ?></td>
+                                <td style="padding:12px;"><?php echo htmlspecialchars($row['category_name']); ?></td>
+                                <td style="padding:12px;"><?php echo date('d/m/Y H:i', strtotime($row['created_at'])); ?></td>
+                            </tr>
+                        <?php endwhile; ?>
+                    </tbody>
+                </table>
+            </div>
         <?php elseif ($section === 'stats'): ?>
             <h3>Thống kê Chi tiết</h3>
-            <!-- Thêm biểu đồ hoặc báo cáo chi tiết -->
+            <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(250px,1fr)); gap:20px; margin-bottom:30px;">
+                <div style="background:#f8f9fa; padding:20px; border-radius:8px; text-align:center;">
+                    <h4>Thống kê theo tháng</h4>
+                    <p style="font-size:24px; color:#007bff; font-weight:bold;"><?php echo date('m/Y'); ?></p>
+                </div>
+                <div style="background:#f8f9fa; padding:20px; border-radius:8px; text-align:center;">
+                    <h4>Tổng số sản phẩm</h4>
+                    <?php
+                    $stmt = $conn->prepare("SELECT COUNT(*) as total FROM products");
+                    $stmt->execute();
+                    $total_products = $stmt->get_result()->fetch_assoc()['total'];
+                    ?>
+                    <p style="font-size:24px; color:#28a745; font-weight:bold;"><?php echo $total_products; ?></p>
+                </div>
+                <div style="background:#f8f9fa; padding:20px; border-radius:8px; text-align:center;">
+                    <h4>Tổng số sân</h4>
+                    <?php
+                    $stmt = $conn->prepare("SELECT COUNT(*) as total FROM courts");
+                    $stmt->execute();
+                    $total_courts = $stmt->get_result()->fetch_assoc()['total'];
+                    ?>
+                    <p style="font-size:24px; color:#ffc107; font-weight:bold;"><?php echo $total_courts; ?></p>
+                </div>
+                <div style="background:#f8f9fa; padding:20px; border-radius:8px; text-align:center;">
+                    <h4>Tổng số sự kiện</h4>
+                    <?php
+                    $stmt = $conn->prepare("SELECT COUNT(*) as total FROM events");
+                    $stmt->execute();
+                    $total_events = $stmt->get_result()->fetch_assoc()['total'];
+                    ?>
+                    <p style="font-size:24px; color:#17a2b8; font-weight:bold;"><?php echo $total_events; ?></p>
+                </div>
+            </div>
+            
+            <div style="background:#f8f9fa; padding:20px; border-radius:8px;">
+                <h4>Biểu đồ doanh thu theo tháng</h4>
+                <canvas id="monthlyRevenueChart" style="max-height:300px;"></canvas>
+            </div>
         <?php elseif ($section === 'settings'): ?>
             <h3>Cấu hình Hệ thống</h3>
-            <!-- Form edit settings từ bảng settings -->
+            <p>Quản lý cài đặt hệ thống, thông tin website và cấu hình đặt sân.</p>
+            <a href="admin_edit_settings.php" class="filter-submit" style="display:inline-block; margin-top:10px;">Chỉnh sửa cấu hình</a>
         <?php endif; ?>
     </div>
 </div>
@@ -323,6 +465,42 @@ document.addEventListener('DOMContentLoaded', function() {
                 scales: { y: { beginAtZero: true } }
             }
         });
+
+    <?php endif; ?>
+    
+    <?php if ($section === 'stats'): ?>
+        // Biểu đồ doanh thu theo tháng cho section stats
+        const monthlyRevenueChart = document.getElementById('monthlyRevenueChart');
+        if (monthlyRevenueChart) {
+            const monthlyCtx = monthlyRevenueChart.getContext('2d');
+            new Chart(monthlyCtx, {
+                type: 'line',
+                data: {
+                    labels: ['T1', 'T2', 'T3', 'T4', 'T5', 'T6', 'T7', 'T8', 'T9', 'T10', 'T11', 'T12'],
+                    datasets: [{
+                        label: 'Doanh thu (triệu VNĐ)',
+                        data: [12, 19, 15, 25, 22, 30, 28, 35, 32, 40, 38, 45],
+                        borderColor: '#28a745',
+                        backgroundColor: 'rgba(40, 167, 69, 0.1)',
+                        tension: 0.4,
+                        fill: true
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    scales: { 
+                        y: { 
+                            beginAtZero: true,
+                            ticks: {
+                                callback: function(value) {
+                                    return value + 'M';
+                                }
+                            }
+                        } 
+                    }
+                }
+            });
+        }
     <?php endif; ?>
 });
 </script>
