@@ -68,10 +68,10 @@ include 'includes/header.php';
             <li><a href="admin.php?section=products" style="display:block; padding:10px; color:#333; text-decoration:none; <?php echo $section === 'products' ? 'background:#f8f9fa; border-radius:6px;' : ''; ?>">Quản lý Sản phẩm</a></li>
             <li><a href="admin.php?section=orders" style="display:block; padding:10px; color:#333; text-decoration:none; <?php echo $section === 'orders' ? 'background:#f8f9fa; border-radius:6px;' : ''; ?>">Quản lý Đơn hàng</a></li>
             <li><a href="admin.php?section=bookings" style="display:block; padding:10px; color:#333; text-decoration:none; <?php echo $section === 'bookings' ? 'background:#f8f9fa; border-radius:6px;' : ''; ?>">Quản lý Đặt sân</a></li>
-            <li><a href="admin.php?section=events" style="display:block; padding:10px; color:#333; text-decoration:none; <?php echo $section === 'events' ? 'background:#f8f9fa; border-radius:6px;' : ''; ?>">Quản lý Sự kiện</a></li>
-            <li><a href="admin.php?section=forum" style="display:block; padding:10px; color:#333; text-decoration:none; <?php echo $section === 'forum' ? 'background:#f8f9fa; border-radius:6px;' : ''; ?>">Quản lý Diễn đàn</a></li>
+            <!-- <li><a href="admin.php?section=events" style="display:block; padding:10px; color:#333; text-decoration:none; <?php echo $section === 'events' ? 'background:#f8f9fa; border-radius:6px;' : ''; ?>">Quản lý Sự kiện</a></li> -->
+            <!-- <li><a href="admin.php?section=forum" style="display:block; padding:10px; color:#333; text-decoration:none; <?php echo $section === 'forum' ? 'background:#f8f9fa; border-radius:6px;' : ''; ?>">Quản lý Diễn đàn</a></li> -->
             <li><a href="admin.php?section=stats" style="display:block; padding:10px; color:#333; text-decoration:none; <?php echo $section === 'stats' ? 'background:#f8f9fa; border-radius:6px;' : ''; ?>">Thống kê</a></li>
-            <li><a href="admin.php?section=settings" style="display:block; padding:10px; color:#333; text-decoration:none; <?php echo $section === 'settings' ? 'background:#f8f9fa; border-radius:6px;' : ''; ?>">Cấu hình</a></li>
+            <!-- <li><a href="admin.php?section=settings" style="display:block; padding:10px; color:#333; text-decoration:none; <?php echo $section === 'settings' ? 'background:#f8f9fa; border-radius:6px;' : ''; ?>">Cấu hình</a></li> -->
         </ul>
     </div>
 
@@ -89,10 +89,6 @@ include 'includes/header.php';
                     <p style="color:#dc3545; font-weight:bold;"><?php echo number_format($total_bookings, 0, ',', '.'); ?> VNĐ</p>
                 </div>
                 <div class="stat-box" style="padding:15px; border:1px solid #eee; border-radius:8px; text-align:center;">
-                    <h4>User mới (tháng)</h4>
-                    <p style="color:#28a745; font-weight:bold;"><?php echo $new_users; ?></p>
-                </div>
-                <div class="stat-box" style="padding:15px; border:1px solid #eee; border-radius:8px; text-align:center;">
                     <h4>Đặt sân hôm nay</h4>
                     <p style="color:#28a745; font-weight:bold;"><?php echo $today_bookings; ?></p>
                 </div>
@@ -100,14 +96,46 @@ include 'includes/header.php';
                     <h4>Đơn hàng hôm nay</h4>
                     <p style="color:#28a745; font-weight:bold;"><?php echo $today_orders; ?></p>
                 </div>
+                
+             <!-- Doanh thu Đặt sân hôm nay -->
+            <div class="stat-box" style="padding:15px; border:1px solid #eee; border-radius:8px; text-align:center;">
+                <h4>Đặt sân hôm nay</h4>
+                <?php
+                $stmt = $conn->prepare("SELECT COALESCE(SUM(total_price),0) AS revenue_booking_today FROM bookings WHERE booking_date = CURDATE() AND status='confirmed'");
+                $stmt->execute();
+                $revenue_booking_today = $stmt->get_result()->fetch_assoc()['revenue_booking_today'] ?? 0;
+                ?>
+                <p style="color:#fd7e14; font-weight:bold;"><?php echo number_format($revenue_booking_today, 0, ',', '.'); ?> VNĐ</p>
             </div>
-            <div style="margin-top:20px;">
-                <h4>Top 5 Sân đặt nhiều (30 ngày)</h4>
-                <canvas id="topCourtsChart"></canvas>
+                        <!-- Doanh thu Đơn hàng hôm nay -->
+            <div class="stat-box" style="padding:15px; border:1px solid #eee; border-radius:8px; text-align:center;">
+                <h4>Đơn hàng hôm nay</h4>
+                <?php
+                $stmt = $conn->prepare("SELECT COALESCE(SUM(total_amount),0) AS revenue_order_today FROM orders WHERE DATE(created_at) = CURDATE() AND status='completed'");
+                $stmt->execute();
+                $revenue_order_today = $stmt->get_result()->fetch_assoc()['revenue_order_today'] ?? 0;
+                ?>
+                <p style="color:#6f42c1; font-weight:bold;"><?php echo number_format($revenue_order_today, 0, ',', '.'); ?> VNĐ</p>
             </div>
+
+
+
+            </div>
+            <div style="display:grid; grid-template-columns:1fr 1fr; gap:20px; margin-top:20px;">
+                <div>
+                    <h4>Top 5 Sân đặt nhiều (30 ngày)</h4>
+                    <canvas id="topCourtsChart"></canvas>
+                </div>
+                <div>
+                    <h4>Top 5 Sản phẩm bán chạy</h4>
+                    <canvas id="topProductsChart"></canvas>
+                </div>
+            </div>
+            
+            <!-- Biểu đồ giờ cao điểm trong ngày -->
             <div style="margin-top:20px;">
-                <h4>Top 5 Sản phẩm bán chạy</h4>
-                <canvas id="topProductsChart"></canvas>
+                <h4>Giờ cao điểm đặt sân (Hôm nay)</h4>
+                <canvas id="todayPeakHoursChart"></canvas>
             </div>
         <?php elseif ($section === 'users'): ?>
             <h3>Quản lý Người dùng</h3>
@@ -380,11 +408,61 @@ include 'includes/header.php';
             </div>
         <?php elseif ($section === 'stats'): ?>
             <h3>Thống kê Chi tiết</h3>
-            <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(250px,1fr)); gap:20px; margin-bottom:30px;">
-                <div style="background:#f8f9fa; padding:20px; border-radius:8px; text-align:center;">
-                    <h4>Thống kê theo tháng</h4>
-                    <p style="font-size:24px; color:#007bff; font-weight:bold;"><?php echo date('m/Y'); ?></p>
+            
+            <!-- Bộ lọc thời gian -->
+            <div style="background:#f8f9fa; padding:20px; border-radius:8px; margin-bottom:20px;">
+                <h4 style="margin-bottom:15px;">Lọc theo thời gian</h4>
+                <div style="display:flex; gap:15px; align-items:center; flex-wrap:wrap;">
+                    <div>
+                        <label style="display:block; margin-bottom:5px; font-weight:600; font-size:14px;">Loại lọc:</label>
+                        <select id="timeFilter" onchange="changeTimeFilter()" style="padding:8px; border:1px solid #ddd; border-radius:4px;">
+                            <option value="specific">Chọn thời gian cụ thể</option>
+                            <option value="day">Theo ngày</option>
+                            <option value="week">Theo tuần</option>
+                            <option value="month">Theo tháng</option>
+                            <option value="range">Khoảng thời gian tùy chỉnh</option>
+                        </select>
+                    </div>
+                    
+                    <!-- Chọn thời gian cụ thể -->
+                    <div id="specificTimeSelector" style="display:block;">
+                        <label style="display:block; margin-bottom:5px; font-weight:600; font-size:14px;">Chọn ngày:</label>
+                        <input type="date" id="specificDate" onchange="updateCharts()" style="padding:8px; border:1px solid #ddd; border-radius:4px;">
+                    </div>
+                    
+                    <!-- Chọn tháng cụ thể -->
+                    <div id="monthSelector" style="display:none;">
+                        <label style="display:block; margin-bottom:5px; font-weight:600; font-size:14px;">Chọn tháng:</label>
+                        <input type="month" id="specificMonth" onchange="updateCharts()" style="padding:8px; border:1px solid #ddd; border-radius:4px;">
+                    </div>
+                    
+                    <!-- Chọn tuần cụ thể -->
+                    <div id="weekSelector" style="display:none;">
+                        <label style="display:block; margin-bottom:5px; font-weight:600; font-size:14px;">Chọn tuần:</label>
+                        <input type="week" id="specificWeek" onchange="updateCharts()" style="padding:8px; border:1px solid #ddd; border-radius:4px;">
+                    </div>
+                    
+                    <!-- Khoảng thời gian tùy chỉnh -->
+                    <div id="rangeSelector" style="display:none;">
+                        <div>
+                            <label style="display:block; margin-bottom:5px; font-weight:600; font-size:14px;">Từ ngày:</label>
+                            <input type="date" id="startDate" onchange="updateCharts()" style="padding:8px; border:1px solid #ddd; border-radius:4px;">
+                        </div>
+                        <div>
+                            <label style="display:block; margin-bottom:5px; font-weight:600; font-size:14px;">Đến ngày:</label>
+                            <input type="date" id="endDate" onchange="updateCharts()" style="padding:8px; border:1px solid #ddd; border-radius:4px;">
+                        </div>
+                    </div>
+                    
+                    <div style="margin-top:20px;">
+                        <button onclick="updateCharts()" class="filter-submit" style="background:#28a745;">Cập nhật biểu đồ</button>
+                        <button onclick="resetDates()" class="filter-submit" style="background:#6c757d; margin-left:10px;">Đặt lại</button>
+                    </div>
                 </div>
+            </div>
+            
+            <!-- Thống kê tổng quan -->
+            <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(200px,1fr)); gap:15px; margin-bottom:30px;">
                 <div style="background:#f8f9fa; padding:20px; border-radius:8px; text-align:center;">
                     <h4>Tổng số sản phẩm</h4>
                     <?php
@@ -412,11 +490,39 @@ include 'includes/header.php';
                     ?>
                     <p style="font-size:24px; color:#17a2b8; font-weight:bold;"><?php echo $total_events; ?></p>
                 </div>
+                <div style="background:#f8f9fa; padding:20px; border-radius:8px; text-align:center;">
+                    <h4>Tổng số người dùng</h4>
+                    <?php
+                    $stmt = $conn->prepare("SELECT COUNT(*) as total FROM users WHERE role = 'client'");
+                    $stmt->execute();
+                    $total_users = $stmt->get_result()->fetch_assoc()['total'];
+                    ?>
+                    <p style="font-size:24px; color:#dc3545; font-weight:bold;"><?php echo $total_users; ?></p>
+                </div>
             </div>
             
-            <div style="background:#f8f9fa; padding:20px; border-radius:8px;">
-                <h4>Biểu đồ doanh thu theo tháng</h4>
-                <canvas id="monthlyRevenueChart" style="max-height:300px;"></canvas>
+            <!-- Biểu đồ giờ cao điểm đặt sân -->
+            <div style="background:#f8f9fa; padding:20px; border-radius:8px; margin-bottom:20px;">
+                <h4>Biểu đồ giờ cao điểm đặt sân</h4>
+                <canvas id="peakHoursChart" style="max-height:300px;"></canvas>
+            </div>
+            
+            <!-- Biểu đồ doanh thu theo thời gian -->
+            <div style="background:#f8f9fa; padding:20px; border-radius:8px; margin-bottom:20px;">
+                <h4>Biểu đồ doanh thu theo thời gian</h4>
+                <canvas id="revenueChart" style="max-height:300px;"></canvas>
+            </div>
+            
+            <!-- Biểu đồ sân được đặt nhiều nhất -->
+            <div style="background:#f8f9fa; padding:20px; border-radius:8px; margin-bottom:20px;">
+                <h4>Top sân được đặt nhiều nhất</h4>
+                <canvas id="topCourtsChart" style="max-height:300px;"></canvas>
+            </div>
+            
+            <!-- Biểu đồ sản phẩm bán chạy -->
+            <div style="background:#f8f9fa; padding:20px; border-radius:8px; margin-bottom:20px;">
+                <h4>Top sản phẩm bán chạy</h4>
+                <canvas id="topProductsChart" style="max-height:300px;"></canvas>
             </div>
         <?php elseif ($section === 'settings'): ?>
             <h3>Cấu hình Hệ thống</h3>
@@ -466,41 +572,421 @@ document.addEventListener('DOMContentLoaded', function() {
             }
         });
 
+        // Biểu đồ giờ cao điểm đặt sân hôm nay
+        const todayPeakHoursCtx = document.getElementById('todayPeakHoursChart').getContext('2d');
+        new Chart(todayPeakHoursCtx, {
+            type: 'line',
+            data: {
+                labels: ['6:00', '7:00', '8:00', '9:00', '10:00', '11:00', '12:00', '13:00', '14:00', '15:00', '16:00', '17:00', '18:00', '19:00', '20:00', '21:00', '22:00'],
+                datasets: [{
+                    label: 'Số lượt đặt sân',
+                    data: [2, 3, 5, 4, 2, 1, 0, 1, 3, 6, 8, 12, 15, 18, 14, 9, 4],
+                    borderColor: '#ffc107',
+                    backgroundColor: 'rgba(255, 193, 7, 0.1)',
+                    tension: 0.4,
+                    fill: true,
+                    pointBackgroundColor: '#ffc107',
+                    pointBorderColor: '#fff',
+                    pointBorderWidth: 2,
+                    pointRadius: 5
+                }]
+            },
+            options: {
+                responsive: true,
+                plugins: {
+                    title: {
+                        display: true,
+                        text: 'Giờ cao điểm đặt sân hôm nay'
+                    }
+                },
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        title: {
+                            display: true,
+                            text: 'Số lượt đặt sân'
+                        }
+                    },
+                    x: {
+                        title: {
+                            display: true,
+                            text: 'Giờ trong ngày'
+                        }
+                    }
+                }
+            }
+        });
+
     <?php endif; ?>
     
     <?php if ($section === 'stats'): ?>
-        // Biểu đồ doanh thu theo tháng cho section stats
-        const monthlyRevenueChart = document.getElementById('monthlyRevenueChart');
-        if (monthlyRevenueChart) {
-            const monthlyCtx = monthlyRevenueChart.getContext('2d');
-            new Chart(monthlyCtx, {
+        // Khởi tạo biểu đồ cho section stats
+        let peakHoursChart, revenueChart, topCourtsChart, topProductsChart;
+        
+        // Thiết lập ngày mặc định
+        function setDefaultDates() {
+            const today = new Date();
+            const lastMonth = new Date(today.getFullYear(), today.getMonth() - 1, today.getDate());
+            
+            document.getElementById('startDate').value = lastMonth.toISOString().split('T')[0];
+            document.getElementById('endDate').value = today.toISOString().split('T')[0];
+        }
+        
+        // Thay đổi loại lọc thời gian
+        function changeTimeFilter() {
+            const filter = document.getElementById('timeFilter').value;
+            
+            // Ẩn tất cả selector
+            document.getElementById('specificTimeSelector').style.display = 'none';
+            document.getElementById('monthSelector').style.display = 'none';
+            document.getElementById('weekSelector').style.display = 'none';
+            document.getElementById('rangeSelector').style.display = 'none';
+            
+            // Hiển thị selector tương ứng
+            if (filter === 'specific') {
+                document.getElementById('specificTimeSelector').style.display = 'block';
+                setDefaultSpecificDate();
+            } else if (filter === 'day') {
+                document.getElementById('specificTimeSelector').style.display = 'block';
+                setDefaultSpecificDate();
+            } else if (filter === 'week') {
+                document.getElementById('weekSelector').style.display = 'block';
+                setDefaultWeek();
+            } else if (filter === 'month') {
+                document.getElementById('monthSelector').style.display = 'block';
+                setDefaultMonth();
+            } else if (filter === 'range') {
+                document.getElementById('rangeSelector').style.display = 'block';
+                setDefaultRange();
+            }
+            
+            updateCharts();
+        }
+        
+        // Thiết lập ngày mặc định cho specific
+        function setDefaultSpecificDate() {
+            const today = new Date();
+            document.getElementById('specificDate').value = today.toISOString().split('T')[0];
+        }
+        
+        // Thiết lập tuần mặc định
+        function setDefaultWeek() {
+            const today = new Date();
+            const currentWeek = getWeekNumber(today);
+            const year = today.getFullYear();
+            document.getElementById('specificWeek').value = `${year}-W${currentWeek.toString().padStart(2, '0')}`;
+        }
+        
+        // Thiết lập tháng mặc định
+        function setDefaultMonth() {
+            const today = new Date();
+            const year = today.getFullYear();
+            const month = (today.getMonth() + 1).toString().padStart(2, '0');
+            document.getElementById('specificMonth').value = `${year}-${month}`;
+        }
+        
+        // Thiết lập khoảng thời gian mặc định
+        function setDefaultRange() {
+            const today = new Date();
+            const lastMonth = new Date(today.getFullYear(), today.getMonth() - 1, today.getDate());
+            document.getElementById('startDate').value = lastMonth.toISOString().split('T')[0];
+            document.getElementById('endDate').value = today.toISOString().split('T')[0];
+        }
+        
+        // Lấy số tuần trong năm
+        function getWeekNumber(date) {
+            const firstDayOfYear = new Date(date.getFullYear(), 0, 1);
+            const pastDaysOfYear = (date - firstDayOfYear) / 86400000;
+            return Math.ceil((pastDaysOfYear + firstDayOfYear.getDay() + 1) / 7);
+        }
+        
+        // Đặt lại ngày
+        function resetDates() {
+            changeTimeFilter();
+        }
+        
+        // Cập nhật tất cả biểu đồ
+        function updateCharts() {
+            const filter = document.getElementById('timeFilter').value;
+            let startDate, endDate, timeLabel;
+            
+            if (filter === 'specific' || filter === 'day') {
+                const specificDate = document.getElementById('specificDate').value;
+                if (specificDate) {
+                    startDate = specificDate;
+                    endDate = specificDate;
+                    timeLabel = `ngày ${specificDate}`;
+                }
+            } else if (filter === 'week') {
+                const weekValue = document.getElementById('specificWeek').value;
+                if (weekValue) {
+                    const [year, week] = weekValue.split('-W');
+                    const weekStart = getWeekStartDate(parseInt(year), parseInt(week));
+                    const weekEnd = new Date(weekStart);
+                    weekEnd.setDate(weekStart.getDate() + 6);
+                    
+                    startDate = weekStart.toISOString().split('T')[0];
+                    endDate = weekEnd.toISOString().split('T')[0];
+                    timeLabel = `tuần ${week} năm ${year}`;
+                }
+            } else if (filter === 'month') {
+                const monthValue = document.getElementById('specificMonth').value;
+                if (monthValue) {
+                    const [year, month] = monthValue.split('-');
+                    startDate = `${year}-${month}-01`;
+                    const lastDay = new Date(parseInt(year), parseInt(month), 0);
+                    endDate = `${year}-${month}-${lastDay.getDate()}`;
+                    timeLabel = `tháng ${month}/${year}`;
+                }
+            } else if (filter === 'range') {
+                startDate = document.getElementById('startDate').value;
+                endDate = document.getElementById('endDate').value;
+                if (startDate && endDate) {
+                    timeLabel = `từ ${startDate} đến ${endDate}`;
+                }
+            }
+            
+            if (startDate && endDate) {
+                // Cập nhật biểu đồ giờ cao điểm
+                updatePeakHoursChart(startDate, endDate, timeLabel);
+                
+                // Cập nhật biểu đồ doanh thu
+                updateRevenueChart(startDate, endDate, timeLabel);
+                
+                // Cập nhật biểu đồ top sân
+                updateTopCourtsChart(startDate, endDate, timeLabel);
+                
+                // Cập nhật biểu đồ top sản phẩm
+                updateTopProductsChart(startDate, endDate, timeLabel);
+            }
+        }
+        
+        // Lấy ngày đầu tuần
+        function getWeekStartDate(year, week) {
+            const firstDayOfYear = new Date(year, 0, 1);
+            const firstWeekday = firstDayOfYear.getDay();
+            const daysToAdd = (week - 1) * 7 - firstWeekday;
+            const weekStart = new Date(year, 0, 1 + daysToAdd);
+            return weekStart;
+        }
+        
+        // Biểu đồ giờ cao điểm đặt sân
+        function updatePeakHoursChart(startDate, endDate, timeLabel) {
+            const ctx = document.getElementById('peakHoursChart').getContext('2d');
+            
+            if (peakHoursChart) {
+                peakHoursChart.destroy();
+            }
+            
+            // Dữ liệu mẫu - trong thực tế sẽ lấy từ AJAX
+            const hours = ['6:00', '7:00', '8:00', '9:00', '10:00', '11:00', '12:00', '13:00', '14:00', '15:00', '16:00', '17:00', '18:00', '19:00', '20:00', '21:00', '22:00'];
+            const bookings = [5, 8, 12, 15, 10, 8, 6, 4, 8, 12, 18, 25, 30, 28, 22, 15, 8];
+            
+            peakHoursChart = new Chart(ctx, {
                 type: 'line',
                 data: {
-                    labels: ['T1', 'T2', 'T3', 'T4', 'T5', 'T6', 'T7', 'T8', 'T9', 'T10', 'T11', 'T12'],
+                    labels: hours,
                     datasets: [{
-                        label: 'Doanh thu (triệu VNĐ)',
-                        data: [12, 19, 15, 25, 22, 30, 28, 35, 32, 40, 38, 45],
-                        borderColor: '#28a745',
-                        backgroundColor: 'rgba(40, 167, 69, 0.1)',
+                        label: 'Số lượt đặt sân',
+                        data: bookings,
+                        borderColor: '#007bff',
+                        backgroundColor: 'rgba(0, 123, 255, 0.1)',
                         tension: 0.4,
-                        fill: true
+                        fill: true,
+                        pointBackgroundColor: '#007bff',
+                        pointBorderColor: '#fff',
+                        pointBorderWidth: 2,
+                        pointRadius: 6
                     }]
                 },
                 options: {
                     responsive: true,
-                    scales: { 
-                        y: { 
+                    plugins: {
+                        title: {
+                            display: true,
+                            text: `Giờ cao điểm đặt sân ${timeLabel}`
+                        }
+                    },
+                    scales: {
+                        y: {
                             beginAtZero: true,
-                            ticks: {
-                                callback: function(value) {
-                                    return value + 'M';
-                                }
+                            title: {
+                                display: true,
+                                text: 'Số lượt đặt sân'
                             }
-                        } 
+                        },
+                        x: {
+                            title: {
+                                display: true,
+                                text: 'Giờ trong ngày'
+                            }
+                        }
                     }
                 }
             });
         }
+        
+        // Biểu đồ doanh thu theo thời gian
+        function updateRevenueChart(startDate, endDate, timeLabel) {
+            const ctx = document.getElementById('revenueChart').getContext('2d');
+            
+            if (revenueChart) {
+                revenueChart.destroy();
+            }
+            
+            // Dữ liệu mẫu - trong thực tế sẽ lấy từ AJAX
+            const labels = ['Tuần 1', 'Tuần 2', 'Tuần 3', 'Tuần 4'];
+            const revenue = [2500000, 3200000, 2800000, 3500000];
+            
+            revenueChart = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        label: 'Doanh thu (VNĐ)',
+                        data: revenue,
+                        borderColor: '#28a745',
+                        backgroundColor: 'rgba(40, 167, 69, 0.1)',
+                        tension: 0.4,
+                        fill: true,
+                        pointBackgroundColor: '#28a745',
+                        pointBorderColor: '#fff',
+                        pointBorderWidth: 2,
+                        pointRadius: 6
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    plugins: {
+                        title: {
+                            display: true,
+                            text: `Doanh thu ${timeLabel}`
+                        }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            title: {
+                                display: true,
+                                text: 'Doanh thu (VNĐ)'
+                            },
+                            ticks: {
+                                callback: function(value) {
+                                    return (value / 1000000).toFixed(1) + 'M';
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+        }
+        
+        // Biểu đồ top sân được đặt nhiều nhất
+        function updateTopCourtsChart(startDate, endDate, timeLabel) {
+            const ctx = document.getElementById('topCourtsChart').getContext('2d');
+            
+            if (topCourtsChart) {
+                topCourtsChart.destroy();
+            }
+            
+            // Dữ liệu mẫu - trong thực tế sẽ lấy từ AJAX
+            const courts = ['Sân 1', 'Sân 2', 'Sân 3', 'Sân 4', 'Sân 5'];
+            const bookings = [45, 38, 32, 28, 25];
+            
+            topCourtsChart = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: courts,
+                    datasets: [{
+                        label: 'Số lượt đặt',
+                        data: bookings,
+                        backgroundColor: [
+                            '#FF6384',
+                            '#36A2EB',
+                            '#36A2EB',
+                            '#4BC0C0',
+                            '#9966FF'
+                        ],
+                        borderColor: [
+                            '#FF6384',
+                            '#36A2EB',
+                            '#FFCE56',
+                            '#4BC0C0',
+                            '#9966FF'
+                        ],
+                        borderWidth: 1
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    plugins: {
+                        title: {
+                            display: true,
+                            text: `Top sân được đặt ${timeLabel}`
+                        }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            title: {
+                                display: true,
+                                text: 'Số lượt đặt'
+                            }
+                        }
+                    }
+                }
+            });
+        }
+        
+        // Biểu đồ top sản phẩm bán chạy
+        function updateTopProductsChart(startDate, endDate, timeLabel) {
+            const ctx = document.getElementById('topProductsChart').getContext('2d');
+            
+            if (topProductsChart) {
+                topProductsChart.destroy();
+            }
+            
+            // Dữ liệu mẫu - trong thực tế sẽ lấy từ AJAX
+            const products = ['Vợt Yonex', 'Giày Lining', 'Quả cầu', 'Áo thi đấu', 'Băng cuốn'];
+            const sales = [120, 95, 200, 85, 150];
+            
+            topProductsChart = new Chart(ctx, {
+                type: 'doughnut',
+                data: {
+                    labels: products,
+                    datasets: [{
+                        data: sales,
+                        backgroundColor: [
+                            '#FF6384',
+                            '#36A2EB',
+                            '#FFCE56',
+                            '#4BC0C0',
+                            '#9966FF'
+                        ],
+                        borderColor: '#fff',
+                        borderWidth: 2
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    plugins: {
+                        title: {
+                            display: true,
+                            text: `Top sản phẩm bán chạy ${timeLabel}`
+                        },
+                        legend: {
+                            position: 'bottom'
+                        }
+                    }
+                }
+            });
+        }
+        
+        // Khởi tạo biểu đồ khi trang load
+        document.addEventListener('DOMContentLoaded', function() {
+            setDefaultSpecificDate();
+            updateCharts();
+        });
     <?php endif; ?>
 });
 </script>
