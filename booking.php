@@ -148,6 +148,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     <option value="2">Sân 2</option>
                     <option value="3">Sân 3</option>
                     <option value="4">Sân 4</option>
+                    <option value="5">Sân 5</option>
+                    <option value="6">Sân 6</option>
+                    <option value="7">Sân 7</option>
+                    <option value="8">Sân 8</option>
+                    <option value="9">Sân 9</option>
+                    <option value="10">Sân 10</option>
                 </select>
             </div>
         </div>
