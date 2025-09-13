@@ -1,3 +1,4 @@
+<script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels"></script>
 <?php
 session_start();
 if (!isset($_SESSION['user_id']) || $_SESSION['role'] !== 'admin') {
@@ -121,20 +122,19 @@ include 'includes/header.php';
 
 
             </div>
-            <div style="display:grid; grid-template-columns:1fr 1fr; gap:20px; margin-top:20px;">
+            <div style="display:grid; grid-template-columns: 1fr 1fr; gap:20px; margin-top:20px;">
                 <div>
                     <h4>Top 5 Sân đặt nhiều (30 ngày)</h4>
-                    <canvas id="topCourtsChart"></canvas>
+                    <canvas id="topCourtsChart" style="width: 100%; height: 300px; max-width: 600px;"></canvas>
                 </div>
                 <div>
                     <h4>Top 5 Sản phẩm bán chạy</h4>
-                    <canvas id="topProductsChart"></canvas>
+                    <canvas id="topProductsChart" style="width: 100%; height: 300px; max-width: 600px;"></canvas>
                 </div>
             </div>
-            
             <!-- Biểu đồ giờ cao điểm trong ngày -->
             <div style="margin-top:20px;">
-                <h4>Giờ cao điểm đặt sân (Hôm nay)</h4>
+                <h4>Giờ cao điểm đặt sân</h4>
                 <canvas id="todayPeakHoursChart"></canvas>
             </div>
         <?php elseif ($section === 'users'): ?>
@@ -550,7 +550,20 @@ document.addEventListener('DOMContentLoaded', function() {
                 }]
             },
             options: {
-                scales: { y: { beginAtZero: true } }
+                scales: {
+            y: {
+                beginAtZero: true,
+                title: {
+                    display: true,
+                    text: 'Số lượt đặt'
+                }
+            },
+            x: {  // Thêm phần này để ẩn labels dưới cột
+                ticks: {
+                    display: false  // Ẩn tên sân
+                }
+            }
+        }
             }
         });
 
@@ -567,9 +580,22 @@ document.addEventListener('DOMContentLoaded', function() {
                     borderWidth: 1
                 }]
             },
-            options: {
-                scales: { y: { beginAtZero: true } }
-            }
+        options: {
+                        scales: {
+                    y: {
+                        beginAtZero: true,
+                        title: {
+                            display: true,
+                            text: 'Số lượt bán'
+                        }
+                    },
+                    x: {  // Thêm phần này để ẩn labels dưới cột
+                        ticks: {
+                            display: false  // Ẩn tên sân
+                        }
+                    }
+                }
+                    }
         });
 
         // Biểu đồ giờ cao điểm đặt sân hôm nay
@@ -596,7 +622,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 plugins: {
                     title: {
                         display: true,
-                        text: 'Giờ cao điểm đặt sân hôm nay'
+                        text: 'Giờ cao điểm đặt sân'
                     }
                 },
                 scales: {
@@ -938,49 +964,88 @@ document.addEventListener('DOMContentLoaded', function() {
             });
         }
         
-        // Biểu đồ top sản phẩm bán chạy
-        function updateTopProductsChart(startDate, endDate, timeLabel) {
-            const ctx = document.getElementById('topProductsChart').getContext('2d');
-            
-            if (topProductsChart) {
-                topProductsChart.destroy();
-            }
-            
-            // Dữ liệu mẫu - trong thực tế sẽ lấy từ AJAX
-            const products = ['Vợt Yonex', 'Giày Lining', 'Quả cầu', 'Áo thi đấu', 'Băng cuốn'];
-            const sales = [120, 95, 200, 85, 150];
-            
-            topProductsChart = new Chart(ctx, {
-                type: 'doughnut',
-                data: {
-                    labels: products,
-                    datasets: [{
-                        data: sales,
-                        backgroundColor: [
-                            '#FF6384',
-                            '#36A2EB',
-                            '#FFCE56',
-                            '#4BC0C0',
-                            '#9966FF'
-                        ],
-                        borderColor: '#fff',
-                        borderWidth: 2
-                    }]
-                },
-                options: {
-                    responsive: true,
-                    plugins: {
-                        title: {
-                            display: true,
-                            text: `Top sản phẩm bán chạy ${timeLabel}`
-                        },
-                        legend: {
-                            position: 'bottom'
-                        }
+// Biểu đồ top sản phẩm bán chạy
+function updateTopProductsChart(startDate, endDate, timeLabel) {
+    const ctx = document.getElementById('topProductsChart').getContext('2d');
+    
+    if (!ctx) {
+        console.error('Canvas "topProductsChart" not found');
+        return;
+    }
+    
+    if (topProductsChart) {
+        topProductsChart.destroy();
+    }
+    
+    // Sử dụng dữ liệu thực từ PHP
+    const products = <?php echo json_encode(array_column($top_products, 'product_name')); ?> || [];
+    const sales = <?php echo json_encode(array_column($top_products, 'total_quantity')); ?> || [];
+    
+    if (products.length === 0 || sales.length === 0) {
+        console.warn('No data available for Top Products chart');
+        return;
+    }
+    topProductsChart = new Chart(ctx, {
+    type: 'bar',
+    data: {
+        labels: products,  // Giữ labels để tooltip hoạt động
+        datasets: [{
+            label: 'Số lượng bán',
+            data: sales,
+            backgroundColor: '#28a745',
+            borderColor: '#28a745',
+            borderWidth: 1
+        }]
+    },
+    options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+            title: {
+                display: true,
+                text: `Top sản phẩm bán chạy ${timeLabel}`
+            },
+            legend: {
+                display: false
+            },
+            tooltip: {
+                enabled: true,
+                callbacks: {
+                    label: function(tooltipItem) {
+                        return `${products[tooltipItem.dataIndex]}: ${tooltipItem.raw}`;
                     }
                 }
-            });
+            },
+            datalabels: {             // ✅ Thêm cấu hình hiển thị số trên cột
+                anchor: 'end',
+                align: 'top',
+                formatter: function(value) {
+                    return value;
+                },
+                font: {
+                    weight: 'bold'
+                }
+            }
+        },
+        scales: {
+            y: {
+                beginAtZero: true,
+                title: {
+                    display: true,
+                    text: 'Số lượng bán'
+                }
+            },
+            x: {
+                ticks: {
+                    display: false  // Ẩn tên sản phẩm dưới cột
+                }
+            }
         }
+    },
+    plugins: [ChartDataLabels]   // ✅ Kích hoạt plugin datalabels
+});
+
+}
         
         // Khởi tạo biểu đồ khi trang load
         document.addEventListener('DOMContentLoaded', function() {
