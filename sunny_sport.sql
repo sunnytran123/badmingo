@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: 127.0.0.1
--- Generation Time: Aug 31, 2025 at 11:34 AM
+-- Generation Time: Sep 14, 2025 at 08:19 AM
 -- Server version: 10.4.32-MariaDB
 -- PHP Version: 8.1.25
 
@@ -55,9 +55,10 @@ INSERT INTO `bookings` (`booking_id`, `user_id`, `court_id`, `booking_date`, `st
 (15, 11, 1, '2025-08-27', '15:00:00', '15:30:00', 'prepaid', 67500.00, 10.00, 'pending', '2025-08-27 07:45:11', 'Nguyễn Văn P', '0914928282'),
 (16, 11, 1, '2025-08-29', '06:00:00', '06:30:00', 'ondelivery', 75000.00, 0.00, 'pending', '2025-08-27 07:59:15', 'Minh Hào', '0927271827'),
 (17, 11, 3, '2025-08-29', '19:00:00', '20:30:00', 'ondelivery', 225000.00, 0.00, 'pending', '2025-08-29 11:57:11', 'Phan Minh Thắng', '0843029049'),
-(18, 11, 4, '2025-09-01', '06:00:00', '09:00:00', 'prepaid', 405000.00, 10.00, 'pending', '2025-08-29 12:49:58', 'Hà Kiều', '0919156745'),
-(19, 11, 2, '2025-09-02', '06:00:00', '07:30:00', 'ondelivery', 225000.00, 0.00, 'pending', '2025-08-29 12:58:46', 'Hà Kiều', '0919156745'),
-(20, 11, 4, '2025-08-31', '10:00:00', '10:30:00', 'ondelivery', 75000.00, 0.00, 'confirmed', '2025-08-31 02:35:17', 'Thắng', '0843029049');
+(18, 11, 4, '2025-09-01', '06:00:00', '09:00:00', 'prepaid', 405000.00, 10.00, 'confirmed', '2025-08-29 12:49:58', 'Hà Kiều', '0919156745'),
+(19, 11, 2, '2025-09-02', '06:00:00', '07:30:00', 'ondelivery', 225000.00, 0.00, 'confirmed', '2025-08-29 12:58:46', 'Hà Kiều', '0919156745'),
+(20, 11, 4, '2025-08-31', '10:00:00', '10:30:00', 'ondelivery', 75000.00, 0.00, 'confirmed', '2025-08-31 02:35:17', 'Thắng', '0843029049'),
+(21, 12, 3, '2025-09-12', '17:30:00', '19:00:00', 'ondelivery', 225000.00, 0.00, 'confirmed', '2025-09-12 10:21:03', 'Thùy', '0926176287');
 
 -- --------------------------------------------------------
 
@@ -92,29 +93,14 @@ INSERT INTO `cart_items` (`cart_item_id`, `user_id`, `product_id`, `quantity`, `
 --
 
 CREATE TABLE `chat_history` (
-  `id` int(11) NOT NULL COMMENT 'Mã tin nhắn',
-  `user_id` int(11) DEFAULT NULL COMMENT 'Mã người dùng (NULL nếu là bot)',
-  `conversation_id` int(11) DEFAULT NULL COMMENT 'Mã cuộc trò chuyện',
-  `role` enum('bot','client','admin') DEFAULT NULL COMMENT 'Vai trò: bot, client, admin',
-  `content` text DEFAULT NULL COMMENT 'Nội dung tin nhắn',
-  `created_at` datetime DEFAULT current_timestamp() COMMENT 'Thời gian gửi'
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='Bảng lưu lịch sử trò chuyện của chatbot';
-
---
--- Dumping data for table `chat_history`
---
-
-INSERT INTO `chat_history` (`id`, `user_id`, `conversation_id`, `role`, `content`, `created_at`) VALUES
-(1, NULL, 1, 'client', 'Chào bot, sân nào còn trống chiều nay?', '2025-08-16 09:00:00'),
-(2, NULL, 1, 'bot', 'Chào bạn! Sân 2 và Sân 4 còn trống từ 15:00-17:00. Bạn muốn đặt không?', '2025-08-16 09:00:05'),
-(3, NULL, 2, 'client', 'Tôi muốn mua vợt Yonex, còn hàng không?', '2025-08-16 09:05:00'),
-(4, NULL, 2, 'bot', 'Vợt Yonex Astrox 99 Pro còn 30 cây. Bạn muốn đặt hàng không?', '2025-08-16 09:05:05'),
-(5, NULL, 3, 'client', 'Giải đấu tháng 9 đăng ký ở đâu?', '2025-08-16 09:10:00'),
-(6, NULL, 3, 'bot', 'Bạn có thể đăng ký tại trang Sự kiện trên website. Phí 200,000 VNĐ.', '2025-08-16 09:10:05'),
-(7, NULL, 4, 'client', 'Kiểm tra trạng thái đặt sân ngày 20/8 của tôi.', '2025-08-16 09:15:00'),
-(8, NULL, 4, 'bot', 'Đặt sân Sân 1 ngày 20/8 từ 6:00-7:00 đang chờ xác nhận thanh toán.', '2025-08-16 09:15:05'),
-(9, NULL, 5, 'admin', 'Kiểm tra danh sách đặt sân hôm nay.', '2025-08-16 09:20:00'),
-(10, NULL, 5, 'bot', 'Hôm nay có 3 lượt đặt sân: Sân 1 (6:00-7:00), Sân 2 (7:00-8:00), Sân 3 (8:00-9:00).', '2025-08-16 09:20:05');
+  `id` int(11) NOT NULL,
+  `conversation_id` int(11) NOT NULL,
+  `user_id` varchar(50) NOT NULL,
+  `sender_role` enum('user','bot','admin') NOT NULL,
+  `message` text NOT NULL,
+  `created_at` timestamp NOT NULL DEFAULT current_timestamp(),
+  `is_read` tinyint(1) DEFAULT 0
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- --------------------------------------------------------
 
@@ -369,7 +355,7 @@ INSERT INTO `orders` (`order_id`, `user_id`, `recipient_name`, `shipping_address
 (23, 11, 'Trần Phương Thùy', 'tran van on, Xã Vĩnh Phương, Thành phố Nha Trang, Tỉnh Khánh Hòa', '0914090876', '', 800000.00, 'pending', 'card', '2025-08-23 15:31:25'),
 (24, 11, 'Phan Minh Thắng', 'đối diện cà phê lê vy 2, Phường 9, Thành phố Vĩnh Long, Tỉnh Vĩnh Long', '0834029049', '', 700000.00, 'pending', 'cod', '2025-08-29 09:08:26'),
 (25, 11, 'Trần Văn Tèo', 'ql1z, Xã Quảng Sơn, Huyện Đăk Glong, Tỉnh Đắk Nông', '0914090142', '', 1500000.00, 'pending', 'cod', '2025-08-29 13:14:53'),
-(26, 11, 'Út mén', 'ql54, Xã Đồn Đạc, Huyện Ba Chẽ, Tỉnh Quảng Ninh', '0914090842', '', 480000.00, 'pending', 'cod', '2025-08-29 13:18:09');
+(26, 11, 'Út mén', 'ql54, Xã Đồn Đạc, Huyện Ba Chẽ, Tỉnh Quảng Ninh', '0914090842', '', 480000.00, 'completed', 'cod', '2025-08-29 13:18:09');
 
 -- --------------------------------------------------------
 
@@ -436,7 +422,8 @@ INSERT INTO `products` (`product_id`, `product_name`, `category_id`, `descriptio
 (7, 'Giày Asics Sky Elite FF', 2, 'Giày cầu lông chống trượt, độ bám tốt', 1800000.00, 15, '2025-08-16 01:30:00'),
 (8, 'Quần cầu lông Yonex', 5, 'Quần ngắn thoải mái, thiết kế thể thao', 350000.00, 40, '2025-08-16 01:35:00'),
 (9, 'Túi đựng vợt Lining 6 cây', 6, 'Túi đựng vợt cao cấp, sức chứa 6 vợt', 800000.00, 10, '2025-08-16 01:40:00'),
-(10, 'Dây đan lưới Yonex BG65', 7, 'Dây đan lưới bền, độ căng tốt', 150000.00, 60, '2025-08-16 01:45:00');
+(10, 'Dây đan lưới Yonex BG65', 7, 'Dây đan lưới bền, độ căng tốt', 150000.00, 60, '2025-08-16 01:45:00'),
+(12, 'Áo đấu', 4, 'Áo thiết kế riêng, vải mè thoáng mát, công nghệ in Korea.', 150000.00, 20, '2025-08-31 10:12:40');
 
 -- --------------------------------------------------------
 
@@ -500,7 +487,8 @@ INSERT INTO `product_images` (`image_id`, `product_id`, `image_url`, `alt_text`,
 (15, 4, 'lining-shirt-front.jpg', 'Áo thi đấu Lining Pro', 0, '2025-08-15 18:15:00'),
 (16, 4, 'lining-shirt-back.jpg', 'Áo thi đấu Lining Pro', 0, '2025-08-15 18:15:00'),
 (17, 6, 'yonex-nanoflare-side.jpg', 'Vợt Yonex Nanoflare 800', 0, '2025-08-15 18:25:00'),
-(18, 7, 'asics-skyelite-side.webp', 'Giày Asics Sky Elite FF', 0, '2025-08-15 18:30:00');
+(18, 7, 'asics-skyelite-side.webp', 'Giày Asics Sky Elite FF', 0, '2025-08-15 18:30:00'),
+(20, 12, 'Áo-đấu.jpg', 'Áo đấu', 1, '2025-08-31 10:12:40');
 
 -- --------------------------------------------------------
 
@@ -534,7 +522,9 @@ INSERT INTO `product_variants` (`variant_id`, `product_id`, `size`, `color`, `st
 (9, 7, '41', 'Black', 5, 1800000.00, '2025-08-29 07:53:02'),
 (10, 8, 'M', 'Black', 20, 350000.00, '2025-08-29 07:53:02'),
 (11, 8, 'L', 'Black', 10, 350000.00, '2025-08-29 07:53:02'),
-(12, 8, 'XL', 'Grey', 10, 350000.00, '2025-08-29 07:53:02');
+(12, 8, 'XL', 'Grey', 10, 350000.00, '2025-08-29 07:53:02'),
+(13, 12, 'S', 'Đen , Trắng', 12, 150000.00, '2025-08-31 10:12:40'),
+(14, 12, 'M', 'Đen Trắng , Hồng', 8, 150000.00, '2025-08-31 10:12:40');
 
 -- --------------------------------------------------------
 
@@ -651,9 +641,7 @@ ALTER TABLE `cart_items`
 -- Indexes for table `chat_history`
 --
 ALTER TABLE `chat_history`
-  ADD PRIMARY KEY (`id`),
-  ADD KEY `idx_user_id` (`user_id`),
-  ADD KEY `idx_conversation_id` (`conversation_id`);
+  ADD PRIMARY KEY (`id`);
 
 --
 -- Indexes for table `courts`
@@ -785,7 +773,7 @@ ALTER TABLE `users`
 -- AUTO_INCREMENT for table `bookings`
 --
 ALTER TABLE `bookings`
-  MODIFY `booking_id` int(11) NOT NULL AUTO_INCREMENT COMMENT 'Mã đặt sân', AUTO_INCREMENT=21;
+  MODIFY `booking_id` int(11) NOT NULL AUTO_INCREMENT COMMENT 'Mã đặt sân', AUTO_INCREMENT=22;
 
 --
 -- AUTO_INCREMENT for table `cart_items`
@@ -797,7 +785,7 @@ ALTER TABLE `cart_items`
 -- AUTO_INCREMENT for table `chat_history`
 --
 ALTER TABLE `chat_history`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT COMMENT 'Mã tin nhắn', AUTO_INCREMENT=11;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
 
 --
 -- AUTO_INCREMENT for table `courts`
@@ -863,7 +851,7 @@ ALTER TABLE `order_items`
 -- AUTO_INCREMENT for table `products`
 --
 ALTER TABLE `products`
-  MODIFY `product_id` int(11) NOT NULL AUTO_INCREMENT COMMENT 'Mã sản phẩm', AUTO_INCREMENT=11;
+  MODIFY `product_id` int(11) NOT NULL AUTO_INCREMENT COMMENT 'Mã sản phẩm', AUTO_INCREMENT=13;
 
 --
 -- AUTO_INCREMENT for table `product_categories`
@@ -875,13 +863,13 @@ ALTER TABLE `product_categories`
 -- AUTO_INCREMENT for table `product_images`
 --
 ALTER TABLE `product_images`
-  MODIFY `image_id` int(11) NOT NULL AUTO_INCREMENT COMMENT 'Mã hình ảnh', AUTO_INCREMENT=19;
+  MODIFY `image_id` int(11) NOT NULL AUTO_INCREMENT COMMENT 'Mã hình ảnh', AUTO_INCREMENT=21;
 
 --
 -- AUTO_INCREMENT for table `product_variants`
 --
 ALTER TABLE `product_variants`
-  MODIFY `variant_id` int(11) NOT NULL AUTO_INCREMENT COMMENT 'Mã biến thể', AUTO_INCREMENT=13;
+  MODIFY `variant_id` int(11) NOT NULL AUTO_INCREMENT COMMENT 'Mã biến thể', AUTO_INCREMENT=15;
 
 --
 -- AUTO_INCREMENT for table `settings`
@@ -911,12 +899,6 @@ ALTER TABLE `users`
 ALTER TABLE `bookings`
   ADD CONSTRAINT `bookings_ibfk_1` FOREIGN KEY (`user_id`) REFERENCES `users` (`user_id`) ON DELETE SET NULL,
   ADD CONSTRAINT `bookings_ibfk_2` FOREIGN KEY (`court_id`) REFERENCES `courts` (`court_id`) ON DELETE SET NULL;
-
---
--- Constraints for table `chat_history`
---
-ALTER TABLE `chat_history`
-  ADD CONSTRAINT `chat_history_ibfk_1` FOREIGN KEY (`user_id`) REFERENCES `users` (`user_id`) ON DELETE SET NULL;
 
 --
 -- Constraints for table `event_registrations`

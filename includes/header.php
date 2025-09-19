@@ -488,7 +488,8 @@ if (session_status() === PHP_SESSION_NONE) {
     var sendBtn = document.getElementById('bubble-chat-send');
 
     // Config: đổi URL này thành endpoint Python của bạn
-    var CHAT_API_URL = 'http://localhost:8000/chat';
+    var CHAT_API_URL = 'http://localhost:5000/api/chat';
+    var USER_ID = '<?php echo isset($_SESSION['user_id']) ? htmlspecialchars((string)$_SESSION['user_id'], ENT_QUOTES, "UTF-8") : "guest"; ?>';
 
     var messages = []; // lưu lịch sử hội thoại {role, content}
 
@@ -511,21 +512,37 @@ if (session_status() === PHP_SESSION_NONE) {
         return div;
     }
 
+    function appendHtmlBubble(html) {
+        var div = document.createElement('div');
+        div.style.background = '#FFFFFF';
+        div.style.border = '1px solid #E5E7EB';
+        div.style.borderRadius = '10px';
+        div.style.padding = '10px 12px';
+        div.style.fontSize = '14px';
+        div.innerHTML = html;
+        body.appendChild(div);
+        body.scrollTop = body.scrollHeight;
+        return div;
+    }
+
     function sendToAI(prompt) {
-        messages.push({ role: 'user', content: prompt });
         appendBubble(prompt, 'user');
         var typing = appendBubble('Đang nhập...', 'assistant', 'bubble-typing');
         fetch(CHAT_API_URL, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ messages: messages })
+            body: JSON.stringify({ user_id: USER_ID, message: prompt })
         }).then(function(r){ return r.json(); })
         .then(function(data){
-            var reply = data.reply || 'Xin lỗi, hiện chưa phản hồi được.';
             var t = document.getElementById('bubble-typing');
             if (t) t.remove();
-            appendBubble(reply, 'assistant');
-            messages.push({ role: 'assistant', content: reply });
+            var reply = data && (data.response || data.reply) ? (data.response || data.reply) : 'Xin lỗi, hiện chưa phản hồi được.';
+            var isHtml = !!(data && data.is_html);
+            if (isHtml) {
+                appendHtmlBubble(reply);
+            } else {
+                appendBubble(reply, 'assistant');
+            }
         }).catch(function(){
             var t = document.getElementById('bubble-typing');
             if (t) t.remove();
