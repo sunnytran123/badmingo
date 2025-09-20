@@ -218,6 +218,7 @@ def handle_court_booking_query(query):
            - Chồng lấn khi: NOT (b.end_time <= 'start_time' OR b.start_time >= 'end_time')
         3. Xem xét thời gian hiện tại: Chỉ loại booking chưa kết thúc (b.end_time > current_time)
         4. Luôn bắt đầu từ bảng courts và loại trừ qua bookings
+        5. QUAN TRỌNG: Sử dụng CURTIME() để lấy thời gian hiện tại, không hardcode thời gian
 
         Cơ sở dữ liệu `sunny_sport`:
         - *courts*: `court_id`, `court_name`, `description`, `price_per_hour`
@@ -226,8 +227,8 @@ def handle_court_booking_query(query):
         Ví dụ SQL mẫu:
         
         # Trường hợp 1: Chỉ có ngày (xem xét thời gian hiện tại)
-        # Mô tả: Tìm sân trống ngày 20/9, chỉ loại booking chưa kết thúc (sau 14:30)
-        # Khi nào dùng: Người dùng hỏi "ngày mai có sân trống không" lúc 14:30
+        # Mô tả: Tìm sân trống ngày 20/9, chỉ loại booking chưa kết thúc (sau thời gian hiện tại)
+        # QUAN TRỌNG: Sử dụng thời gian hiện tại thực tế, không hardcode
         SELECT c.court_id, c.court_name, c.description, c.price_per_hour 
         FROM courts c 
         WHERE NOT EXISTS (
@@ -235,7 +236,7 @@ def handle_court_booking_query(query):
             WHERE b.court_id = c.court_id 
             AND b.booking_date = '2025-09-20' 
             AND b.status IN ('pending', 'confirmed')
-            AND b.end_time > '14:30:00'
+            AND b.end_time > CURTIME()
         )
         LIMIT 5
         
@@ -391,22 +392,23 @@ def generate_court_answer(data, query):
     try:
         # Xử lý trường hợp không có dữ liệu
         if not data or len(data) == 0:
-            return "Xin lỗi, hiện tại không có sân trống phù hợp với yêu cầu của bạn. Vui lòng thử ngày khác hoặc khung giờ khác."
+            return "Hiện tại không có sân trống phù hợp. Bạn thử ngày khác nhé! 😊"
         
-        # Tạo câu trả lời trực tiếp từ dữ liệu
-        response = f"Tìm thấy {len(data)} sân còn trống:\n\n"
+        # Nếu chỉ có 1 sân
+        if len(data) == 1:
+            court = data[0]
+            response = f"✅ Có 1 sân trống:\n- {court['court_name']}"
+        else:
+            response = f"✅ Có {len(data)} sân trống:\n"
+            for court in data:
+                response += f"- {court['court_name']}\n"
         
-        for i, court in enumerate(data, 1):
-            response += f"{i}. {court['court_name']} - Giá: {court['price_per_hour']:,.0f} VNĐ/giờ\n"
-            if court.get('description'):
-                response += f"   Mô tả: {court['description']}\n"
-            response += "\n"
-        
-        return response
+        return response.strip()
         
     except Exception as e:
         print(f"Lỗi tạo court answer: {e}")
         return "Xin lỗi, không thể tạo thông tin sân. Vui lòng thử lại."
+
 
 
 def generate_product_card(data, query):
@@ -516,23 +518,19 @@ def chat():
                 data = execute_query(fallback_query, params)
                 
                 if data:
-                    response = f"Dưới đây là sân trống ngay bây giờ:\n\n"
+                    response = f"✅ Sân trống ngay bây giờ:\n"
                     for i, court in enumerate(data, 1):
                         response += f"{i}. {court['court_name']} - {court['price_per_hour']:,.0f} VNĐ/giờ\n"
-                        if court.get('description'):
-                            response += f"   {court['description']}\n\n"
                 else:
                     # Nếu không có sân trống ngay bây giờ, tìm sân trống cả ngày
                     fallback_query, params = create_standard_court_query(today)
                     data = execute_query(fallback_query, params)
                     if data:
-                        response = f"Hiện tại không có sân trống, nhưng có sân trống trong ngày:\n\n"
+                        response = f"⏰ Hiện tại không có sân trống, nhưng có sân trống trong ngày:\n"
                         for i, court in enumerate(data, 1):
                             response += f"{i}. {court['court_name']} - {court['price_per_hour']:,.0f} VNĐ/giờ\n"
-                            if court.get('description'):
-                                response += f"   {court['description']}\n\n"
                     else:
-                        response = "Xin lỗi, hôm nay không có sân trống nào."
+                        response = "😔 Hôm nay không có sân trống nào rồi."
             else:
                 data = execute_query(query)
                 print("Court data:", data)
