@@ -410,6 +410,174 @@ def generate_court_answer(data, query):
         return "Xin lỗi, không thể tạo thông tin sân. Vui lòng thử lại."
 
 
+def find_alternative_time_slots(date, start_time, end_time, max_slots=5):
+    """Tìm các khung giờ thay thế khi khung giờ yêu cầu không có sân trống"""
+    try:
+        from datetime import datetime, timedelta
+        
+        # Parse thời gian
+        start_dt = datetime.strptime(f"{date} {start_time}", "%Y-%m-%d %H:%M:%S")
+        end_dt = datetime.strptime(f"{date} {end_time}", "%Y-%m-%d %H:%M:%S")
+        
+        # Tính thời gian kết thúc của khung giờ yêu cầu
+        requested_end_hour = end_dt.hour
+        
+        alternative_slots = []
+        
+        # Tìm các khung giờ tiếp theo trong ngày (từ 6h đến 22h)
+        for hour in range(requested_end_hour, 22):
+            slot_start = f"{hour:02d}:00:00"
+            slot_end = f"{hour+1:02d}:00:00"
+            
+            # Kiểm tra sân trống cho khung giờ này
+            query = f"""
+            SELECT c.court_id, c.court_name, c.description, c.price_per_hour 
+            FROM courts c 
+            WHERE NOT EXISTS (
+                SELECT 1 FROM bookings b 
+                WHERE b.court_id = c.court_id 
+                AND b.booking_date = %s 
+                AND b.status IN ('pending', 'confirmed')
+                AND NOT (b.end_time <= %s OR b.start_time >= %s)
+            )
+            LIMIT 5
+            """
+            
+            data = execute_query(query, (date, slot_start, slot_end))
+            
+            if data:
+                court_names = [court['court_name'] for court in data]
+                alternative_slots.append({
+                    'time': f"{hour}h–{hour+1}h",
+                    'courts': court_names
+                })
+                
+                # Giới hạn số lượng khung giờ gợi ý
+                if len(alternative_slots) >= max_slots:
+                    break
+        
+        return alternative_slots
+        
+    except Exception as e:
+        print(f"Lỗi tìm khung giờ thay thế: {e}")
+        return []
+
+
+def extract_time_info_from_message(message):
+    """Trích xuất thông tin ngày, giờ bắt đầu và kết thúc từ message của user"""
+    try:
+        import re
+        from datetime import datetime, timedelta
+        
+        # Mặc định là hôm nay
+        date = datetime.now().strftime('%Y-%m-%d')
+        start_time = None
+        end_time = None
+        
+        # Tìm ngày trong message
+        date_patterns = [
+            r'ngày\s+(\d{1,2})[/-](\d{1,2})',  # ngày 20/9, ngày 20-9
+            r'(\d{1,2})[/-](\d{1,2})',  # 20/9, 20-9
+            r'ngày\s+mai',  # ngày mai
+            r'hôm\s+nay',  # hôm nay
+        ]
+        
+        for pattern in date_patterns:
+            match = re.search(pattern, message.lower())
+            if match:
+                if 'mai' in pattern:
+                    date = (datetime.now() + timedelta(days=1)).strftime('%Y-%m-%d')
+                elif 'nay' in pattern:
+                    date = datetime.now().strftime('%Y-%m-%d')
+                else:
+                    day, month = match.groups()
+                    current_year = datetime.now().year
+                    date = f"{current_year}-{month.zfill(2)}-{day.zfill(2)}"
+                break
+        
+        # Tìm khung giờ trong message
+        time_patterns = [
+            r'(\d{1,2})h\s*[-–]\s*(\d{1,2})h',  # 8h-9h, 8h–9h
+            r'(\d{1,2}):(\d{2})\s*[-–]\s*(\d{1,2}):(\d{2})',  # 8:00-9:00
+            r'từ\s+(\d{1,2})h\s+đến\s+(\d{1,2})h',  # từ 8h đến 9h
+            r'(\d{1,2})h\s+đến\s+(\d{1,2})h',  # 8h đến 9h
+        ]
+        
+        for pattern in time_patterns:
+            match = re.search(pattern, message.lower())
+            if match:
+                groups = match.groups()
+                if len(groups) == 2:  # 8h-9h format
+                    start_hour = int(groups[0])
+                    end_hour = int(groups[1])
+                    start_time = f"{start_hour:02d}:00:00"
+                    end_time = f"{end_hour:02d}:00:00"
+                elif len(groups) == 4:  # 8:00-9:00 format
+                    start_hour, start_min = int(groups[0]), int(groups[1])
+                    end_hour, end_min = int(groups[2]), int(groups[3])
+                    start_time = f"{start_hour:02d}:{start_min:02d}:00"
+                    end_time = f"{end_hour:02d}:{end_min:02d}:00"
+                break
+        
+        # Nếu không tìm thấy khung giờ cụ thể, tìm giờ đơn lẻ
+        if not start_time:
+            single_hour_patterns = [
+                r'(\d{1,2})h',  # 8h
+                r'(\d{1,2}):(\d{2})',  # 8:00
+            ]
+            
+            for pattern in single_hour_patterns:
+                match = re.search(pattern, message.lower())
+                if match:
+                    groups = match.groups()
+                    if len(groups) == 1:  # 8h format
+                        hour = int(groups[0])
+                        start_time = f"{hour:02d}:00:00"
+                        end_time = f"{hour+1:02d}:00:00"
+                    elif len(groups) == 2:  # 8:00 format
+                        hour, minute = int(groups[0]), int(groups[1])
+                        start_time = f"{hour:02d}:{minute:02d}:00"
+                        end_time = f"{hour+1:02d}:00:00"
+                    break
+        
+        return date, start_time, end_time
+        
+    except Exception as e:
+        print(f"Lỗi trích xuất thông tin thời gian: {e}")
+        return None, None, None
+
+
+def generate_court_answer_with_alternatives(data, query, date=None, start_time=None, end_time=None):
+    """Tạo câu trả lời với khung giờ gợi ý nếu không có sân trống"""
+    try:
+        # Nếu có sân trống, trả kết quả bình thường
+        if data and len(data) > 0:
+            return generate_court_answer(data, query)
+        
+        # Nếu không có sân và có thông tin khung giờ, tìm khung giờ thay thế
+        if not data and date and start_time and end_time:
+            alternative_slots = find_alternative_time_slots(date, start_time, end_time)
+            
+            if alternative_slots:
+                response = f"❌ Khung {start_time[:5]}–{end_time[:5]} đã kín.\n"
+                response += "👉 Nhưng có sân trống ở các khung giờ sau:\n"
+                
+                for slot in alternative_slots:
+                    courts_str = ", ".join(slot['courts'])
+                    response += f"- {slot['time']}: {courts_str}\n"
+                
+                return response.strip()
+            else:
+                return "😔 Cả ngày không còn sân trống nào rồi. Bạn thử ngày khác nhé!"
+        
+        # Fallback cho trường hợp khác
+        return "Hiện tại không có sân trống phù hợp. Bạn thử ngày khác nhé! 😊"
+        
+    except Exception as e:
+        print(f"Lỗi tạo court answer với alternatives: {e}")
+        return "Xin lỗi, không thể tạo thông tin sân. Vui lòng thử lại."
+
+
 
 def generate_product_card(data, query):
     """Tạo HTML card hiển thị sản phẩm cầu lông"""
@@ -534,7 +702,12 @@ def chat():
             else:
                 data = execute_query(query)
                 print("Court data:", data)
-                response = generate_court_answer(data, message_text)
+                
+                # Trích xuất thông tin khung giờ từ message để tìm alternatives
+                date, start_time, end_time = extract_time_info_from_message(message_text)
+                
+                # Sử dụng logic mới với khung giờ gợi ý
+                response = generate_court_answer_with_alternatives(data, message_text, date, start_time, end_time)
             
             print("Court response:", response)
             # Lưu phản hồi của bot
