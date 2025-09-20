@@ -1,21 +1,4 @@
-# 🤖 Hướng dẫn sử dụng Chatbot Sunny Sport
 
-## 🚀 Cách chạy server
-
-### 1. Cài đặt dependencies
-```bash
-pip install -r install_requirements.txt
-```
-
-### 2. Chạy server
-```bash
-cd sv
-python chatbot_badminton.py
-```
-
-### 3. Kiểm tra server
-- Mở trình duyệt: `http://localhost:5000/api/chat`
-- Nếu thấy lỗi 405 Method Not Allowed là bình thường (chỉ POST mới được)
 
 ## 🎯 Tính năng chatbot
 

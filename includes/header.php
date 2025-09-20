@@ -472,8 +472,8 @@ if (session_status() === PHP_SESSION_NONE) {
         <button class="bubble-chat-close" aria-label="Đóng" onclick="document.getElementById('bubble-chat-window').style.display='none'">&times;</button>
     </div>
     <div class="bubble-chat-body" id="bubble-chat-body">
-        <div class="bubble-chat-option" data-seed="Tôi muốn đặt sân cầu lông">Đặt sân cầu lông</div>
-        <div class="bubble-chat-option" data-seed="Tôi muốn mua vợt/phụ kiện">Mua vợt, phụ kiện</div>
+        <!-- <div class="bubble-chat-option" data-seed="Tôi muốn đặt sân cầu lông">Đặt sân cầu lông</div>
+        <div class="bubble-chat-option" data-seed="Tôi muốn mua vợt/phụ kiện">Mua vợt, phụ kiện</div> -->
     </div>
     <div class="bubble-chat-input">
         <input id="bubble-chat-text" type="text" placeholder="Nhập câu hỏi của bạn..." />
@@ -489,7 +489,9 @@ if (session_status() === PHP_SESSION_NONE) {
 
     // Config: đổi URL này thành endpoint Python của bạn
     var CHAT_API_URL = 'http://localhost:5000/api/chat';
-    var USER_ID = '<?php echo isset($_SESSION['user_id']) ? htmlspecialchars((string)$_SESSION['user_id'], ENT_QUOTES, "UTF-8") : "guest"; ?>';
+    
+    // Lấy user_id từ session PHP
+    var userId = '<?php echo isset($_SESSION["user_id"]) ? $_SESSION["user_id"] : "guest"; ?>';
 
     var messages = []; // lưu lịch sử hội thoại {role, content}
 
@@ -506,47 +508,46 @@ if (session_status() === PHP_SESSION_NONE) {
         div.style.borderRadius = '10px';
         div.style.padding = '10px 12px';
         div.style.fontSize = '14px';
-        div.textContent = text;
-        body.appendChild(div);
-        body.scrollTop = body.scrollHeight;
-        return div;
-    }
-
-    function appendHtmlBubble(html) {
-        var div = document.createElement('div');
-        div.style.background = '#FFFFFF';
-        div.style.border = '1px solid #E5E7EB';
-        div.style.borderRadius = '10px';
-        div.style.padding = '10px 12px';
-        div.style.fontSize = '14px';
-        div.innerHTML = html;
+        div.innerHTML = text; // Thay đổi từ textContent sang innerHTML để hỗ trợ HTML
         body.appendChild(div);
         body.scrollTop = body.scrollHeight;
         return div;
     }
 
     function sendToAI(prompt) {
+        messages.push({ role: 'user', content: prompt });
         appendBubble(prompt, 'user');
         var typing = appendBubble('Đang nhập...', 'assistant', 'bubble-typing');
         fetch(CHAT_API_URL, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ user_id: USER_ID, message: prompt })
-        }).then(function(r){ return r.json(); })
-        .then(function(data){
-            var t = document.getElementById('bubble-typing');
-            if (t) t.remove();
-            var reply = data && (data.response || data.reply) ? (data.response || data.reply) : 'Xin lỗi, hiện chưa phản hồi được.';
-            var isHtml = !!(data && data.is_html);
-            if (isHtml) {
-                appendHtmlBubble(reply);
-            } else {
-                appendBubble(reply, 'assistant');
+            body: JSON.stringify({ 
+                message: prompt,
+                user_id: userId // Lấy từ session PHP
+            })
+        }).then(function(r){ 
+            if (!r.ok) {
+                throw new Error('HTTP ' + r.status + ': ' + r.statusText);
             }
-        }).catch(function(){
+            return r.json(); 
+        })
+        .then(function(data){
+            var reply = data.response || 'Xin lỗi, hiện chưa phản hồi được.';
             var t = document.getElementById('bubble-typing');
             if (t) t.remove();
-            appendBubble('Có lỗi khi kết nối server. Vui lòng thử lại.', 'assistant');
+            appendBubble(reply, 'assistant');
+            messages.push({ role: 'assistant', content: reply });
+        }).catch(function(error){
+            console.error('Lỗi kết nối:', error);
+            var t = document.getElementById('bubble-typing');
+            if (t) t.remove();
+            var errorMsg = 'Có lỗi khi kết nối server. ';
+            if (error.message.includes('Failed to fetch')) {
+                errorMsg += 'Server chưa chạy hoặc không thể kết nối. Vui lòng kiểm tra server.';
+            } else {
+                errorMsg += 'Chi tiết: ' + error.message;
+            }
+            appendBubble(errorMsg, 'assistant');
         });
     }
 

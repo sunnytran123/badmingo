@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: 127.0.0.1
--- Generation Time: Sep 14, 2025 at 08:19 AM
+-- Generation Time: Sep 19, 2025 at 06:07 AM
 -- Server version: 10.4.32-MariaDB
 -- PHP Version: 8.1.25
 
@@ -94,13 +94,96 @@ INSERT INTO `cart_items` (`cart_item_id`, `user_id`, `product_id`, `quantity`, `
 
 CREATE TABLE `chat_history` (
   `id` int(11) NOT NULL,
-  `conversation_id` int(11) NOT NULL,
   `user_id` varchar(50) NOT NULL,
-  `sender_role` enum('user','bot','admin') NOT NULL,
+  `role` enum('user','bot','admin') NOT NULL,
   `message` text NOT NULL,
-  `created_at` timestamp NOT NULL DEFAULT current_timestamp(),
-  `is_read` tinyint(1) DEFAULT 0
+  `created_at` timestamp NOT NULL DEFAULT current_timestamp()
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+--
+-- Dumping data for table `chat_history`
+--
+
+INSERT INTO `chat_history` (`id`, `user_id`, `role`, `message`, `created_at`) VALUES
+(1, '12', 'user', 'xin chào , vào 8 giờ sáng ngày mai có sân trống không', '2025-09-14 08:06:30'),
+(2, '12', 'bot', 'Xin lỗi, tôi chưa hiểu yêu cầu.', '2025-09-14 08:06:32'),
+(3, '12', 'user', 'sân 1 ngày mai lúc 7 giờ sáng tới 9 giờ sáng có trống không', '2025-09-15 15:06:13'),
+(4, '12', 'bot', 'Hiện tại, tôi không có thông tin về tình trạng trống của Sân 1 vào ngày mai từ 7 giờ sáng đến 9 giờ sáng. Bạn có thể cung cấp thêm thông tin cụ thể hơn để tôi có thể hỗ trợ tốt hơn. Giá sân là 150.000 VNĐ/giờ.', '2025-09-15 15:06:20'),
+(5, '12', 'user', 'bạn muốn thông tini gì để cụ thể hơn', '2025-09-15 15:06:45'),
+(6, '12', 'user', 'bạn muốn thông tini gì để cụ thể hơn', '2025-09-15 15:06:46'),
+(7, '12', 'bot', 'Xin lỗi, tôi chưa hiểu yêu cầu. Bạn có thể nói rõ đặt sân hay tìm sản phẩm?', '2025-09-15 15:06:47'),
+(8, '12', 'bot', 'Xin lỗi, tôi chưa hiểu yêu cầu. Bạn có thể nói rõ đặt sân hay tìm sản phẩm?', '2025-09-15 15:06:47'),
+(9, '12', 'user', 'tôi muốn mua vợt cầu lông', '2025-09-15 15:08:09'),
+(10, '12', 'bot', '<div class=\"product-list\" style=\"display:flex;flex-wrap:wrap;gap:10px;\"><div class=\"product-card\" style=\"width:180px;padding:8px;border-radius:10px;box-shadow:0 1px 6px rgba(0,0,0,0.08);cursor:pointer;background:#fff;text-align:center;\" onclick=\"window.location.href=\'t.php?product_id=1\';\"><img src=\"images/Astrox_99_Pro_Cherry\" style=\"width:100%;height:120px;object-fit:cover;border-radius:8px;\"><div style=\"margin:6px 0 4px;font-weight:600;font-size:14px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;\">Vợt Yonex Astrox 99 Pro</div><div style=\"color:#388e3c;font-weight:700;\">đ2500000.00</div></div><div class=\"product-card\" style=\"width:180px;padding:8px;border-radius:10px;box-shadow:0 1px 6px rgba(0,0,0,0.08);cursor:pointer;background:#fff;text-align:center;\" onclick=\"window.location.href=\'t.php?product_id=6\';\"><img src=\"images/yonex-nanoflare-side.jpg\" style=\"width:100%;height:120px;object-fit:cover;border-radius:8px;\"><div style=\"margin:6px 0 4px;font-weight:600;font-size:14px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;\">Vợt Yonex Nanoflare 800</div><div style=\"color:#388e3c;font-weight:700;\">đ2200000.00</div></div></div>', '2025-09-15 15:08:13'),
+(11, '12', 'user', 'tôi muốn mua áo', '2025-09-15 15:13:42'),
+(12, '12', 'bot', '<div class=\"product-list\" style=\"display:flex;flex-wrap:wrap;gap:10px;\"><div class=\"product-card\" style=\"width:180px;padding:8px;border-radius:10px;box-shadow:0 1px 6px rgba(0,0,0,0.08);cursor:pointer;background:#fff;text-align:center;\" onclick=\"window.location.href=\'t.php?product_id=1\';\"><img src=\"images/Astrox_99_Pro_Cherry.jpg\" style=\"width:100%;height:120px;object-fit:cover;border-radius:8px;\"><div style=\"margin:6px 0 4px;font-weight:600;font-size:14px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;\">Vợt Yonex Astrox 99 Pro</div><div style=\"color:#388e3c;font-weight:700;\">đ2500000.00</div></div><div class=\"product-card\" style=\"width:180px;padding:8px;border-radius:10px;box-shadow:0 1px 6px rgba(0,0,0,0.08);cursor:pointer;background:#fff;text-align:center;\" onclick=\"window.location.href=\'t.php?product_id=4\';\"><img src=\"images/lining-shirt-back.jpg\" style=\"width:100%;height:120px;object-fit:cover;border-radius:8px;\"><div style=\"margin:6px 0 4px;font-weight:600;font-size:14px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;\">Áo thi đấu Lining Pro</div><div style=\"color:#388e3c;font-weight:700;\">đ450000.00</div></div><div class=\"product-card\" style=\"width:180px;padding:8px;border-radius:10px;box-shadow:0 1px 6px rgba(0,0,0,0.08);cursor:pointer;background:#fff;text-align:center;\" onclick=\"window.location.href=\'t.php?product_id=8\';\"><img src=\"images/yonex-shorts.jpg\" style=\"width:100%;height:120px;object-fit:cover;border-radius:8px;\"><div style=\"margin:6px 0 4px;font-weight:600;font-size:14px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;\">Quần cầu lông Yonex</div><div style=\"color:#388e3c;font-weight:700;\">đ350000.00</div></div><div class=\"product-card\" style=\"width:180px;padding:8px;border-radius:10px;box-shadow:0 1px 6px rgba(0,0,0,0.08);cursor:pointer;background:#fff;text-align:center;\" onclick=\"window.location.href=\'t.php?product_id=9\';\"><img src=\"images/lining-bag.jpg\" style=\"width:100%;height:120px;object-fit:cover;border-radius:8px;\"><div style=\"margin:6px 0 4px;font-weight:600;font-size:14px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;\">Túi đựng vợt Lining 6 cây</div><div style=\"color:#388e3c;font-weight:700;\">đ800000.00</div></div><div class=\"product-card\" style=\"width:180px;padding:8px;border-radius:10px;box-shadow:0 1px 6px rgba(0,0,0,0.08);cursor:pointer;background:#fff;text-align:center;\" onclick=\"window.location.href=\'t.php?product_id=12\';\"><img src=\"images/Áo-đấu.jpg\" style=\"width:100%;height:120px;object-fit:cover;border-radius:8px;\"><div style=\"margin:6px 0 4px;font-weight:600;font-size:14px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;\">Áo đấu</div><div style=\"color:#388e3c;font-weight:700;\">đ150000.00</div></div></div>', '2025-09-15 15:13:47'),
+(13, '12', 'user', 'tôi muốn đặt sân câuf', '2025-09-15 15:14:04'),
+(14, '12', 'bot', 'Giá sân tham khảo: Sân 1 (150,000đ/giờ), Sân 2 (150,000đ/giờ), Sân 3 (150,000đ/giờ), Sân 4 (150,000đ/giờ), Sân 5 (140,000đ/giờ)', '2025-09-15 15:14:05'),
+(15, '12', 'user', 'ngày mai lúc 7h đến 9h có sân trống không', '2025-09-15 15:14:22'),
+(16, '12', 'bot', 'Các sân còn trống 2025-09-16 07:00–09:00: Sân 1 (150,000đ/giờ), Sân 2 (150,000đ/giờ), Sân 3 (150,000đ/giờ), Sân 4 (150,000đ/giờ), Sân 5 (140,000đ/giờ).', '2025-09-15 15:14:23'),
+(17, '12', 'user', 'áo đấu bên shopo bạn có còn sản phẩm không', '2025-09-15 15:14:54'),
+(18, '12', 'bot', '<div class=\"product-list\" style=\"display:flex;flex-wrap:wrap;gap:10px;\"><div class=\"product-card\" style=\"width:180px;padding:8px;border-radius:10px;box-shadow:0 1px 6px rgba(0,0,0,0.08);cursor:pointer;background:#fff;text-align:center;\" onclick=\"window.location.href=\'t.php?product_id=12\';\"><img src=\"images/Áo-đấu.jpg\" style=\"width:100%;height:120px;object-fit:cover;border-radius:8px;\"><div style=\"margin:6px 0 4px;font-weight:600;font-size:14px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;\">Áo đấu</div><div style=\"color:#388e3c;font-weight:700;\">đ150000.00</div></div></div>', '2025-09-15 15:14:57'),
+(19, '12', 'user', 'tôi muốn mua áo đấu', '2025-09-15 15:20:18'),
+(20, '12', 'bot', 'Không tìm thấy sản phẩm phù hợp.', '2025-09-15 15:20:22'),
+(21, '12', 'user', 'tôi muốn tìm mua vợt yonex', '2025-09-15 15:20:42'),
+(22, '12', 'bot', 'Không tìm thấy sản phẩm phù hợp.', '2025-09-15 15:20:46'),
+(23, '12', 'user', 'tôi muốn tìm mua vợt yonex', '2025-09-15 15:28:51'),
+(24, '12', 'bot', '<div class=\"product-list\">\n    <div class=\"product-card\" onclick=\"window.location.href=\'shop_list.php?product_id=1\'\">\n        <img src=\"images/Astrox_99_Pro_Cherry.jpg\" alt=\"Vợt Yonex Astrox 99 Pro\">\n        <h3>Vợt Yonex Astrox 99 Pro</h3>\n        <p>Giá: 2.500.000 VNĐ</p>\n    </div>\n    <div class=\"product-card\" onclick=\"window.location.href=\'shop_list.php?product_id=6\'\">\n        <img src=\"images/yonex-nanoflare-side.jpg\" alt=\"Vợt Yonex Nanoflare 800\">\n        <h3>Vợt Yonex Nanoflare 800</h3>\n        <p>Giá: 2.200.000 VNĐ</p>\n    </div>\n</div>', '2025-09-15 15:29:01'),
+(25, '12', 'user', 'tôi muốn tìm mua vợt yonex', '2025-09-15 15:36:45'),
+(26, '12', 'bot', '<div class=\"product-list\">\n    <div class=\"product-card\" onclick=\"window.location.href=\'shop_list.php?product_id=1\'\">\n        <img src=\"images/Astrox_99_Pro_Cherry.jpg\" alt=\"Vợt Yonex Astrox 99 Pro\">\n        <h3>Vợt Yonex Astrox 99 Pro</h3>\n        <p>Giá: 2,500,000 VNĐ</p>\n    </div>\n    <div class=\"product-card\" onclick=\"window.location.href=\'shop_list.php?product_id=6\'\">\n        <img src=\"images/yonex-nanoflare-side.jpg\" alt=\"Vợt Yonex Nanoflare 800\">\n        <h3>Vợt Yonex Nanoflare 800</h3>\n        <p>Giá: 2,200,000 VNĐ</p>\n    </div>\n</div>', '2025-09-15 15:36:55'),
+(27, '12', 'user', 'tôi muốn mua vợt yonex', '2025-09-15 15:41:17'),
+(28, '12', 'bot', '<div class=\"product-list\">\n    <div class=\"product-card\" onclick=\"window.location.href=\'t.php?product_id=1\'\">\n        <img src=\"images/Astrox_99_Pro_Cherry.jpg\" alt=\"Vợt Yonex Astrox 99 Pro\">\n        <h3>Vợt Yonex Astrox 99 Pro</h3>\n        <p>Giá: 2,500,000 VNĐ</p>\n    </div>\n    <div class=\"product-card\" onclick=\"window.location.href=\'t.php?product_id=6\'\">\n        <img src=\"images/yonex-nanoflare-side.jpg\" alt=\"Vợt Yonex Nanoflare 800\">\n        <h3>Vợt Yonex Nanoflare 800</h3>\n        <p>Giá: 2,200,000 VNĐ</p>\n    </div>\n</div>', '2025-09-15 15:41:32'),
+(29, '12', 'user', 'tôi muốn mua vợt yonesx', '2025-09-15 15:55:51'),
+(30, '12', 'bot', 'Không tìm thấy sản phẩm phù hợp.', '2025-09-15 15:55:58'),
+(31, '12', 'user', 'vợt yonex còn không', '2025-09-15 15:56:08'),
+(32, '12', 'bot', '[HTML sản phẩm]', '2025-09-15 15:56:17'),
+(33, '12', 'user', 'tôi muốn mua vợt yonex', '2025-09-15 15:56:30'),
+(34, '12', 'bot', '[HTML sản phẩm]', '2025-09-15 15:56:41'),
+(35, '12', 'user', 'tôi muốn mua vợt yonex', '2025-09-15 16:02:51'),
+(36, '12', 'user', 'tôi muốn mua vợt yonex', '2025-09-15 16:02:52'),
+(37, '12', 'bot', '[HTML sản phẩm]', '2025-09-15 16:02:55'),
+(38, '12', 'bot', '[HTML sản phẩm]', '2025-09-15 16:02:56'),
+(39, '12', 'user', 'tôi muốn mua vợt yonex', '2025-09-15 16:32:47'),
+(40, '12', 'user', 'muốn mua vợt yonex', '2025-09-15 16:34:51'),
+(41, '12', 'bot', '[HTML sản phẩm]', '2025-09-15 16:35:01'),
+(42, '12', 'user', 'muốn mua vợt yonex', '2025-09-15 16:36:30'),
+(43, '12', 'bot', '[HTML sản phẩm]', '2025-09-15 16:36:38'),
+(44, '12', 'user', 'tôi muốn tìm vợt yoonex', '2025-09-15 16:50:23'),
+(45, '12', 'bot', 'Không tìm thấy sản phẩm phù hợp.', '2025-09-15 16:50:27'),
+(46, '12', 'user', 'vợt yonex', '2025-09-15 16:50:33'),
+(47, '12', 'bot', '[HTML sản phẩm]', '2025-09-15 16:50:40'),
+(48, '12', 'user', 'ngày mai 7h sáng còn sân trống không', '2025-09-18 13:49:36'),
+(49, '12', 'bot', 'Xin lỗi, mình chưa hiểu yêu cầu của bạn. Bạn có thể thử diễn đạt lại?', '2025-09-18 13:49:38'),
+(50, '12', 'user', 'ngày mai 7h sáng còn sân trống không', '2025-09-18 13:50:30'),
+(51, '12', 'bot', 'Bạn vui lòng cung cấp rõ ngày và giờ muốn đặt sân để mình kiểm tra.', '2025-09-18 13:50:34'),
+(52, '12', 'user', 'ngày 18/9 7h sáng mai có còn sân trống không', '2025-09-18 13:50:54'),
+(53, '12', 'user', 'ngày 18 tháng 9 sáng mai có còn sân trống không', '2025-09-18 13:51:24'),
+(54, '12', 'bot', 'Bạn vui lòng cung cấp rõ ngày và giờ muốn đặt sân để mình kiểm tra.', '2025-09-18 13:51:25'),
+(55, '12', 'user', 'Tôi muốn đặt sân cầu lông', '2025-09-18 13:55:21'),
+(56, '12', 'bot', 'Bạn vui lòng cung cấp rõ ngày và giờ muốn đặt sân để mình kiểm tra.', '2025-09-18 13:55:24'),
+(57, '12', 'user', 'ngày 18 tháng 9  từ 7h đến 9h còn sân trống không', '2025-09-18 13:55:46'),
+(58, '12', 'bot', 'Bạn vui lòng cung cấp rõ ngày và giờ muốn đặt sân để mình kiểm tra.', '2025-09-18 13:56:26'),
+(59, '12', 'user', 'tôi muốn đặt sân cầu lông vào ngày 18 tháng 9 từ 7 giờ tới 9 giờ', '2025-09-18 13:57:31'),
+(60, '12', 'bot', 'Xin lỗi, tôi chưa hiểu yêu cầu.', '2025-09-18 13:57:33'),
+(61, '12', 'user', 'tôi muốn đặt sân cầu lông vào ngày 18 tháng 9 từ 7 giờ tới 9 giờ', '2025-09-18 13:58:08'),
+(62, '12', 'bot', 'Hiện còn sân trống: Sân 1, Sân 2, Sân 3, Sân 4, Sân 5. Bạn muốn đặt sân nào? (Nhập court_id)', '2025-09-18 13:58:15'),
+(63, '12', 'user', 'tôi muốn tìm áo đấu', '2025-09-18 14:00:24'),
+(64, '12', 'bot', 'Tìm thấy 1 sản phẩm phù hợp: <div class=\'product-list\'>\n        <div class=\"product-card\" onclick=\"window.location.href=\'t.php?id=12\'\">\n            <img src=\"picture/no-image.png\" class=\"product-image\">\n            <div class=\"product-name\">Áo đấu</div>\n            <div class=\"product-price\">đ150,000.00</div>\n        </div>\n        </div><br>Bạn muốn mua sản phẩm nào? (Nhập product_id)', '2025-09-18 14:00:29'),
+(65, '12', 'user', 'Tôi muốn đặt sân cầu lông', '2025-09-18 14:01:50'),
+(66, '12', 'bot', 'Hiện còn sân trống: Sân 1, Sân 2, Sân 3, Sân 4, Sân 5. Bạn muốn đặt sân nào? (Nhập court_id)', '2025-09-18 14:01:55'),
+(67, '12', 'user', 'tôi tìm áo đấu', '2025-09-18 14:02:40'),
+(68, '12', 'bot', 'Không có sản phẩm phù hợp.<br>Bạn muốn mua sản phẩm nào? (Nhập product_id)', '2025-09-18 14:02:44'),
+(69, '12', 'user', 'tôi tìm áo đấu', '2025-09-18 14:02:57'),
+(70, '12', 'bot', 'Không có sản phẩm phù hợp.<br>Bạn muốn mua sản phẩm nào? (Nhập product_id)', '2025-09-18 14:03:01'),
+(71, '12', 'user', 'tôi tìm vợt cầu lông', '2025-09-18 14:03:07'),
+(72, '12', 'bot', 'Tìm thấy 2 sản phẩm phù hợp: <div class=\'product-list\'>\n        <div class=\"product-card\" onclick=\"window.location.href=\'t.php?id=1\'\">\n            <img src=\"picture/no-image.png\" class=\"product-image\">\n            <div class=\"product-name\">Vợt Yonex Astrox 99 Pro</div>\n            <div class=\"product-price\">đ2,500,000.00</div>\n        </div>\n        \n        <div class=\"product-card\" onclick=\"window.location.href=\'t.php?id=6\'\">\n            <img src=\"picture/no-image.png\" class=\"product-image\">\n            <div class=\"product-name\">Vợt Yonex Nanoflare 800</div>\n            <div class=\"product-price\">đ2,200,000.00</div>\n        </div>\n        </div><br>Bạn muốn mua sản phẩm nào? (Nhập product_id)', '2025-09-18 14:03:11'),
+(73, '12', 'user', 'tôi tìm áo đấu', '2025-09-18 14:08:25'),
+(74, '12', 'bot', 'Không có sản phẩm phù hợp.<br>Bạn muốn mua sản phẩm nào? (Nhập product_id)', '2025-09-18 14:08:30'),
+(75, '12', 'user', 'toi muốn đặt sân vào ngày mai', '2025-09-18 14:20:02'),
+(76, '12', 'user', 'tôi muốn đặt sân cầu vào ngày mai', '2025-09-18 14:22:24'),
+(77, '12', 'user', 'tôi muốn đặt sân cầu', '2025-09-18 14:28:26'),
+(78, '12', 'user', 'tôi muốn đặt sân cầu lông vào ngày mai', '2025-09-18 14:55:07'),
+(79, '12', 'user', 'chào bạn', '2025-09-18 18:30:48');
 
 -- --------------------------------------------------------
 
@@ -124,12 +207,7 @@ INSERT INTO `courts` (`court_id`, `court_name`, `description`, `price_per_hour`)
 (2, 'Sân 2', 'Trang bị điều hòa, tạo không gian thoải mái', 150000.00),
 (3, 'Sân 3', 'Hệ thống chiếu sáng hiện đại, đảm bảo chất lượng trận đấu', 150000.00),
 (4, 'Sân 4', 'Ánh sáng tốt và không gian thoáng mát', 150000.00),
-(5, 'Sân 5', 'Sàn đa năng, có thể sử dụng cho nhiều hoạt động thể thao', 140000.00),
-(6, 'Sân 6', 'Mới nâng cấp với trang thiết bị hiện đại', 160000.00),
-(7, 'Sân 7', 'Vị trí thuận tiện gần khu vực nghỉ ngơi', 150000.00),
-(8, 'Sân 8', 'Tiêu chuẩn thi đấu chuyên nghiệp, phù hợp tổ chức giải', 180000.00),
-(9, 'Sân 9', 'Có khu vực ghế chờ và tiện nghi đi kèm', 150000.00),
-(10, 'Sân 10', 'Phù hợp cho luyện tập hằng ngày', 150000.00);
+(5, 'Sân 5', 'Sàn đa năng, có thể sử dụng cho nhiều hoạt động thể thao', 140000.00);
 
 -- --------------------------------------------------------
 
@@ -559,6 +637,33 @@ INSERT INTO `settings` (`setting_id`, `setting_key`, `setting_value`, `descripti
 -- --------------------------------------------------------
 
 --
+-- Table structure for table `shop_info`
+--
+
+CREATE TABLE `shop_info` (
+  `shop_id` int(11) NOT NULL COMMENT 'Mã shop',
+  `shop_name` varchar(255) NOT NULL COMMENT 'Tên shop/câu lạc bộ',
+  `description` text DEFAULT NULL COMMENT 'Giới thiệu chung về shop',
+  `address` varchar(255) DEFAULT NULL COMMENT 'Địa chỉ',
+  `phone` varchar(20) DEFAULT NULL COMMENT 'Số điện thoại liên hệ',
+  `email` varchar(100) DEFAULT NULL COMMENT 'Email liên hệ',
+  `website` varchar(255) DEFAULT NULL COMMENT 'Website chính thức',
+  `facebook` varchar(255) DEFAULT NULL COMMENT 'Fanpage Facebook',
+  `instagram` varchar(255) DEFAULT NULL COMMENT 'Instagram',
+  `opening_hours` varchar(100) DEFAULT NULL COMMENT 'Giờ mở cửa',
+  `created_at` timestamp NOT NULL DEFAULT current_timestamp() COMMENT 'Ngày tạo'
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='Thông tin giới thiệu về shop Sunny Sport';
+
+--
+-- Dumping data for table `shop_info`
+--
+
+INSERT INTO `shop_info` (`shop_id`, `shop_name`, `description`, `address`, `phone`, `email`, `website`, `facebook`, `instagram`, `opening_hours`, `created_at`) VALUES
+(1, 'Sunny Sport', 'Sunny Sport là trung tâm thể thao hiện đại chuyên về cầu lông và các sản phẩm thể thao. Chúng tôi cung cấp sân bãi, dụng cụ chính hãng, tổ chức sự kiện và lớp học cầu lông cho mọi lứa tuổi.', '123 Đường Nguyễn Văn Thể Thao, Quận Cầu Giấy, Hà Nội', '0914 123 456', 'support@sunnysport.vn', 'https://sunnysport.vn', 'https://facebook.com/sunnysport.vn', 'https://instagram.com/sunnysport.vn', '06:00 - 22:00 hàng ngày', '2025-09-19 02:28:32');
+
+-- --------------------------------------------------------
+
+--
 -- Table structure for table `transactions`
 --
 
@@ -749,6 +854,12 @@ ALTER TABLE `settings`
   ADD UNIQUE KEY `setting_key` (`setting_key`);
 
 --
+-- Indexes for table `shop_info`
+--
+ALTER TABLE `shop_info`
+  ADD PRIMARY KEY (`shop_id`);
+
+--
 -- Indexes for table `transactions`
 --
 ALTER TABLE `transactions`
@@ -785,7 +896,7 @@ ALTER TABLE `cart_items`
 -- AUTO_INCREMENT for table `chat_history`
 --
 ALTER TABLE `chat_history`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=80;
 
 --
 -- AUTO_INCREMENT for table `courts`
@@ -876,6 +987,12 @@ ALTER TABLE `product_variants`
 --
 ALTER TABLE `settings`
   MODIFY `setting_id` int(11) NOT NULL AUTO_INCREMENT COMMENT 'Mã cấu hình', AUTO_INCREMENT=11;
+
+--
+-- AUTO_INCREMENT for table `shop_info`
+--
+ALTER TABLE `shop_info`
+  MODIFY `shop_id` int(11) NOT NULL AUTO_INCREMENT COMMENT 'Mã shop', AUTO_INCREMENT=2;
 
 --
 -- AUTO_INCREMENT for table `transactions`
