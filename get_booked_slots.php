@@ -11,8 +11,8 @@ if ($date && $court) {
     $res = $stmt->get_result();
     while ($row = $res->fetch_assoc()) {
         $result[] = [
-            'start_time' => $row['start_time'],
-            'end_time' => $row['end_time']
+            'start_time' => substr($row['start_time'], 0, 5), // 13:00:00 -> 13:00
+            'end_time' => substr($row['end_time'], 0, 5)       // 14:00:00 -> 14:00
         ];
     }
 }

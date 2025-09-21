@@ -1053,6 +1053,7 @@ function updateTopProductsChart(startDate, endDate, timeLabel) {
             updateCharts();
         });
     <?php endif; ?>
+    
 });
 </script>
 

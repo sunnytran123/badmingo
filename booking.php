@@ -504,13 +504,20 @@ function fetchBookedSlots() {
             for (let opt of endSelect.options) opt.disabled = false;
 
             data.forEach(slot => {
+                const slotStartMin = toMinutes(slot.start_time);
+                const slotEndMin = toMinutes(slot.end_time);
+                
                 for (let opt of startSelect.options) {
-                    if (opt.value >= slot.start_time && opt.value < slot.end_time) {
+                    const optMin = toMinutes(opt.value);
+                    // Disable nếu start time nằm trong khoảng đã đặt
+                    if (optMin >= slotStartMin && optMin < slotEndMin) {
                         opt.disabled = true;
                     }
                 }
                 for (let opt of endSelect.options) {
-                    if (opt.value > slot.start_time && opt.value <= slot.end_time) {
+                    const optMin = toMinutes(opt.value);
+                    // Disable nếu end time nằm trong khoảng đã đặt (không bao gồm điểm cuối)
+                    if (optMin > slotStartMin && optMin < slotEndMin) {
                         opt.disabled = true;
                     }
                 }

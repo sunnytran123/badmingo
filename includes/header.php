@@ -462,115 +462,354 @@ if (session_status() === PHP_SESSION_NONE) {
 
 <div class="container">
 
-<!-- Bubble Chat -->
-<button id="bubble-chat-btn" title="Chat hỗ trợ">
-    💬
-</button>
-<div id="bubble-chat-window">
-    <div class="bubble-chat-header">
-        <span class="bubble-chat-title">Chat Sunny Sport</span>
-        <button class="bubble-chat-close" aria-label="Đóng" onclick="document.getElementById('bubble-chat-window').style.display='none'">&times;</button>
-    </div>
-    <div class="bubble-chat-body" id="bubble-chat-body">
-        <div class="bubble-chat-option" data-seed="Tôi muốn đặt sân cầu lông">Đặt sân cầu lông</div>
-        <div class="bubble-chat-option" data-seed="Tôi muốn mua vợt/phụ kiện">Mua vợt, phụ kiện</div>
-    </div>
-    <div class="bubble-chat-input">
-        <input id="bubble-chat-text" type="text" placeholder="Nhập câu hỏi của bạn..." />
-        <button id="bubble-chat-send" class="bubble-chat-send" title="Gửi"><i class="fas fa-paper-plane"></i></button>
-    </div>
+<!-- Chatbot Button -->
+<div class="chatbot-button">
+    <button onclick="openChatbot()" title="Mở Chatbot">
+        <i class="fas fa-robot"></i>
+        <span>Chatbot</span>
+    </button>
 </div>
+
+<!-- Chatbot Popup -->
+<div id="chatbot-popup" class="chatbot-popup" style="display: none;">
+    <div class="chatbot-header">
+        <h3>Sunny Sport Chatbot</h3>
+        <button onclick="closeChatbot()" class="chatbot-close" title="Đóng">×</button>
+    </div>
+    <iframe id="chatbot-frame" src="" frameborder="0"></iframe>
+</div>
+<style>
+/* Chatbot Button Styles */
+.chatbot-button {
+    position: fixed;
+    bottom: 20px;
+    right: 20px;
+    z-index: 10000;
+    transition: all 0.3s ease;
+}
+
+.chatbot-button button {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    padding: 14px 24px;
+    border-radius: 30px;
+    border: none;
+    box-shadow: 
+        0 8px 25px rgba(102, 126, 234, 0.3),
+        0 0 0 1px rgba(255, 255, 255, 0.1);
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    font-weight: 600;
+    cursor: pointer;
+    position: relative;
+    overflow: hidden;
+    font-size: 15px;
+    letter-spacing: 0.3px;
+    opacity: 1;
+    transform: scale(1);
+}
+
+.chatbot-button button::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
+    transition: left 0.5s;
+}
+
+.chatbot-button button:hover::before {
+    left: 100%;
+}
+
+.chatbot-button button:hover {
+    transform: translateY(-3px) scale(1.05);
+    box-shadow: 
+        0 12px 35px rgba(102, 126, 234, 0.4),
+        0 0 0 1px rgba(255, 255, 255, 0.2);
+    animation: pulse 2s infinite;
+}
+
+.chatbot-button i {
+    font-size: 20px;
+    position: relative;
+    z-index: 1;
+}
+
+.chatbot-button span {
+    font-size: 15px;
+    position: relative;
+    z-index: 1;
+}
+
+/* Admin button different color */
+<?php if (isset($_SESSION['role']) && $_SESSION['role'] === 'admin'): ?>
+.chatbot-button button {
+    background: linear-gradient(135deg, #e74c3c 0%, #c0392b 100%);
+    box-shadow: 
+        0 8px 25px rgba(231, 76, 60, 0.3),
+        0 0 0 1px rgba(255, 255, 255, 0.1);
+}
+
+.chatbot-button button:hover {
+    box-shadow: 
+        0 12px 35px rgba(231, 76, 60, 0.4),
+        0 0 0 1px rgba(255, 255, 255, 0.2);
+}
+<?php endif; ?>
+
+/* Chatbot Popup Styles */
+.chatbot-popup {
+    position: fixed;
+    bottom: 20px;
+    right: 20px;
+    width: 380px;
+    height: 580px;
+    background: linear-gradient(145deg, #ffffff 0%, #f8f9fa 100%);
+    border-radius: 20px;
+    box-shadow: 
+        0 20px 40px rgba(0, 0, 0, 0.15),
+        0 0 0 1px rgba(255, 255, 255, 0.8),
+        inset 0 1px 0 rgba(255, 255, 255, 0.6);
+    z-index: 9999;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    border: 1px solid rgba(0, 0, 0, 0.08);
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    backdrop-filter: blur(10px);
+    opacity: 1;
+    transform: translateY(0) scale(1);
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+    }
+    to {
+        opacity: 1;
+    }
+}
+
+@keyframes slideInUp {
+    from {
+        transform: translateY(100px) scale(0.9);
+        opacity: 0;
+    }
+    to {
+        transform: translateY(0) scale(1);
+        opacity: 1;
+    }
+}
+
+@keyframes pulse {
+    0% {
+        box-shadow: 0 0 0 0 rgba(102, 126, 234, 0.4);
+    }
+    70% {
+        box-shadow: 0 0 0 10px rgba(102, 126, 234, 0);
+    }
+    100% {
+        box-shadow: 0 0 0 0 rgba(102, 126, 234, 0);
+    }
+}
+
+/* Responsive: Điều chỉnh kích thước chatbot */
+@media (max-width: 768px) {
+    .chatbot-popup {
+        width: 360px;
+        height: 520px;
+        bottom: 15px;
+        right: 15px;
+        border-radius: 18px;
+    }
+    
+    .chatbot-popup .chatbot-header {
+        padding: 18px 22px;
+        border-radius: 18px 18px 0 0;
+    }
+    
+    .chatbot-popup .chatbot-header h3 {
+        font-size: 18px;
+    }
+    
+    .chatbot-popup .chatbot-close {
+        width: 32px;
+        height: 32px;
+        font-size: 18px;
+    }
+}
+
+@media (max-width: 480px) {
+    .chatbot-popup {
+        width: 340px;
+        height: 480px;
+        bottom: 10px;
+        right: 10px;
+        border-radius: 16px;
+    }
+    
+    .chatbot-popup .chatbot-header {
+        padding: 16px 20px;
+        border-radius: 16px 16px 0 0;
+    }
+    
+    .chatbot-popup .chatbot-header h3 {
+        font-size: 16px;
+    }
+    
+    .chatbot-popup .chatbot-close {
+        width: 30px;
+        height: 30px;
+        font-size: 16px;
+    }
+}
+
+.chatbot-popup .chatbot-header {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    padding: 20px 24px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-radius: 20px 20px 0 0;
+    flex-shrink: 0;
+    position: relative;
+    overflow: hidden;
+}
+
+.chatbot-popup .chatbot-header::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: linear-gradient(45deg, rgba(255,255,255,0.1) 0%, transparent 50%, rgba(255,255,255,0.1) 100%);
+    pointer-events: none;
+}
+
+.chatbot-popup .chatbot-header h3 {
+    margin: 0;
+    font-size: 20px;
+    font-weight: 700;
+    letter-spacing: -0.5px;
+    position: relative;
+    z-index: 1;
+}
+
+.chatbot-popup .chatbot-close {
+    background: rgba(255, 255, 255, 0.15);
+    border: none;
+    color: white;
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    cursor: pointer;
+    font-size: 20px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    position: relative;
+    z-index: 1;
+    backdrop-filter: blur(10px);
+}
+
+.chatbot-popup .chatbot-close:hover {
+    background: rgba(255, 255, 255, 0.25);
+    transform: scale(1.1);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+}
+
+#chatbot-frame {
+    flex: 1;
+    width: 100%;
+    border: none;
+    border-radius: 0 0 20px 20px;
+    min-height: 0;
+    background: #fafbfc;
+}
+
+/* Admin popup different color */
+<?php if (isset($_SESSION['role']) && $_SESSION['role'] === 'admin'): ?>
+.chatbot-popup .chatbot-header {
+    background: linear-gradient(135deg, #e74c3c 0%, #c0392b 100%);
+}
+<?php endif; ?>
+</style>
+
 <script>
-(function(){
-    var win = document.getElementById('bubble-chat-window');
-    var body = document.getElementById('bubble-chat-body');
-    var input = document.getElementById('bubble-chat-text');
-    var sendBtn = document.getElementById('bubble-chat-send');
+function openChatbot() {
+    const popup = document.getElementById('chatbot-popup');
+    const frame = document.getElementById('chatbot-frame');
+    const button = document.querySelector('.chatbot-button');
+    
+    // Xác định URL chatbot dựa trên role
+    const isAdmin = <?php echo (isset($_SESSION['role']) && $_SESSION['role'] === 'admin') ? 'true' : 'false'; ?>;
+    const chatbotUrl = isAdmin ? 'chatbot_admin.php' : 'chatbot_user.php';
+    
+    // Set iframe source
+    frame.src = chatbotUrl;
+    
+    // Hiển thị popup với animation
+    popup.style.display = 'flex';
+    popup.style.opacity = '0';
+    popup.style.transform = 'translateY(100px) scale(0.9)';
+    
+    // Fade in popup
+    setTimeout(() => {
+        popup.style.opacity = '1';
+        popup.style.transform = 'translateY(0) scale(1)';
+    }, 10);
+    
+    // Fade out button
+    button.style.opacity = '0';
+    button.style.transform = 'scale(0.8)';
+    setTimeout(() => {
+        button.style.display = 'none';
+    }, 300);
+}
 
-    // Config: đổi URL này thành endpoint Python của bạn
-    var CHAT_API_URL = 'http://localhost:5000/api/chat';
-    var USER_ID = '<?php echo isset($_SESSION['user_id']) ? htmlspecialchars((string)$_SESSION['user_id'], ENT_QUOTES, "UTF-8") : "guest"; ?>';
+function closeChatbot() {
+    const popup = document.getElementById('chatbot-popup');
+    const frame = document.getElementById('chatbot-frame');
+    const button = document.querySelector('.chatbot-button');
+    
+    // Fade out popup
+    popup.style.opacity = '0';
+    popup.style.transform = 'translateY(100px) scale(0.9)';
+    
+    setTimeout(() => {
+        popup.style.display = 'none';
+        // Clear iframe source để dừng các process
+        frame.src = '';
+    }, 300);
+    
+    // Hiện lại button với animation
+    button.style.display = 'block';
+    button.style.opacity = '0';
+    button.style.transform = 'scale(0.8)';
+    
+    setTimeout(() => {
+        button.style.opacity = '1';
+        button.style.transform = 'scale(1)';
+    }, 350);
+}
 
-    var messages = []; // lưu lịch sử hội thoại {role, content}
-
-    document.getElementById('bubble-chat-btn').onclick = function() {
-        win.style.display = win.style.display === 'flex' ? 'none' : 'flex';
-        if (win.style.display === 'flex') { input.focus(); }
-    };
-
-    function appendBubble(text, role, elId) {
-        var div = document.createElement('div');
-        if (elId) div.id = elId;
-        div.style.background = role === 'user' ? '#EEF2FF' : '#FFFFFF';
-        div.style.border = '1px solid #E5E7EB';
-        div.style.borderRadius = '10px';
-        div.style.padding = '10px 12px';
-        div.style.fontSize = '14px';
-        div.textContent = text;
-        body.appendChild(div);
-        body.scrollTop = body.scrollHeight;
-        return div;
+// Đóng chatbot bằng phím ESC
+document.addEventListener('keydown', function(e) {
+    if (e.key === 'Escape') {
+        closeChatbot();
     }
+});
 
-    function appendHtmlBubble(html) {
-        var div = document.createElement('div');
-        div.style.background = '#FFFFFF';
-        div.style.border = '1px solid #E5E7EB';
-        div.style.borderRadius = '10px';
-        div.style.padding = '10px 12px';
-        div.style.fontSize = '14px';
-        div.innerHTML = html;
-        body.appendChild(div);
-        body.scrollTop = body.scrollHeight;
-        return div;
-    }
-
-    function sendToAI(prompt) {
-        appendBubble(prompt, 'user');
-        var typing = appendBubble('Đang nhập...', 'assistant', 'bubble-typing');
-        fetch(CHAT_API_URL, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ user_id: USER_ID, message: prompt })
-        }).then(function(r){ return r.json(); })
-        .then(function(data){
-            var t = document.getElementById('bubble-typing');
-            if (t) t.remove();
-            var reply = data && (data.response || data.reply) ? (data.response || data.reply) : 'Xin lỗi, hiện chưa phản hồi được.';
-            var isHtml = !!(data && data.is_html);
-            if (isHtml) {
-                appendHtmlBubble(reply);
-            } else {
-                appendBubble(reply, 'assistant');
-            }
-        }).catch(function(){
-            var t = document.getElementById('bubble-typing');
-            if (t) t.remove();
-            appendBubble('Có lỗi khi kết nối server. Vui lòng thử lại.', 'assistant');
-        });
-    }
-
-    body.addEventListener('click', function(e){
-        var opt = e.target.closest('.bubble-chat-option');
-        if (!opt) return;
-        var seed = opt.getAttribute('data-seed') || '';
-        if (seed) sendToAI(seed);
-    });
-
-    sendBtn.addEventListener('click', function(){
-        var text = input.value.trim();
-        if (!text) return;
-        sendToAI(text);
-        input.value = '';
-    });
-    input.addEventListener('keydown', function(e){
-        if (e.key === 'Enter') {
-            e.preventDefault();
-            sendBtn.click();
-        }
-    });
-})();
 </script>
+
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 </html>
