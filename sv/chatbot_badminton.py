@@ -8,6 +8,7 @@ import uuid
 
 app = Flask(__name__)
 
+
 #
 # Cấu hình CORS thủ công
 @app.after_request
@@ -652,7 +653,7 @@ def generate_product_card(data, query):
         Phần 2. Đoạn mã HTML để hiển thị sản phẩm: 
         - Mỗi sản phẩm là 1 <div class="product-card">.
         - Trong mỗi product-card chỉ có ảnh, tên sản phẩm, giá (hoặc giá khuyến mãi nếu có).
-        - Khi nhấn vào toàn bộ thẻ product-card thì chuyển hướng đến t.php?product_id=... (dùng thuộc tính onclick cho div với window.location.href).
+        - Khi nhấn vào toàn bộ thẻ product-card thì chuyển hướng đến t.php?product_id=... (dùng thuộc tính onclick cho div với window.location.href, KHÔNG dùng window.open).
         - Sử dụng đường dẫn hình ảnh: images/[image_url] (từ database, không có dấu gạch chéo đầu)
         - Sử dụng CSS inline để styling
         - Nếu không có hình ảnh, sử dụng hình mặc định: images/no-image.jpg
@@ -697,23 +698,11 @@ def save_chat_history(user_id, role, message, bot_disabled=None):
             return False
 
         cursor = conn.cursor()
-        
-        # Nếu không truyền bot_disabled, lấy từ database
+
+        # Nếu không truyền bot_disabled, mặc định là 0 (bot bật)
         if bot_disabled is None:
-            if role == "user":
-                # Chỉ check khi user gửi tin nhắn - lấy từ tin nhắn gần nhất
-                try:
-                    query = "SELECT bot_disabled FROM chat_history WHERE user_id = %s ORDER BY created_at DESC LIMIT 1"
-                    result = execute_query(query, (user_id,))
-                    if result and len(result) > 0:
-                        bot_disabled = result[0]['bot_disabled']
-                    else:
-                        bot_disabled = 0  # Mặc định bot bật
-                except:
-                    bot_disabled = 0
-            else:
-                bot_disabled = 0  # Bot và admin messages mặc định là 0
-        
+            bot_disabled = 0  # Mặc định bot bật cho tất cả tin nhắn mới
+
         query = "INSERT INTO chat_history (user_id, role, message, bot_disabled) VALUES (%s, %s, %s, %s)"
         cursor.execute(query, (user_id, role, message, bot_disabled))
         conn.commit()
@@ -725,19 +714,6 @@ def save_chat_history(user_id, role, message, bot_disabled=None):
         return False
 
 
-def check_bot_disabled_for_user(user_id):
-    """Kiểm tra xem bot có bị tắt cho user này không"""
-    try:
-        query = "SELECT bot_disabled FROM chat_history WHERE user_id = %s ORDER BY created_at DESC LIMIT 1"
-        result = execute_query(query, (user_id,))
-        
-        if result and len(result) > 0:
-            # bot_disabled = 1 có nghĩa là bot bị tắt
-            return result[0]['bot_disabled'] == 1
-        return False
-    except Exception as e:
-        print(f"Lỗi kiểm tra bot disabled: {e}")
-        return False
 
 
 # ==================== CONVERSATION STATE MANAGEMENT ====================
@@ -1543,8 +1519,6 @@ def create_booking_in_database(user_id):
         return "❌ Có lỗi xảy ra khi đặt sân. Vui lòng thử lại sau hoặc liên hệ admin để được hỗ trợ."
 
 
-
-
 @app.route('/api/chat', methods=['POST', 'OPTIONS'])
 def chat():
     # Xử lý CORS preflight request
@@ -1558,14 +1532,7 @@ def chat():
         if not message_text:
             return jsonify({"status": "error", "message": "Vui lòng nhập tin nhắn"}), 400
 
-        # Kiểm tra xem bot có bị tắt cho user này không TRƯỚC KHI lưu tin nhắn
-        bot_disabled = check_bot_disabled_for_user(user_id)
-        print(f"🔍 DEBUG: User {user_id}, bot_disabled = {bot_disabled}")
-        if bot_disabled:
-            print(f"🤖 Bot bị tắt cho user {user_id} - trả về empty response")
-            # Vẫn lưu tin nhắn user nhưng không trả lời gì cả
-            save_chat_history(user_id, "user", message_text, bot_disabled=1)
-            return jsonify({"status": "success", "response": "", "user_id": user_id, "bot_disabled": 1}), 200
+        # Bot luôn hoạt động - đã xóa chức năng toggle bot
 
         # Lưu tin nhắn của user
         save_chat_history(user_id, "user", message_text)
@@ -1583,7 +1550,7 @@ def chat():
 
         if current_state['step'] is not None:
             # Kiểm tra lệnh hủy
-            if message_text.lower().strip() in ['hủy', 'huy', 'cancel', 'dừng', 'stop', 'exit']:
+            if message_text.lower().strip() in ['hủy', 'huy', 'cancel', 'dừng','stop', 'exit']:
                 clear_conversation_state(user_id)
                 response = "❌ Đã hủy quy trình đặt sân. Nếu bạn cần hỗ trợ gì khác, hãy cho tôi biết nhé! 😊"
                 save_chat_history(user_id, "bot", response)
@@ -1652,7 +1619,7 @@ def get_chat_history(user_id):
         query = """
         SELECT role, message, created_at 
         FROM chat_history 
-        WHERE user_id = %s 
+        WHERE user_id = %s AND role != 'system'
         ORDER BY created_at ASC 
         LIMIT 100
         """
@@ -1671,7 +1638,7 @@ def get_admin_conversations():
     """Lấy danh sách tất cả cuộc trò chuyện cho admin"""
     if request.method == 'OPTIONS':
         return '', 200
-    
+
     try:
         query = """
         SELECT 
@@ -1681,8 +1648,7 @@ def get_admin_conversations():
             COUNT(*) as total_messages,
             SUM(CASE WHEN ch.role = 'user' THEN 1 ELSE 0 END) as user_messages,
             SUM(CASE WHEN ch.role = 'bot' THEN 1 ELSE 0 END) as bot_messages,
-            SUM(CASE WHEN ch.role = 'admin' THEN 1 ELSE 0 END) as admin_messages,
-            MAX(ch.bot_disabled) as bot_disabled
+            SUM(CASE WHEN ch.role = 'admin' THEN 1 ELSE 0 END) as admin_messages
         FROM chat_history ch
         LEFT JOIN users u ON ch.user_id = u.user_id
         GROUP BY ch.user_id, u.username
@@ -1690,7 +1656,7 @@ def get_admin_conversations():
         LIMIT 50
         """
         conversations = execute_query(query)
-        
+
         # Lấy tin nhắn cuối cùng cho mỗi cuộc trò chuyện
         for conv in conversations:
             last_msg_query = """
@@ -1707,11 +1673,9 @@ def get_admin_conversations():
             else:
                 conv['last_message'] = ''
                 conv['last_message_role'] = ''
-            
+
             # user_name đã được lấy từ query
-            # Xử lý bot_disabled (0/1 từ database)
-            conv['bot_disabled'] = bool(conv['bot_disabled']) if conv['bot_disabled'] is not None else False
-            
+
             # Đếm tin nhắn mới (trong 5 phút qua)
             new_msg_query = """
             SELECT COUNT(*) as new_count
@@ -1722,7 +1686,7 @@ def get_admin_conversations():
             new_count = execute_query(new_msg_query, (conv['user_id'],))
             conv['new_message_count'] = new_count[0]['new_count'] if new_count else 0
             conv['has_new_message'] = conv['new_message_count'] > 0
-        
+
         return jsonify({"status": "success", "conversations": conversations}), 200
     except Exception as e:
         print(f"Lỗi lấy conversations: {e}")
@@ -1734,18 +1698,18 @@ def admin_send_message():
     """Admin gửi tin nhắn cho user"""
     if request.method == 'OPTIONS':
         return '', 200
-    
+
     try:
         data = request.json
         user_id = data.get("user_id")
         message = data.get("message", "").strip()
-        
+
         if not user_id or not message:
             return jsonify({"status": "error", "message": "Thiếu user_id hoặc message"}), 400
 
         # Lưu tin nhắn admin
         save_chat_history(user_id, "admin", message)
-        
+
         return jsonify({"status": "success", "message": "Đã gửi tin nhắn admin"}), 200
     except Exception as e:
         print(f"Lỗi gửi tin nhắn admin: {e}")
@@ -1757,7 +1721,7 @@ def get_admin_user_info(user_id):
     """Lấy thông tin chi tiết của user cho admin"""
     if request.method == 'OPTIONS':
         return '', 200
-    
+
     try:
         # Lấy thông tin cơ bản từ chat_history
         query = """
@@ -1773,7 +1737,7 @@ def get_admin_user_info(user_id):
         WHERE user_id = %s
         """
         user_info = execute_query(query, (user_id,))
-        
+
         if user_info:
             return jsonify({"status": "success", "user_info": user_info[0]}), 200
         else:
@@ -1781,55 +1745,6 @@ def get_admin_user_info(user_id):
     except Exception as e:
         print(f"Lỗi lấy user info: {e}")
         return jsonify({"status": "error", "message": "Lỗi server"}), 500
-
-
-@app.route('/api/admin/toggle-bot', methods=['POST', 'OPTIONS'])
-def toggle_bot_for_user():
-    """Bật/tắt bot cho user cụ thể"""
-    if request.method == 'OPTIONS':
-        return '', 200
-    
-    try:
-        data = request.json
-        user_id = data.get("user_id")
-        bot_disabled = data.get("bot_disabled", False)
-        
-        if not user_id:
-            return jsonify({"status": "error", "message": "Thiếu user_id"}), 400
-
-        # Cập nhật trạng thái bot trong bảng chat_history
-        conn = ket_noi_db()
-        if not conn:
-            return jsonify({"status": "error", "message": "Lỗi kết nối database"}), 500
-
-        cursor = conn.cursor()
-        
-        # Chỉ cập nhật tin nhắn gần nhất của user này với trạng thái bot mới
-        # Lấy ID của tin nhắn gần nhất
-        get_latest_query = "SELECT id FROM chat_history WHERE user_id = %s ORDER BY created_at DESC LIMIT 1"
-        cursor.execute(get_latest_query, (user_id,))
-        latest_row = cursor.fetchone()
-        
-        if latest_row:
-            latest_id = latest_row[0]
-            update_query = "UPDATE chat_history SET bot_disabled = %s WHERE id = %s"
-            cursor.execute(update_query, (1 if bot_disabled else 0, latest_id))
-        else:
-            # Nếu không có tin nhắn nào, tạo một tin nhắn thông báo trạng thái
-            insert_query = "INSERT INTO chat_history (user_id, role, message, bot_disabled) VALUES (%s, %s, %s, %s)"
-            status_message = f"Bot đã được {'tắt' if bot_disabled else 'bật'}"
-            cursor.execute(insert_query, (user_id, "system", status_message, 1 if bot_disabled else 0))
-        
-        conn.commit()
-        cursor.close()
-        conn.close()
-        
-        return jsonify({"status": "success", "message": "Đã cập nhật trạng thái bot"}), 200
-    except Exception as e:
-        print(f"Lỗi toggle bot: {e}")
-        return jsonify({"status": "error", "message": "Lỗi server"}), 500
-
-
 
 
 

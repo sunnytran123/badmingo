@@ -95,6 +95,18 @@ session_start();
             align-items: flex-start;
         }
 
+        .message.admin {
+            align-items: flex-start;
+        }
+
+        .message.bot {
+            align-items: flex-start;
+        }
+
+        .message.system {
+            align-items: center;
+        }
+
         .message-content {
             max-width: 80%;
             padding: 12px 16px;
@@ -115,6 +127,30 @@ session_start();
             color: #333;
             border: 1px solid #e5e7eb;
             border-bottom-left-radius: 5px;
+        }
+
+        .message.admin .message-content {
+            background: #d1ecf1;
+            color: #0c5460;
+            border: 1px solid #bee5eb;
+            border-bottom-left-radius: 5px;
+        }
+
+        .message.bot .message-content {
+            background: white;
+            color: #333;
+            border: 1px solid #e5e7eb;
+            border-bottom-left-radius: 5px;
+        }
+
+        .message.system .message-content {
+            background: #fff3cd;
+            color: #856404;
+            border: 1px solid #ffeaa7;
+            border-radius: 15px;
+            text-align: center;
+            font-style: italic;
+            max-width: 60%;
         }
 
         .message-time {
@@ -381,13 +417,8 @@ session_start();
                 hideTypingIndicator();
                 
                 if (data.status === 'success') {
-                    // Kiểm tra bot_disabled từ response
-                    if (data.bot_disabled === 1 || data.bot_disabled === true) {
-                        // Bot bị tắt - không hiển thị gì cả, không làm gì
-                        console.log('Bot is disabled for this user - no response shown');
-                        return; // Thoát sớm, không làm gì cả
-                    } else if (data.response && data.response.trim() !== "") {
-                        // Bot bật và có response - hiển thị bình thường
+                    if (data.response && data.response.trim() !== "") {
+                        // Hiển thị response của bot
                         displayMessage(data.response, 'assistant');
                     }
                 } else {
@@ -479,7 +510,7 @@ session_start();
             stopPolling();
         });
 
-        // Handle product card clicks to open in new tab
+        // Handle product card clicks to navigate parent window
         document.addEventListener('click', function(e) {
             // Check if clicked element is a product card or inside a product card
             var productCard = e.target.closest('.product-card');
@@ -487,13 +518,29 @@ session_start();
                 e.preventDefault();
                 e.stopPropagation();
                 
-                // Extract product_id from onclick attribute or href
+                // Extract product_id from onclick attribute
                 var onclick = productCard.getAttribute('onclick');
                 if (onclick) {
-                    // Extract URL from onclick="window.location.href='...'" or onclick="window.open('...', '_blank')"
-                    var urlMatch = onclick.match(/['"]([^'"]*t\.php\?product_id=\d+[^'"]*)['"]/);
+                    // Extract URL from onclick="window.location.href='...'"
+                    var urlMatch = onclick.match(/window\.location\.href\s*=\s*['"]([^'"]*)['"]/);
                     if (urlMatch) {
-                        window.open(urlMatch[1], '_blank');
+                        // Chuyển trang chính (đóng chatbot và navigate parent)
+                        try {
+                            if (window.parent && window.parent !== window) {
+                                // Nếu đang trong iframe/popup, điều hướng parent window
+                                window.parent.location.href = urlMatch[1];
+                            } else if (window.opener) {
+                                // Nếu là popup window, điều hướng opener và đóng popup
+                                window.opener.location.href = urlMatch[1];
+                                window.close();
+                            } else {
+                                // Nếu là standalone window, điều hướng thường
+                                window.location.href = urlMatch[1];
+                            }
+                        } catch (e) {
+                            // Fallback: mở tab mới nếu bị chặn cross-origin
+                            window.open(urlMatch[1], '_blank');
+                        }
                     }
                 }
             }

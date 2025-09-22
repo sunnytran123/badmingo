@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: 127.0.0.1
--- Generation Time: Sep 21, 2025 at 05:53 AM
+-- Generation Time: Sep 22, 2025 at 03:26 AM
 -- Server version: 10.4.32-MariaDB
 -- PHP Version: 8.1.25
 
@@ -94,7 +94,11 @@ INSERT INTO `bookings` (`booking_id`, `user_id`, `court_id`, `booking_date`, `st
 (125, 12, 5, '2025-09-20', '19:00:00', '20:00:00', 'ondelivery', 140000.00, 0.00, 'confirmed', '2025-09-20 01:00:00', 'Võ Văn AA', '0966666668'),
 (126, 12, 2, '2025-09-20', '20:00:00', '21:00:00', 'ondelivery', 150000.00, 0.00, 'confirmed', '2025-09-20 01:00:00', 'Đinh Thị BB', '0977777779'),
 (127, 12, 4, '2025-09-20', '20:00:00', '21:00:00', 'ondelivery', 150000.00, 0.00, 'confirmed', '2025-09-20 01:00:00', 'Phan Văn CC', '0988888890'),
-(5300, 12, 2, '2025-09-21', '18:00:00', '20:00:00', 'ondelivery', 300000.00, 0.00, 'confirmed', '2025-09-21 03:26:54', 'Bơ', '0914090892');
+(5300, 12, 2, '2025-09-21', '18:00:00', '20:00:00', 'ondelivery', 300000.00, 0.00, 'confirmed', '2025-09-21 03:26:54', 'Bơ', '0914090892'),
+(5301, 12, 3, '2025-09-21', '13:00:00', '14:00:00', 'prepaid', 135000.00, 10.00, 'pending', '2025-09-21 04:36:42', 'hồng nhung', '0912839374'),
+(5303, 12, 3, '2025-09-21', '14:00:00', '14:30:00', 'ondelivery', 75000.00, 0.00, 'pending', '2025-09-21 05:45:00', 'Minh Hào', '0927271827'),
+(5304, 12, 1, '2025-09-22', '06:30:00', '08:00:00', 'prepaid', 202500.00, 10.00, 'pending', '2025-09-21 09:17:07', 'su', '09672336132'),
+(5305, 12, 3, '2025-09-21', '09:00:00', '11:00:00', 'ondelivery', 300000.00, 0.00, 'confirmed', '2025-09-21 12:22:35', 'bo', '0892736251');
 
 -- --------------------------------------------------------
 
@@ -134,80 +138,101 @@ CREATE TABLE `chat_history` (
   `user_id` varchar(50) NOT NULL,
   `role` enum('user','bot','admin') NOT NULL,
   `message` text NOT NULL,
-  `created_at` timestamp NOT NULL DEFAULT current_timestamp()
+  `created_at` timestamp NOT NULL DEFAULT current_timestamp(),
+  `bot_disabled` tinyint(1) DEFAULT 0 COMMENT 'Trạng thái bot: 0=bật, 1=tắt'
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 --
 -- Dumping data for table `chat_history`
 --
 
-INSERT INTO `chat_history` (`id`, `user_id`, `role`, `message`, `created_at`) VALUES
-(194, '12', 'user', 'chào bạn , toi muốn tim giày yonex', '2025-09-21 02:16:33'),
-(195, '12', 'bot', 'Chào bạn, hiện tại chúng tôi không có sản phẩm giày Yonex nào trong danh sách. Tuy nhiên, dưới đây là các sản phẩm giày cầu lông khác mà bạn có thể tham khảo:\n\n```html\n<div class=\"product-list\" style=\"display:flex;flex-wrap:wrap;gap:15px;margin-top:10px;\">\n    <div class=\"product-card\" onclick=\"window.location.href=\'t.php?product_id=2\'\" style=\"width:200px;padding:15px;border:1px solid #ddd;border-radius:10px;background:#fff;box-shadow:0 2px 8px rgba(0,0,0,0.1);cursor:pointer;transition:transform 0.2s;\">\n        <img src=\"images/lining-attack.jpg\" class=\"product-image\" style=\"width:100%;height:150px;object-fit:cover;border-radius:8px;margin-bottom:10px;\">\n        <div class=\"product-name\" style=\"font-size:16px;color:#333;margin-bottom:8px;font-weight:bold;\">Giày Lining Attack 2025</div>\n        <div class=\"product-price\" style=\"color:#e74c3c;font-weight:bold;font-size:18px;\">1,500,000 VNĐ</div>\n    </div>\n    <div class=\"product-card\" onclick=\"window.location.href=\'t.php?product_id=7\'\" style=\"width:200px;padding:15px;border:1px solid #ddd;border-radius:10px;background:#fff;box-shadow:0 2px 8px rgba(0,0,0,0.1);cursor:pointer;transition:transform 0.2s;\">\n        <img src=\"images/asics-skyelite.jpg\" class=\"product-image\" style=\"width:100%;height:150px;object-fit:cover;border-radius:8px;margin-bottom:10px;\">\n        <div class=\"product-name\" style=\"font-size:16px;color:#333;margin-bottom:8px;font-weight:bold;\">Giày Asics Sky Elite FF</div>\n        <div class=\"product-price\" style=\"color:#e74c3c;font-weight:bold;font-size:18px;\">1,800,000 VNĐ</div>\n    </div>\n</div>\n```\n\nNếu bạn cần thêm thông tin hoặc tìm kiếm sản phẩm khác, hãy cho tôi biết!', '2025-09-21 02:16:45'),
-(196, '12', 'user', 'tôi muốn tìm áo để thi đấu', '2025-09-21 02:18:28'),
-(197, '12', 'bot', 'Tìm thấy 2 sản phẩm phù hợp: \n<div class=\"product-list\" style=\"display:flex;flex-wrap:wrap;gap:15px;margin-top:10px;\">\n    <div class=\"product-card\" onclick=\"window.location.href=\'t.php?product_id=4\'\" style=\"width:200px;padding:15px;border:1px solid #ddd;border-radius:10px;background:#fff;box-shadow:0 2px 8px rgba(0,0,0,0.1);cursor:pointer;transition:transform 0.2s;\">\n        <img src=\"images/lining-shirt.jpg\" class=\"product-image\" style=\"width:100%;height:150px;object-fit:cover;border-radius:8px;margin-bottom:10px;\">\n        <div class=\"product-name\" style=\"font-size:16px;color:#333;margin-bottom:8px;font-weight:bold;\">Áo thi đấu Lining Pro</div>\n        <div class=\"product-price\" style=\"color:#e74c3c;font-weight:bold;font-size:18px;\">450,000 VNĐ</div>\n    </div>\n    <div class=\"product-card\" onclick=\"window.location.href=\'t.php?product_id=12\'\" style=\"width:200px;padding:15px;border:1px solid #ddd;border-radius:10px;background:#fff;box-shadow:0 2px 8px rgba(0,0,0,0.1);cursor:pointer;transition:transform 0.2s;\">\n        <img src=\"images/Áo-đấu.jpg\" class=\"product-image\" style=\"width:100%;height:150px;object-fit:cover;border-radius:8px;margin-bottom:10px;\">\n        <div class=\"product-name\" style=\"font-size:16px;color:#333;margin-bottom:8px;font-weight:bold;\">Áo đấu</div>\n        <div class=\"product-price\" style=\"color:#e74c3c;font-weight:bold;font-size:18px;\">150,000 VNĐ</div>\n    </div>\n</div>', '2025-09-21 02:18:41'),
-(198, '12', 'user', 'hôm nay lúc 18 giời đến 20 giờ có sân trống không', '2025-09-21 02:20:01'),
-(199, '12', 'bot', '✅ Có 4 sân trống:\n- Sân 2\n- Sân 3\n- Sân 4\n- Sân 5', '2025-09-21 02:20:05'),
-(200, '12', 'user', 'ngày mai từ 6h30 tới 8h có sân nào trống không', '2025-09-21 02:20:54'),
-(201, '12', 'bot', '✅ Có 4 sân trống:\n- Sân 1\n- Sân 2\n- Sân 4\n- Sân 5', '2025-09-21 02:21:00'),
-(202, '12', 'user', 'ngày mai còn sân trống từ 7 giờ đến 8 giờ sáng không', '2025-09-21 03:00:57'),
-(203, '12', 'bot', '✅ Tìm thấy các sân trống:\n1. Sân 1 - 150,000 VNĐ/giờ\n2. Sân 2 - 150,000 VNĐ/giờ\n3. Sân 4 - 150,000 VNĐ/giờ\n4. Sân 5 - 150,000 VNĐ/giờ\n\n🎯 **Bạn có muốn đặt một trong những sân này ngay bây giờ không?**\nTrả lời \'có\' hoặc \'đặt sân\' để tiếp tục đặt sân.', '2025-09-21 03:01:02'),
-(204, '12', 'user', 'ngày mai còn sân trống từ 7 giờ đến 8 giờ sáng không', '2025-09-21 03:06:26'),
-(205, '12', 'bot', '✅ Tìm thấy các sân trống:\n1. Sân 1 - 150,000 VNĐ/giờ\n2. Sân 2 - 150,000 VNĐ/giờ\n3. Sân 4 - 150,000 VNĐ/giờ\n4. Sân 5 - 150,000 VNĐ/giờ\n\n🎯 **Bạn có muốn đặt một trong những sân này ngay bây giờ không?**\nTrả lời \'có\' hoặc \'không\'.', '2025-09-21 03:06:32'),
-(206, '12', 'user', 'có', '2025-09-21 03:07:23'),
-(207, '12', 'bot', '⏰ **Bước 2: Chọn giờ bắt đầu**\n\nVui lòng cho biết giờ bắt đầu đặt sân:\n• Ví dụ: \'18h\', \'18:00\', \'6 giờ tối\'', '2025-09-21 03:07:23'),
-(208, '12', 'user', '7h sáng', '2025-09-21 03:07:44'),
-(209, '12', 'bot', '✅ Đã chọn giờ bắt đầu: 07:00\n\n⏰ **Bước 3/5: Chọn giờ kết thúc**\n\nVui lòng cho biết giờ kết thúc:\n• Ví dụ: \'20h\', \'20:00\', \'8 giờ tối\'', '2025-09-21 03:07:44'),
-(210, '12', 'user', '8h sáng', '2025-09-21 03:07:53'),
-(211, '12', 'bot', '✅ Đã chọn giờ kết thúc: 08:00\n\n🏸 **Bước 4/5: Chọn sân**\n\nVui lòng chọn sân bạn muốn đặt:\n1. Sân 1 - 150,000 VNĐ/giờ\n2. Sân 2 - 150,000 VNĐ/giờ\n3. Sân 4 - 150,000 VNĐ/giờ\n4. Sân 5 - 150,000 VNĐ/giờ\n\nVui lòng trả lời số thứ tự sân (ví dụ: \'1\').', '2025-09-21 03:07:53'),
-(212, '12', 'user', '3', '2025-09-21 03:08:05'),
-(213, '12', 'bot', '❌ Có lỗi tạo tóm tắt. Vui lòng thử lại từ đầu.', '2025-09-21 03:08:05'),
-(214, '12', 'user', 'ngày mai còn sân trống từ 7 giờ đến 8 giờ sáng không', '2025-09-21 03:14:59'),
-(215, '12', 'bot', '✅ Tìm thấy các sân trống:\n1. Sân 1 - 150,000 VNĐ/giờ\n2. Sân 2 - 150,000 VNĐ/giờ\n3. Sân 4 - 150,000 VNĐ/giờ\n4. Sân 5 - 150,000 VNĐ/giờ\n\n🎯 **Bạn có muốn đặt một trong những sân này ngay bây giờ không?**\nTrả lời \'có\' hoặc \'không\'.', '2025-09-21 03:15:09'),
-(216, '12', 'user', 'có', '2025-09-21 03:15:15'),
-(217, '12', 'bot', '⏰ **Bước 2: Chọn giờ bắt đầu**\n\nVui lòng cho biết giờ bắt đầu đặt sân:\n• Ví dụ: \'18h\', \'18:00\', \'6 giờ tối\'', '2025-09-21 03:15:15'),
-(218, '12', 'user', '7 giờ sáng', '2025-09-21 03:15:27'),
-(219, '12', 'bot', '✅ Đã chọn giờ bắt đầu: 07:00\n\n⏰ **Bước 3/5: Chọn giờ kết thúc**\n\nVui lòng cho biết giờ kết thúc:\n• Ví dụ: \'20h\', \'20:00\', \'8 giờ tối\'', '2025-09-21 03:15:27'),
-(220, '12', 'user', '8h sáng', '2025-09-21 03:15:32'),
-(221, '12', 'bot', '✅ Đã chọn giờ kết thúc: 08:00\n\n🏸 **Bước 4/5: Chọn sân**\n\nVui lòng chọn sân bạn muốn đặt:\n1. Sân 1 - 150,000 VNĐ/giờ\n2. Sân 2 - 150,000 VNĐ/giờ\n3. Sân 4 - 150,000 VNĐ/giờ\n4. Sân 5 - 150,000 VNĐ/giờ\n\nVui lòng trả lời số thứ tự sân (ví dụ: \'1\').', '2025-09-21 03:15:32'),
-(222, '12', 'user', 'sân 3', '2025-09-21 03:15:35'),
-(223, '12', 'bot', '📋 **Tóm tắt thông tin đặt sân:**\n\n🏸 Sân: Sân 4\n📅 Ngày: 22/09/2025\n⏰ Thời gian: 07:00 - 08:00 (1.0 giờ)\n💰 Giá gốc: 150,000 VNĐ\n\n✅ **Thông tin đúng chưa?**\nTrả lời \'đúng\' hoặc \'ok\' để tiếp tục chọn phương thức thanh toán.', '2025-09-21 03:15:35'),
-(224, '12', 'user', 'đúng', '2025-09-21 03:16:02'),
-(225, '12', 'bot', '💳 **Chọn phương thức thanh toán:**\n\n1️⃣ **Thanh toán khi đến sân (ondelivery)**\n   • Thanh toán sau khi chơi xong\n   • Giá gốc không đổi\n\n2️⃣ **Chuyển khoản trước (prepaid) - GIẢM 10%**\n   • Chuyển khoản ngay bây giờ\n   • Được giảm 10% tổng tiền\n\nVui lòng trả lời:\n• \'1\' hoặc \'ondelivery\' để thanh toán sau\n• \'2\' hoặc \'prepaid\' để chuyển khoản trước', '2025-09-21 03:16:02'),
-(226, '12', 'user', '1', '2025-09-21 03:16:18'),
-(227, '12', 'bot', '✅ **Phương thức: Thanh toán khi đến sân**\n\n💰 Tổng tiền: 150,000 VNĐ\n🏸 Sân: Sân 4\n📅 Ngày: 2025-09-22\n⏰ Thời gian: 07:00 - 08:00\n\n🎯 **Xác nhận đặt sân này không?**\nTrả lời \'xác nhận\' để hoàn tất đặt sân.', '2025-09-21 03:16:18'),
-(228, '12', 'user', 'xác nhận', '2025-09-21 03:16:32'),
-(229, '12', 'bot', '🎉 **ĐẶT SÂN THÀNH CÔNG!**\n\n📝 Mã đặt sân: cf6dcfd1...\n🏸 Sân: Sân 4\n📅 Ngày: 2025-09-22\n⏰ Thời gian: 07:00 - 08:00\n💰 Tổng tiền: 150,000 VNĐ\n💳 Phương thức: Thanh toán khi đến sân\n📋 Trạng thái: Đã xác nhận\n\n✅ Bạn có thể đến sân theo giờ đã đặt. Vui lòng thanh toán tại quầy sau khi chơi xong!\n🙏 Cảm ơn bạn đã sử dụng dịch vụ Sunny Sport!', '2025-09-21 03:16:33'),
-(230, '12', 'user', 'hôm nay từ 18 giờ đến 20 giờ có sân trống không', '2025-09-21 03:24:38'),
-(231, '12', 'bot', '✅ Tìm thấy các sân trống:\n1. Sân 2 - 150,000 VNĐ/giờ\n2. Sân 3 - 150,000 VNĐ/giờ\n3. Sân 4 - 150,000 VNĐ/giờ\n4. Sân 5 - 150,000 VNĐ/giờ\n\n🎯 **Bạn có muốn đặt một trong những sân này ngay bây giờ không?**\nTrả lời \'có\' hoặc \'không\'.', '2025-09-21 03:24:43'),
-(232, '12', 'user', 'có', '2025-09-21 03:25:06'),
-(233, '12', 'bot', '⏰ **Bước 2: Chọn giờ bắt đầu**\n\nVui lòng cho biết giờ bắt đầu đặt sân:\n• Ví dụ: \'18h\', \'18:00\', \'6 giờ tối\'', '2025-09-21 03:25:07'),
-(234, '12', 'user', '18h', '2025-09-21 03:25:21'),
-(235, '12', 'bot', '✅ Đã chọn giờ bắt đầu: 18:00\n\n⏰ **Bước 3/5: Chọn giờ kết thúc**\n\nVui lòng cho biết giờ kết thúc:\n• Ví dụ: \'20h\', \'20:00\', \'8 giờ tối\'', '2025-09-21 03:25:21'),
-(236, '12', 'user', '20h', '2025-09-21 03:25:24'),
-(237, '12', 'bot', '✅ Đã chọn giờ kết thúc: 20:00\n\n🏸 **Bước 4/5: Chọn sân**\n\nCác sân trống trong khung giờ này:\n• Sân 2 - 150,000 VNĐ/giờ\n• Sân 3 - 150,000 VNĐ/giờ\n• Sân 4 - 150,000 VNĐ/giờ\n• Sân 5 - 150,000 VNĐ/giờ\n\nVui lòng trả lời tên sân bạn muốn đặt (ví dụ: \'Sân 1\').', '2025-09-21 03:25:24'),
-(238, '12', 'user', 'sân 2', '2025-09-21 03:25:37'),
-(239, '12', 'bot', '✅ Đã chọn Sân 2\n\n👤 **Thông tin liên hệ**\n\nVui lòng cho biết họ tên của bạn:', '2025-09-21 03:25:37'),
-(240, '12', 'user', 'Bơ', '2025-09-21 03:25:53'),
-(241, '12', 'bot', '✅ Đã lưu tên: Bơ\n\n📱 **Bước 5b/5: Số điện thoại**\n\nVui lòng cho biết số điện thoại liên hệ:', '2025-09-21 03:25:53'),
-(242, '12', 'user', '0914090892', '2025-09-21 03:26:10'),
-(243, '12', 'bot', '📋 **Tóm tắt thông tin đặt sân:**\n\n🏸 Sân: Sân 2\n📅 Ngày: 21/09/2025\n⏰ Thời gian: 18:00 - 20:00 (2.0 giờ)\n💰 Giá gốc: 300,000 VNĐ\n👤 Tên: Bơ\n📱 SĐT: 0914090892\n\n✅ **Thông tin đúng chưa?**\nTrả lời \'đúng\' hoặc \'chưa\' để tiếp tục chọn phương thức thanh toán.', '2025-09-21 03:26:10'),
-(244, '12', 'user', 'đúng', '2025-09-21 03:26:21'),
-(245, '12', 'bot', '💳 **Chọn phương thức thanh toán:**\n\n1️⃣ **Thanh toán khi đến sân (ondelivery)**\n   • Thanh toán sau khi chơi xong\n   • Giá gốc không đổi\n\n2️⃣ **Chuyển khoản trước (prepaid) - GIẢM 10%**\n   • Chuyển khoản ngay bây giờ\n   • Được giảm 10% tổng tiền\n\nVui lòng trả lời:\n• \'ondelivery\' để thanh toán sau\n• \'prepaid\' để chuyển khoản trước', '2025-09-21 03:26:21'),
-(246, '12', 'user', 'ondelivery', '2025-09-21 03:26:45'),
-(247, '12', 'bot', '✅ **Phương thức: Thanh toán khi đến sân**\n\n💰 Tổng tiền: 300,000 VNĐ\n🏸 Sân: Sân 2\n📅 Ngày: 2025-09-21\n⏰ Thời gian: 18:00 - 20:00\n\n🎯 **Xác nhận đặt sân này không?**\nTrả lời \'xác nhận\' để hoàn tất đặt sân.', '2025-09-21 03:26:45'),
-(248, '12', 'user', 'xác nhận', '2025-09-21 03:26:54'),
-(249, '12', 'bot', '🎉 **ĐẶT SÂN THÀNH CÔNG!**\n\n📝 Mã đặt sân: 53e2eb66...\n🏸 Sân: Sân 2\n📅 Ngày: 2025-09-21\n⏰ Thời gian: 18:00 - 20:00\n💰 Tổng tiền: 300,000 VNĐ\n💳 Phương thức: Thanh toán khi đến sân\n📋 Trạng thái: Đã xác nhận\n\n✅ Bạn có thể đến sân theo giờ đã đặt. Vui lòng thanh toán tại quầy sau khi chơi xong!\n🙏 Cảm ơn bạn đã sử dụng dịch vụ Sunny Sport!', '2025-09-21 03:26:54'),
-(250, '12', 'user', 'tôi muốn đặt sân 12h đến 1 giờ trưa nay', '2025-09-21 03:30:20'),
-(251, '12', 'bot', '✅ Tìm thấy các sân trống:\n1. Sân 3 - 150,000 VNĐ/giờ\n2. Sân 4 - 150,000 VNĐ/giờ\n3. Sân 5 - 150,000 VNĐ/giờ\n\n🎯 **Bạn có muốn đặt một trong những sân này ngay bây giờ không?**\nTrả lời \'có\' hoặc \'không\'.', '2025-09-21 03:30:24'),
-(252, '12', 'user', 'tôi muốn đặt sân 12h đến 1 giờ hôm nay', '2025-09-21 03:31:20'),
-(253, '12', 'bot', '🏸 **Chọn sân bạn muốn đặt:**\n\nCác sân trống trong khung giờ này:\n• Sân 3 - 150,000 VNĐ/giờ\n• Sân 4 - 150,000 VNĐ/giờ\n• Sân 5 - 150,000 VNĐ/giờ\n\nVui lòng trả lời tên sân bạn muốn đặt (ví dụ: \'Sân 1\').', '2025-09-21 03:31:20'),
-(254, '12', 'user', 'tôi muốn đặt sân 12h đến 1 giờ hôm nay', '2025-09-21 03:39:11'),
-(255, '12', 'bot', '✅ Tìm thấy các sân trống:\n1. Sân 3 - 150,000 VNĐ/giờ\n2. Sân 4 - 150,000 VNĐ/giờ\n3. Sân 5 - 150,000 VNĐ/giờ\n\n🎯 **Bạn có muốn đặt một trong những sân này ngay bây giờ không?**\nTrả lời \'có\' hoặc \'không\'.', '2025-09-21 03:39:15'),
-(256, '12', 'user', 'tôi muốn đặt sân 12h đến 1 giờ hôm nay', '2025-09-21 03:42:56'),
-(257, '12', 'bot', '✅ Tìm thấy các sân trống:\n1. Sân 3 - 150,000 VNĐ/giờ\n2. Sân 4 - 150,000 VNĐ/giờ\n3. Sân 5 - 150,000 VNĐ/giờ\n\n🎯 **Bạn có muốn đặt một trong những sân này ngay bây giờ không?**\nTrả lời \'có\' hoặc \'không\'.', '2025-09-21 03:43:01'),
-(258, '12', 'user', 'tôi muốn đặt sân 12h đến 1 giờ hôm nay', '2025-09-21 03:47:03'),
-(259, '12', 'bot', '✅ Tìm thấy các sân trống:\n1. Sân 3 - 150,000 VNĐ/giờ\n2. Sân 4 - 150,000 VNĐ/giờ\n3. Sân 5 - 150,000 VNĐ/giờ\n\n🎯 **Bạn có muốn đặt một trong những sân này ngay bây giờ không?**\nTrả lời \'có\' hoặc \'không\'.', '2025-09-21 03:47:06');
+INSERT INTO `chat_history` (`id`, `user_id`, `role`, `message`, `created_at`, `bot_disabled`) VALUES
+(194, '12', 'user', 'chào bạn , toi muốn tim giày yonex', '2025-09-21 02:16:33', 1),
+(195, '12', 'bot', 'Chào bạn, hiện tại chúng tôi không có sản phẩm giày Yonex nào trong danh sách. Tuy nhiên, dưới đây là các sản phẩm giày cầu lông khác mà bạn có thể tham khảo:\n\n```html\n<div class=\"product-list\" style=\"display:flex;flex-wrap:wrap;gap:15px;margin-top:10px;\">\n    <div class=\"product-card\" onclick=\"window.location.href=\'t.php?product_id=2\'\" style=\"width:200px;padding:15px;border:1px solid #ddd;border-radius:10px;background:#fff;box-shadow:0 2px 8px rgba(0,0,0,0.1);cursor:pointer;transition:transform 0.2s;\">\n        <img src=\"images/lining-attack.jpg\" class=\"product-image\" style=\"width:100%;height:150px;object-fit:cover;border-radius:8px;margin-bottom:10px;\">\n        <div class=\"product-name\" style=\"font-size:16px;color:#333;margin-bottom:8px;font-weight:bold;\">Giày Lining Attack 2025</div>\n        <div class=\"product-price\" style=\"color:#e74c3c;font-weight:bold;font-size:18px;\">1,500,000 VNĐ</div>\n    </div>\n    <div class=\"product-card\" onclick=\"window.location.href=\'t.php?product_id=7\'\" style=\"width:200px;padding:15px;border:1px solid #ddd;border-radius:10px;background:#fff;box-shadow:0 2px 8px rgba(0,0,0,0.1);cursor:pointer;transition:transform 0.2s;\">\n        <img src=\"images/asics-skyelite.jpg\" class=\"product-image\" style=\"width:100%;height:150px;object-fit:cover;border-radius:8px;margin-bottom:10px;\">\n        <div class=\"product-name\" style=\"font-size:16px;color:#333;margin-bottom:8px;font-weight:bold;\">Giày Asics Sky Elite FF</div>\n        <div class=\"product-price\" style=\"color:#e74c3c;font-weight:bold;font-size:18px;\">1,800,000 VNĐ</div>\n    </div>\n</div>\n```\n\nNếu bạn cần thêm thông tin hoặc tìm kiếm sản phẩm khác, hãy cho tôi biết!', '2025-09-21 02:16:45', 1),
+(196, '12', 'user', 'tôi muốn tìm áo để thi đấu', '2025-09-21 02:18:28', 1),
+(197, '12', 'bot', 'Tìm thấy 2 sản phẩm phù hợp: \n<div class=\"product-list\" style=\"display:flex;flex-wrap:wrap;gap:15px;margin-top:10px;\">\n    <div class=\"product-card\" onclick=\"window.location.href=\'t.php?product_id=4\'\" style=\"width:200px;padding:15px;border:1px solid #ddd;border-radius:10px;background:#fff;box-shadow:0 2px 8px rgba(0,0,0,0.1);cursor:pointer;transition:transform 0.2s;\">\n        <img src=\"images/lining-shirt.jpg\" class=\"product-image\" style=\"width:100%;height:150px;object-fit:cover;border-radius:8px;margin-bottom:10px;\">\n        <div class=\"product-name\" style=\"font-size:16px;color:#333;margin-bottom:8px;font-weight:bold;\">Áo thi đấu Lining Pro</div>\n        <div class=\"product-price\" style=\"color:#e74c3c;font-weight:bold;font-size:18px;\">450,000 VNĐ</div>\n    </div>\n    <div class=\"product-card\" onclick=\"window.location.href=\'t.php?product_id=12\'\" style=\"width:200px;padding:15px;border:1px solid #ddd;border-radius:10px;background:#fff;box-shadow:0 2px 8px rgba(0,0,0,0.1);cursor:pointer;transition:transform 0.2s;\">\n        <img src=\"images/Áo-đấu.jpg\" class=\"product-image\" style=\"width:100%;height:150px;object-fit:cover;border-radius:8px;margin-bottom:10px;\">\n        <div class=\"product-name\" style=\"font-size:16px;color:#333;margin-bottom:8px;font-weight:bold;\">Áo đấu</div>\n        <div class=\"product-price\" style=\"color:#e74c3c;font-weight:bold;font-size:18px;\">150,000 VNĐ</div>\n    </div>\n</div>', '2025-09-21 02:18:41', 1),
+(230, '12', 'user', 'hôm nay từ 18 giờ đến 20 giờ có sân trống không', '2025-09-21 03:24:38', 1),
+(231, '12', 'bot', '✅ Tìm thấy các sân trống:\n1. Sân 2 - 150,000 VNĐ/giờ\n2. Sân 3 - 150,000 VNĐ/giờ\n3. Sân 4 - 150,000 VNĐ/giờ\n4. Sân 5 - 150,000 VNĐ/giờ\n\n🎯 **Bạn có muốn đặt một trong những sân này ngay bây giờ không?**\nTrả lời \'có\' hoặc \'không\'.', '2025-09-21 03:24:43', 1),
+(232, '12', 'user', 'có', '2025-09-21 03:25:06', 1),
+(233, '12', 'bot', '⏰ **Bước 2: Chọn giờ bắt đầu**\n\nVui lòng cho biết giờ bắt đầu đặt sân:\n• Ví dụ: \'18h\', \'18:00\', \'6 giờ tối\'', '2025-09-21 03:25:07', 1),
+(234, '12', 'user', '18h', '2025-09-21 03:25:21', 1),
+(235, '12', 'bot', '✅ Đã chọn giờ bắt đầu: 18:00\n\n⏰ **Bước 3/5: Chọn giờ kết thúc**\n\nVui lòng cho biết giờ kết thúc:\n• Ví dụ: \'20h\', \'20:00\', \'8 giờ tối\'', '2025-09-21 03:25:21', 1),
+(236, '12', 'user', '20h', '2025-09-21 03:25:24', 1),
+(237, '12', 'bot', '✅ Đã chọn giờ kết thúc: 20:00\n\n🏸 **Bước 4/5: Chọn sân**\n\nCác sân trống trong khung giờ này:\n• Sân 2 - 150,000 VNĐ/giờ\n• Sân 3 - 150,000 VNĐ/giờ\n• Sân 4 - 150,000 VNĐ/giờ\n• Sân 5 - 150,000 VNĐ/giờ\n\nVui lòng trả lời tên sân bạn muốn đặt (ví dụ: \'Sân 1\').', '2025-09-21 03:25:24', 1),
+(238, '12', 'user', 'sân 2', '2025-09-21 03:25:37', 1),
+(239, '12', 'bot', '✅ Đã chọn Sân 2\n\n👤 **Thông tin liên hệ**\n\nVui lòng cho biết họ tên của bạn:', '2025-09-21 03:25:37', 1),
+(240, '12', 'user', 'Bơ', '2025-09-21 03:25:53', 1),
+(241, '12', 'bot', '✅ Đã lưu tên: Bơ\n\n📱 **Bước 5b/5: Số điện thoại**\n\nVui lòng cho biết số điện thoại liên hệ:', '2025-09-21 03:25:53', 1),
+(242, '12', 'user', '0914090892', '2025-09-21 03:26:10', 1),
+(243, '12', 'bot', '📋 **Tóm tắt thông tin đặt sân:**\n\n🏸 Sân: Sân 2\n📅 Ngày: 21/09/2025\n⏰ Thời gian: 18:00 - 20:00 (2.0 giờ)\n💰 Giá gốc: 300,000 VNĐ\n👤 Tên: Bơ\n📱 SĐT: 0914090892\n\n✅ **Thông tin đúng chưa?**\nTrả lời \'đúng\' hoặc \'chưa\' để tiếp tục chọn phương thức thanh toán.', '2025-09-21 03:26:10', 1),
+(244, '12', 'user', 'đúng', '2025-09-21 03:26:21', 1),
+(245, '12', 'bot', '💳 **Chọn phương thức thanh toán:**\n\n1️⃣ **Thanh toán khi đến sân (ondelivery)**\n   • Thanh toán sau khi chơi xong\n   • Giá gốc không đổi\n\n2️⃣ **Chuyển khoản trước (prepaid) - GIẢM 10%**\n   • Chuyển khoản ngay bây giờ\n   • Được giảm 10% tổng tiền\n\nVui lòng trả lời:\n• \'ondelivery\' để thanh toán sau\n• \'prepaid\' để chuyển khoản trước', '2025-09-21 03:26:21', 1),
+(246, '12', 'user', 'ondelivery', '2025-09-21 03:26:45', 1),
+(247, '12', 'bot', '✅ **Phương thức: Thanh toán khi đến sân**\n\n💰 Tổng tiền: 300,000 VNĐ\n🏸 Sân: Sân 2\n📅 Ngày: 2025-09-21\n⏰ Thời gian: 18:00 - 20:00\n\n🎯 **Xác nhận đặt sân này không?**\nTrả lời \'xác nhận\' để hoàn tất đặt sân.', '2025-09-21 03:26:45', 1),
+(248, '12', 'user', 'xác nhận', '2025-09-21 03:26:54', 1),
+(249, '12', 'bot', '🎉 **ĐẶT SÂN THÀNH CÔNG!**\n\n📝 Mã đặt sân: 53e2eb66...\n🏸 Sân: Sân 2\n📅 Ngày: 2025-09-21\n⏰ Thời gian: 18:00 - 20:00\n💰 Tổng tiền: 300,000 VNĐ\n💳 Phương thức: Thanh toán khi đến sân\n📋 Trạng thái: Đã xác nhận\n\n✅ Bạn có thể đến sân theo giờ đã đặt. Vui lòng thanh toán tại quầy sau khi chơi xong!\n🙏 Cảm ơn bạn đã sử dụng dịch vụ Sunny Sport!', '2025-09-21 03:26:54', 1),
+(316, '12', 'user', 'chào bạn', '2025-09-21 04:35:19', 1),
+(317, '12', 'bot', 'Chào bạn! \n\nSunny Sport là trung tâm thể thao hiện đại chuyên về cầu lông và các sản phẩm thể thao. Chúng tôi cung cấp sân bãi, dụng cụ chính hãng, tổ chức sự kiện và lớp học cầu lông cho mọi lứa tuổi. Nếu bạn cần thêm thông tin, hãy cho tôi biết nhé! \n\nĐịa chỉ của chúng tôi là 123 Đường Nguyễn Văn Thể Thao, Quận Cầu Giấy, Hà Nội. Bạn có thể liên hệ qua số điện thoại 0914 123 456 hoặc email support@sunnysport.vn. \n\nChúng tôi mở cửa từ 06:00 đến 22:00 hàng ngày. Bạn cũng có thể theo dõi chúng tôi trên [Facebook](https://facebook.com/sunnysport.vn) và [Instagram](https://instagram.com/sunnysport.vn) để cập nhật thêm thông tin. \n\nHy vọng được phục vụ bạn!', '2025-09-21 04:35:26', 1),
+(318, '12', 'user', 'tôi muốn đặt sân 13h đến 14h hôm nay', '2025-09-21 04:35:42', 1),
+(319, '12', 'bot', '✅ Tìm thấy các sân trống:\n1. Sân 1 - 150,000 VNĐ/giờ\n2. Sân 2 - 150,000 VNĐ/giờ\n3. Sân 3 - 150,000 VNĐ/giờ\n4. Sân 4 - 150,000 VNĐ/giờ\n5. Sân 5 - 150,000 VNĐ/giờ\n\n🎯 **Bạn có muốn đặt một trong những sân này ngay bây giờ không?**\nTrả lời \'có\' hoặc \'không\'.', '2025-09-21 04:35:43', 1),
+(320, '12', 'user', 'có', '2025-09-21 04:35:48', 1),
+(321, '12', 'bot', '🏸 **Chọn sân bạn muốn đặt:**\n\nCác sân trống trong khung giờ này:\n• Sân 1 - 150,000 VNĐ/giờ\n• Sân 2 - 150,000 VNĐ/giờ\n• Sân 3 - 150,000 VNĐ/giờ\n• Sân 4 - 150,000 VNĐ/giờ\n• Sân 5 - 150,000 VNĐ/giờ\n\nVui lòng trả lời tên sân bạn muốn đặt (ví dụ: \'Sân 1\').', '2025-09-21 04:35:48', 1),
+(322, '12', 'user', 'sân 3', '2025-09-21 04:35:54', 1),
+(323, '12', 'bot', '✅ Đã chọn Sân 3\n\n👤 **Thông tin liên hệ**\n\nVui lòng cho biết họ tên của bạn:', '2025-09-21 04:35:54', 1),
+(324, '12', 'user', 'hồng nhung', '2025-09-21 04:36:06', 1),
+(325, '12', 'bot', '✅ Đã lưu tên: hồng nhung\n\n📱 **Bước 5b/5: Số điện thoại**\n\nVui lòng cho biết số điện thoại liên hệ:', '2025-09-21 04:36:06', 1),
+(326, '12', 'user', '0912839374', '2025-09-21 04:36:12', 1),
+(327, '12', 'bot', '📋 **Tóm tắt thông tin đặt sân:**\n\n🏸 Sân: Sân 3\n📅 Ngày: 21/09/2025\n⏰ Thời gian: 13:00 - 14:00 (1.0 giờ)\n💰 Giá gốc: 150,000 VNĐ\n👤 Tên: hồng nhung\n📱 SĐT: 0912839374\n\n✅ **Thông tin đúng chưa?**\nTrả lời \'đúng\' hoặc \'chưa\' để tiếp tục chọn phương thức thanh toán.', '2025-09-21 04:36:12', 1),
+(328, '12', 'user', 'đúng', '2025-09-21 04:36:17', 1),
+(329, '12', 'bot', '💳 **Chọn phương thức thanh toán:**\n\n1️⃣ **Thanh toán khi đến sân (ondelivery)**\n   • Thanh toán sau khi chơi xong\n   • Giá gốc không đổi\n\n2️⃣ **Chuyển khoản trước (prepaid) - GIẢM 10%**\n   • Chuyển khoản ngay bây giờ\n   • Được giảm 10% tổng tiền\n\nVui lòng trả lời:\n• \'ondelivery\' để thanh toán sau\n• \'prepaid\' để chuyển khoản trước', '2025-09-21 04:36:17', 1),
+(330, '12', 'user', 'prepaid', '2025-09-21 04:36:29', 1),
+(331, '12', 'bot', '✅ **Phương thức: Chuyển khoản trước (GIẢM 10%)**\n\n💰 Giá gốc: 150,000 VNĐ\n🎁 Giảm giá: 15,000 VNĐ (10%)\n💸 Tổng thanh toán: 135,000 VNĐ\n\n🏦 **Thông tin chuyển khoản:**\n• Số tài khoản: **0123456789**\n• Ngân hàng: **Vietcombank – Chi nhánh Hà Nội**\n• Chủ tài khoản: **SUNNY SPORT (Trần Phương Thùy)**\n\n📝 **Nội dung chuyển khoản:**\n`hồng nhung - 2025-09-21 - 13:00 - 14:00`\n\n🎯 **Xác nhận đặt sân này không?**\nTrả lời \'xác nhận\' để hoàn tất đặt sân.\n⚠️ Lưu ý: Sau khi xác nhận, vui lòng chuyển khoản và báo admin để xác nhận.', '2025-09-21 04:36:29', 1),
+(332, '12', 'user', 'xác nhận', '2025-09-21 04:36:42', 1),
+(333, '12', 'bot', '🎉 **ĐẶT SÂN THÀNH CÔNG!**\n\n📝 Mã đặt sân: #5301\n🏸 Sân: Sân 3\n📅 Ngày: 2025-09-21\n⏰ Thời gian: 13:00 - 14:00\n💰 Tổng tiền: 135,000 VNĐ\n🎁 Đã giảm: 10%\n💳 Phương thức: Chuyển khoản trước\n📋 Trạng thái: Chờ xác nhận thanh toán\n\n⚠️ **Quan trọng:** Vui lòng chuyển khoản theo thông tin đã cung cấp và báo admin để xác nhận!\n🙏 Cảm ơn bạn đã sử dụng dịch vụ Sunny Sport!', '2025-09-21 04:36:42', 1),
+(336, '12', 'user', 'tôi muốn tìm giày cầu lông', '2025-09-21 04:59:47', 1),
+(337, '12', 'bot', 'Tìm thấy 2 sản phẩm phù hợp: \n<div class=\"product-list\" style=\"display:flex;flex-wrap:wrap;gap:15px;margin-top:10px;\">\n    <div class=\"product-card\" onclick=\"window.location.href=\'t.php?product_id=2\'\" style=\"width:200px;padding:15px;border:1px solid #ddd;border-radius:10px;background:#fff;box-shadow:0 2px 8px rgba(0,0,0,0.1);cursor:pointer;transition:transform 0.2s;\">\n        <img src=\"images/lining-attack.jpg\" class=\"product-image\" style=\"width:100%;height:150px;object-fit:cover;border-radius:8px;margin-bottom:10px;\">\n        <div class=\"product-name\" style=\"font-size:16px;color:#333;margin-bottom:8px;font-weight:bold;\">Giày Lining Attack 2025</div>\n        <div class=\"product-price\" style=\"color:#e74c3c;font-weight:bold;font-size:18px;\">1,500,000 VNĐ</div>\n    </div>\n    <div class=\"product-card\" onclick=\"window.location.href=\'t.php?product_id=7\'\" style=\"width:200px;padding:15px;border:1px solid #ddd;border-radius:10px;background:#fff;box-shadow:0 2px 8px rgba(0,0,0,0.1);cursor:pointer;transition:transform 0.2s;\">\n        <img src=\"images/asics-skyelite.jpg\" class=\"product-image\" style=\"width:100%;height:150px;object-fit:cover;border-radius:8px;margin-bottom:10px;\">\n        <div class=\"product-name\" style=\"font-size:16px;color:#333;margin-bottom:8px;font-weight:bold;\">Giày Asics Sky Elite FF</div>\n        <div class=\"product-price\" style=\"color:#e74c3c;font-weight:bold;font-size:18px;\">1,800,000 VNĐ</div>\n    </div>\n</div>', '2025-09-21 05:00:00', 1),
+(338, '12', 'user', 'tôi muốn tìm sản phẩm của victor', '2025-09-21 08:57:26', 1),
+(339, '12', 'bot', 'Tìm thấy 1 sản phẩm phù hợp: \n<div class=\"product-list\" style=\"display:flex;flex-wrap:wrap;gap:15px;margin-top:10px;\">\n    <div class=\"product-card\" onclick=\"window.location.href=\'t.php?product_id=5\'\" style=\"width:200px;padding:15px;border:1px solid #ddd;border-radius:10px;background:#fff;box-shadow:0 2px 8px rgba(0,0,0,0.1);cursor:pointer;transition:transform 0.2s;\">\n        <img src=\"images/victor-wristband.jpg\" class=\"product-image\" style=\"width:100%;height:150px;object-fit:cover;border-radius:8px;margin-bottom:10px;\">\n        <div class=\"product-name\" style=\"font-size:16px;color:#333;margin-bottom:8px;font-weight:bold;\">Băng cuốn cổ tay Victor</div>\n        <div class=\"product-price\" style=\"color:#e74c3c;font-weight:bold;font-size:18px;\">100,000 VNĐ</div>\n    </div>\n</div>', '2025-09-21 08:57:35', 1),
+(394, '12', 'user', 'chào bạn , ngày mai lúc từ 06:30:00 đến 08:00:00 có sân trống không', '2025-09-21 09:16:24', 1),
+(395, '12', 'bot', '✅ Tìm thấy các sân trống:\n1. Sân 1 - 150,000 VNĐ/giờ\n2. Sân 2 - 150,000 VNĐ/giờ\n3. Sân 4 - 150,000 VNĐ/giờ\n4. Sân 5 - 150,000 VNĐ/giờ\n\n🎯 **Bạn có muốn đặt một trong những sân này ngay bây giờ không?**\nTrả lời \'có\' hoặc \'không\'.', '2025-09-21 09:16:26', 1),
+(396, '12', 'user', 'có', '2025-09-21 09:16:30', 1),
+(397, '12', 'bot', '🏸 **Chọn sân bạn muốn đặt:**\n\nCác sân trống trong khung giờ này:\n• Sân 1 - 150,000 VNĐ/giờ\n• Sân 2 - 150,000 VNĐ/giờ\n• Sân 4 - 150,000 VNĐ/giờ\n• Sân 5 - 150,000 VNĐ/giờ\n\nVui lòng trả lời tên sân bạn muốn đặt (ví dụ: \'Sân 1\').', '2025-09-21 09:16:30', 1),
+(398, '12', 'user', 'sân 1', '2025-09-21 09:16:33', 1),
+(399, '12', 'bot', '✅ Đã chọn Sân 1\n\n👤 **Thông tin liên hệ**\n\nVui lòng cho biết họ tên của bạn:', '2025-09-21 09:16:33', 1),
+(400, '12', 'user', 'su', '2025-09-21 09:16:34', 1),
+(401, '12', 'bot', '✅ Đã lưu tên: su\n\n📱 **Bước 5b/5: Số điện thoại**\n\nVui lòng cho biết số điện thoại liên hệ:', '2025-09-21 09:16:34', 1),
+(402, '12', 'user', '09672336132', '2025-09-21 09:16:42', 1),
+(403, '12', 'bot', '📋 **Tóm tắt thông tin đặt sân:**\n\n🏸 Sân: Sân 1\n📅 Ngày: 22/09/2025\n⏰ Thời gian: 06:30 - 08:00 (1.5 giờ)\n💰 Giá gốc: 225,000 VNĐ\n👤 Tên: su\n📱 SĐT: 09672336132\n\n✅ **Thông tin đúng chưa?**\nTrả lời \'đúng\' hoặc \'chưa\' để tiếp tục chọn phương thức thanh toán.', '2025-09-21 09:16:42', 1),
+(404, '12', 'user', 'đúng', '2025-09-21 09:16:49', 1),
+(405, '12', 'bot', '💳 **Chọn phương thức thanh toán:**\n\n1️⃣ **Thanh toán khi đến sân (ondelivery)**\n   • Thanh toán sau khi chơi xong\n   • Giá gốc không đổi\n\n2️⃣ **Chuyển khoản trước (prepaid) - GIẢM 10%**\n   • Chuyển khoản ngay bây giờ\n   • Được giảm 10% tổng tiền\n\nVui lòng trả lời:\n• \'ondelivery\' để thanh toán sau\n• \'prepaid\' để chuyển khoản trước', '2025-09-21 09:16:49', 1),
+(406, '12', 'user', 'prepaid', '2025-09-21 09:16:56', 1),
+(407, '12', 'bot', '✅ **Phương thức: Chuyển khoản trước (GIẢM 10%)**\n\n💰 Giá gốc: 225,000 VNĐ\n🎁 Giảm giá: 22,500 VNĐ (10%)\n💸 Tổng thanh toán: 202,500 VNĐ\n\n🏦 **Thông tin chuyển khoản:**\n• Số tài khoản: **0123456789**\n• Ngân hàng: **Vietcombank – Chi nhánh Hà Nội**\n• Chủ tài khoản: **SUNNY SPORT (Trần Phương Thùy)**\n\n📝 **Nội dung chuyển khoản:**\n`su - 2025-09-22 - 06:30 - 08:00`\n\n🎯 **Xác nhận đặt sân này không?**\nTrả lời \'xác nhận\' để hoàn tất đặt sân.\n⚠️ Lưu ý: Sau khi xác nhận, vui lòng chuyển khoản và báo admin để xác nhận.', '2025-09-21 09:16:56', 1),
+(408, '12', 'user', 'xác nhận', '2025-09-21 09:17:07', 1),
+(409, '12', 'bot', '🎉 **ĐẶT SÂN THÀNH CÔNG!**\n\n📝 Mã đặt sân: #5304\n🏸 Sân: Sân 1\n📅 Ngày: 2025-09-22\n⏰ Thời gian: 06:30 - 08:00\n💰 Tổng tiền: 202,500 VNĐ\n🎁 Đã giảm: 10%\n💳 Phương thức: Chuyển khoản trước\n📋 Trạng thái: Chờ xác nhận thanh toán\n\n⚠️ **Quan trọng:** Vui lòng chuyển khoản theo thông tin đã cung cấp và báo admin để xác nhận!\n🙏 Cảm ơn bạn đã sử dụng dịch vụ Sunny Sport!', '2025-09-21 09:17:07', 1),
+(410, '12', 'user', '22 tháng 9 từ 9 giờ đến 11 giờ có sân trống không', '2025-09-21 12:20:32', 1),
+(411, '12', 'bot', '✅ Tìm thấy các sân trống:\n1. Sân 3 - 150,000 VNĐ/giờ\n2. Sân 4 - 150,000 VNĐ/giờ\n3. Sân 5 - 150,000 VNĐ/giờ\n\n🎯 **Bạn có muốn đặt một trong những sân này ngay bây giờ không?**\nTrả lời \'có\' hoặc \'không\'.', '2025-09-21 12:20:35', 1),
+(412, '12', 'user', 'có', '2025-09-21 12:21:33', 1),
+(413, '12', 'bot', '⏰ **Bước 2: Chọn giờ bắt đầu**\n\nVui lòng cho biết giờ bắt đầu đặt sân:\n• Ví dụ: \'18h\', \'18:00\', \'6 giờ tối\'', '2025-09-21 12:21:33', 1),
+(414, '12', 'user', '9 giờ', '2025-09-21 12:21:41', 1),
+(415, '12', 'bot', '✅ Đã chọn giờ bắt đầu: 09:00\n\n⏰ **Bước 3/5: Chọn giờ kết thúc**\n\nVui lòng cho biết giờ kết thúc:\n• Ví dụ: \'20h\', \'20:00\', \'8 giờ tối\'', '2025-09-21 12:21:41', 1),
+(416, '12', 'user', '11 giờ', '2025-09-21 12:21:47', 1),
+(417, '12', 'bot', '✅ Đã chọn giờ kết thúc: 11:00\n\n🏸 **Bước 4/5: Chọn sân**\n\nCác sân trống trong khung giờ này:\n• Sân 3 - 150,000 VNĐ/giờ\n• Sân 4 - 150,000 VNĐ/giờ\n• Sân 5 - 150,000 VNĐ/giờ\n\nVui lòng trả lời tên sân bạn muốn đặt (ví dụ: \'Sân 1\').', '2025-09-21 12:21:47', 1),
+(418, '12', 'user', 'sân 3', '2025-09-21 12:21:50', 1),
+(419, '12', 'bot', '✅ Đã chọn Sân 3\n\n👤 **Thông tin liên hệ**\n\nVui lòng cho biết họ tên của bạn:', '2025-09-21 12:21:50', 1),
+(420, '12', 'user', 'bo', '2025-09-21 12:22:02', 1),
+(421, '12', 'bot', '✅ Đã lưu tên: bo\n\n📱 **Bước 5b/5: Số điện thoại**\n\nVui lòng cho biết số điện thoại liên hệ:', '2025-09-21 12:22:02', 1),
+(422, '12', 'user', '0892736251', '2025-09-21 12:22:08', 1),
+(423, '12', 'bot', '📋 **Tóm tắt thông tin đặt sân:**\n\n🏸 Sân: Sân 3\n📅 Ngày: 21/09/2025\n⏰ Thời gian: 09:00 - 11:00 (2.0 giờ)\n💰 Giá gốc: 300,000 VNĐ\n👤 Tên: bo\n📱 SĐT: 0892736251\n\n✅ **Thông tin đúng chưa?**\nTrả lời \'đúng\' hoặc \'chưa\' để tiếp tục chọn phương thức thanh toán.', '2025-09-21 12:22:08', 1),
+(424, '12', 'user', 'đúng', '2025-09-21 12:22:14', 1),
+(425, '12', 'bot', '💳 **Chọn phương thức thanh toán:**\n\n1️⃣ **Thanh toán khi đến sân (ondelivery)**\n   • Thanh toán sau khi chơi xong\n   • Giá gốc không đổi\n\n2️⃣ **Chuyển khoản trước (prepaid) - GIẢM 10%**\n   • Chuyển khoản ngay bây giờ\n   • Được giảm 10% tổng tiền\n\nVui lòng trả lời:\n• \'ondelivery\' để thanh toán sau\n• \'prepaid\' để chuyển khoản trước', '2025-09-21 12:22:14', 1),
+(426, '12', 'user', 'ondelivery', '2025-09-21 12:22:27', 1),
+(427, '12', 'bot', '✅ **Phương thức: Thanh toán khi đến sân**\n\n💰 Tổng tiền: 300,000 VNĐ\n🏸 Sân: Sân 3\n📅 Ngày: 2025-09-21\n⏰ Thời gian: 09:00 - 11:00\n\n🎯 **Xác nhận đặt sân này không?**\nTrả lời \'xác nhận\' để hoàn tất đặt sân.', '2025-09-21 12:22:27', 1),
+(428, '12', 'user', 'xác nhận', '2025-09-21 12:22:35', 1),
+(429, '12', 'bot', '🎉 **ĐẶT SÂN THÀNH CÔNG!**\n\n📝 Mã đặt sân: #5305\n🏸 Sân: Sân 3\n📅 Ngày: 2025-09-21\n⏰ Thời gian: 09:00 - 11:00\n💰 Tổng tiền: 300,000 VNĐ\n💳 Phương thức: Thanh toán khi đến sân\n📋 Trạng thái: Đã xác nhận\n\n✅ Bạn có thể đến sân theo giờ đã đặt. Vui lòng thanh toán tại quầy sau khi chơi xong!\n🙏 Cảm ơn bạn đã sử dụng dịch vụ Sunny Sport!', '2025-09-21 12:22:35', 1),
+(430, '12', 'admin', 'aaa', '2025-09-21 16:53:04', 1),
+(431, '12', 'user', 'e', '2025-09-21 16:54:19', 1),
+(432, '12', 'bot', 'Xin chào! Dưới đây là thông tin về shop cầu lông Sunny Sport:\n\n- **Tên shop**: Sunny Sport\n- **Mô tả**: Sunny Sport là trung tâm thể thao hiện đại chuyên về cầu lông và các sản phẩm thể thao. Chúng tôi cung cấp sân bãi, dụng cụ chính hãng, tổ chức sự kiện và lớp học cầu lông cho mọi lứa tuổi.\n- **Địa chỉ**: 123 Đường Nguyễn Văn Thể Thao, Quận Cầu Giấy, Hà Nội\n- **Số điện thoại**: 0914 123 456\n- **Email**: support@sunnysport.vn\n- **Website**: [sunnysport.vn](https://sunnysport.vn)\n- **Facebook**: [facebook.com/sunnysport.vn](https://facebook.com/sunnysport.vn)\n- **Instagram**: [instagram.com/sunnysport.vn](https://instagram.com/sunnysport.vn)\n- **Giờ mở cửa**: 06:00 - 22:00 hàng ngày\n\nNếu bạn cần thêm thông tin nào khác, hãy cho tôi biết nhé!', '2025-09-21 16:54:31', 1),
+(433, '12', 'user', 'ê', '2025-09-21 17:12:46', 1);
 
 -- --------------------------------------------------------
 
@@ -771,7 +796,8 @@ ALTER TABLE `cart_items`
 -- Indexes for table `chat_history`
 --
 ALTER TABLE `chat_history`
-  ADD PRIMARY KEY (`id`);
+  ADD PRIMARY KEY (`id`),
+  ADD KEY `idx_chat_history_user_bot_disabled` (`user_id`,`bot_disabled`);
 
 --
 -- Indexes for table `courts`
@@ -909,7 +935,7 @@ ALTER TABLE `users`
 -- AUTO_INCREMENT for table `bookings`
 --
 ALTER TABLE `bookings`
-  MODIFY `booking_id` int(11) NOT NULL AUTO_INCREMENT COMMENT 'Mã đặt sân', AUTO_INCREMENT=5301;
+  MODIFY `booking_id` int(11) NOT NULL AUTO_INCREMENT COMMENT 'Mã đặt sân', AUTO_INCREMENT=5306;
 
 --
 -- AUTO_INCREMENT for table `cart_items`
@@ -921,7 +947,7 @@ ALTER TABLE `cart_items`
 -- AUTO_INCREMENT for table `chat_history`
 --
 ALTER TABLE `chat_history`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=260;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=455;
 
 --
 -- AUTO_INCREMENT for table `courts`

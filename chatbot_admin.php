@@ -110,31 +110,6 @@ if (!isset($_SESSION['user_id']) || $_SESSION['role'] !== 'admin') {
             font-size: 14px;
         }
 
-        .conversation-controls {
-            margin-bottom: 5px;
-        }
-
-        .bot-toggle {
-            display: flex;
-            align-items: center;
-            cursor: pointer;
-            font-size: 12px;
-            color: #666;
-        }
-
-        .bot-toggle input[type="checkbox"] {
-            margin-right: 6px;
-            transform: scale(0.8);
-        }
-
-        .toggle-text {
-            font-size: 11px;
-            font-weight: 500;
-        }
-
-        .bot-toggle input[type="checkbox"]:checked + .toggle-text {
-            color: #e74c3c;
-        }
 
 
         .new-message-badge {
@@ -495,15 +470,24 @@ if (!isset($_SESSION['user_id']) || $_SESSION['role'] !== 'admin') {
         // Load conversations list
         async function loadConversations() {
             try {
+                console.log('🔄 Đang load conversations từ:', API_BASE_URL + '/admin/conversations');
                 const response = await fetch(API_BASE_URL + '/admin/conversations');
+                console.log('📡 Response status:', response.status);
+                
                 const data = await response.json();
+                console.log('📨 Data nhận được:', data);
                 
                 if (data && data.status === "success") {
                     conversations = data.conversations;
+                    console.log('✅ Số conversation:', conversations.length);
                     displayConversations(conversations);
+                } else {
+                    console.error('❌ API trả về lỗi:', data);
+                    conversationsList.innerHTML = '<div style="padding: 20px; text-align: center; color: #e74c3c;">❌ Lỗi load danh sách: ' + (data?.message || 'Unknown error') + '</div>';
                 }
             } catch (error) {
-                console.error('Lỗi load conversations:', error);
+                console.error('❌ Lỗi load conversations:', error);
+                conversationsList.innerHTML = '<div style="padding: 20px; text-align: center; color: #e74c3c;">❌ Không thể kết nối server Python<br>Kiểm tra: python chatbot_badminton.py</div>';
             }
         }
 
@@ -525,13 +509,6 @@ if (!isset($_SESSION['user_id']) || $_SESSION['role'] !== 'admin') {
                 
                 convDiv.innerHTML = `
                     <div class="conversation-user">${conv.user_name || 'User ' + conv.user_id}</div>
-                    <div class="conversation-controls">
-                        <label class="bot-toggle">
-                            <input type="checkbox" ${conv.bot_disabled ? 'checked' : ''} 
-                                   onchange="toggleBotForUser('${conv.user_id}', this.checked, this)">
-                            <span class="toggle-text">${conv.bot_disabled ? 'Bot tắt' : 'Bot bật'}</span>
-                        </label>
-                    </div>
                     ${conv.new_message_count > 0 ? `<div class="new-message-badge">${conv.new_message_count}</div>` : ''}
                 `;
                 
@@ -694,43 +671,6 @@ if (!isset($_SESSION['user_id']) || $_SESSION['role'] !== 'admin') {
             chatMessages.scrollTop = chatMessages.scrollHeight;
         }
 
-        // Toggle bot for specific user
-        async function toggleBotForUser(userId, disabled, checkboxElement) {
-            try {
-                const response = await fetch(API_BASE_URL + '/admin/toggle-bot', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                    },
-                    body: JSON.stringify({
-                        user_id: userId,
-                        bot_disabled: disabled
-                    })
-                });
-                
-                const data = await response.json();
-                if (data.status === 'success') {
-                    // Update local state
-                    const conv = conversations.find(c => c.user_id === userId);
-                    if (conv) {
-                        conv.bot_disabled = disabled;
-                    }
-                    
-                    // Update UI text
-                    const toggleText = checkboxElement.nextElementSibling;
-                    toggleText.textContent = disabled ? 'Bot tắt' : 'Bot bật';
-                    
-                    // Show notification - removed
-                } else {
-                    showNotification('Lỗi: ' + data.message, 'error');
-                }
-            } catch (error) {
-                console.error('Lỗi toggle bot:', error);
-                console.error('Error details:', error.message);
-                console.error('Error type:', error.name);
-                showNotification('Lỗi kết nối server: ' + error.message, 'error');
-            }
-        }
 
         // Polling for updates
         function startPolling() {
@@ -754,6 +694,7 @@ if (!isset($_SESSION['user_id']) || $_SESSION['role'] !== 'admin') {
                 
                 if (data && data.status === "success") {
                     const newConversations = data.conversations;
+                    console.log('🔄 Polling update - conversations:', newConversations.length);
                     
                     // Check for new messages
                     newConversations.forEach(newConv => {
@@ -770,7 +711,7 @@ if (!isset($_SESSION['user_id']) || $_SESSION['role'] !== 'admin') {
                     displayConversations(conversations);
                 }
             } catch (error) {
-                console.error('Lỗi kiểm tra cập nhật:', error);
+                console.error('❌ Lỗi polling:', error);
             }
         }
 
@@ -795,7 +736,7 @@ if (!isset($_SESSION['user_id']) || $_SESSION['role'] !== 'admin') {
             stopPolling();
         });
 
-        // Handle product card clicks to open in new tab
+        // Handle product card clicks to open in new tab (admin opens in new tab for convenience)
         document.addEventListener('click', function(e) {
             // Check if clicked element is a product card or inside a product card
             var productCard = e.target.closest('.product-card');
@@ -803,12 +744,13 @@ if (!isset($_SESSION['user_id']) || $_SESSION['role'] !== 'admin') {
                 e.preventDefault();
                 e.stopPropagation();
                 
-                // Extract product_id from onclick attribute or href
+                // Extract product_id from onclick attribute
                 var onclick = productCard.getAttribute('onclick');
                 if (onclick) {
-                    // Extract URL from onclick="window.location.href='...'" or onclick="window.open('...', '_blank')"
-                    var urlMatch = onclick.match(/['"]([^'"]*t\.php\?product_id=\d+[^'"]*)['"]/);
+                    // Extract URL from onclick="window.location.href='...'"
+                    var urlMatch = onclick.match(/window\.location\.href\s*=\s*['"]([^'"]*)['"]/);
                     if (urlMatch) {
+                        // Admin mở tab mới để tiện theo dõi chat
                         window.open(urlMatch[1], '_blank');
                     }
                 }
