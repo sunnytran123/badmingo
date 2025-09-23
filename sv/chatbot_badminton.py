@@ -5,9 +5,21 @@ from datetime import datetime, timedelta
 from decimal import Decimal
 import json
 import uuid
+import paho.mqtt.client as mqtt
+import time
+import threading
 
 app = Flask(__name__)
 
+
+# ===== CONFIG MQTT =====
+MQTT_SERVER = "broker.hivemq.com"
+MQTT_PORT = 1883
+MQTT_TOPIC = "badminton/device/control/sunny"
+
+# ===== MQTT CLIENT GLOBAL =====
+mqtt_client = None
+mqtt_connected = False
 
 #
 # Cấu hình CORS thủ công
@@ -32,6 +44,149 @@ def ket_noi_db():
     except mysql.connector.Error as e:
         print(f"Lỗi kết nối cơ sở dữ liệu: {e}")
         return None
+
+
+# ===== MQTT FUNCTIONS =====
+def on_mqtt_connect(client, userdata, flags, rc):
+    """Callback khi kết nối MQTT thành công"""
+    global mqtt_connected
+    if rc == 0:
+        print("[MQTT] Connected thành công")
+        mqtt_connected = True
+    else:
+        print(f"[MQTT] Lỗi kết nối: {rc}")
+        mqtt_connected = False
+
+
+def on_mqtt_disconnect(client, userdata, rc):
+    """Callback khi mất kết nối MQTT"""
+    global mqtt_connected
+    mqtt_connected = False
+    print("[MQTT] Mất kết nối")
+
+
+def connect_mqtt():
+    """Kết nối tới MQTT broker"""
+    global mqtt_client, mqtt_connected
+    
+    if mqtt_client and mqtt_connected:
+        return mqtt_client
+    
+    try:
+        mqtt_client = mqtt.Client(client_id="Chatbot_Server_001", protocol=mqtt.MQTTv311)
+        mqtt_client.on_connect = on_mqtt_connect
+        mqtt_client.on_disconnect = on_mqtt_disconnect
+        
+        mqtt_client.connect(MQTT_SERVER, MQTT_PORT, 60)
+        mqtt_client.loop_start()  # Chạy loop trong background thread
+        
+        # Đợi kết nối thành công
+        timeout = 10
+        while not mqtt_connected and timeout > 0:
+            time.sleep(1)
+            timeout -= 1
+            
+        if mqtt_connected:
+            print("[MQTT] Kết nối thành công")
+            return mqtt_client
+        else:
+            print("[MQTT] Timeout kết nối")
+            return None
+            
+    except Exception as e:
+        print(f"[MQTT] Lỗi kết nối: {e}")
+        return None
+
+
+def send_mqtt_command(court_id, action):
+    """Gửi lệnh điều khiển thiết bị qua MQTT"""
+    global mqtt_client, mqtt_connected
+    
+    try:
+        if not mqtt_client or not mqtt_connected:
+            mqtt_client = connect_mqtt()
+            
+        if mqtt_client and mqtt_connected:
+            if action == "on":
+                msg = str(court_id)  # Ví dụ "1", "2", "3"
+                print(f"[{datetime.now()}] MQTT -> Bật sân {court_id}")
+            elif action == "off":
+                msg = str(court_id * 10)  # Ví dụ "10", "20", "30"
+                print(f"[{datetime.now()}] MQTT -> Tắt sân {court_id}")
+            else:
+                print(f"[MQTT] Action không hợp lệ: {action}")
+                return False
+                
+            mqtt_client.publish(MQTT_TOPIC, msg)
+            return True
+        else:
+            print("[MQTT] Không thể kết nối để gửi lệnh")
+            return False
+            
+    except Exception as e:
+        print(f"[MQTT] Lỗi gửi lệnh: {e}")
+        return False
+
+
+def check_and_control_court_devices():
+    """Kiểm tra và điều khiển thiết bị sân cầu lông theo lịch booking"""
+    try:
+        conn = ket_noi_db()
+        if not conn:
+            return
+            
+        cursor = conn.cursor(dictionary=True)
+        now = datetime.now()
+        today = now.date()
+        
+        # Lấy tất cả booking hôm nay
+        cursor.execute("""
+            SELECT booking_id, court_id, booking_date, start_time, end_time, status
+            FROM bookings
+            WHERE booking_date = %s AND status IN ('pending', 'confirmed')
+        """, (today,))
+        bookings = cursor.fetchall()
+        
+        for booking in bookings:
+            start_dt = datetime.combine(
+                booking['booking_date'],
+                datetime.strptime(str(booking['start_time']), "%H:%M:%S").time()
+            )
+            end_dt = datetime.combine(
+                booking['booking_date'],
+                datetime.strptime(str(booking['end_time']), "%H:%M:%S").time()
+            )
+            court_id = booking['court_id']
+            
+            # Bật thiết bị 15 phút trước giờ bắt đầu
+            if start_dt - timedelta(minutes=15) <= now <= end_dt:
+                send_mqtt_command(court_id, "on")
+            # Tắt thiết bị sau giờ kết thúc
+            elif now > end_dt:
+                send_mqtt_command(court_id, "off")
+        
+        cursor.close()
+        conn.close()
+        
+    except Exception as e:
+        print(f"[IoT] Lỗi kiểm tra thiết bị: {e}")
+
+
+def start_iot_monitoring():
+    """Khởi động thread theo dõi và điều khiển thiết bị IoT"""
+    def iot_loop():
+        while True:
+            try:
+                check_and_control_court_devices()
+                time.sleep(60)  # Kiểm tra mỗi 1 phút
+            except Exception as e:
+                print(f"[IoT] Lỗi trong vòng lặp IoT: {e}")
+                time.sleep(60)
+    
+    # Khởi động thread IoT
+    iot_thread = threading.Thread(target=iot_loop, daemon=True)
+    iot_thread.start()
+    print("[IoT] Đã khởi động monitoring thiết bị IoT")
 
 
 def clean_sql_output(sql_string):
@@ -1488,6 +1643,22 @@ def create_booking_in_database(user_id):
         cursor.close()
         conn.close()
 
+        # Kiểm tra và điều khiển thiết bị IoT nếu booking hôm nay
+        booking_date = datetime.strptime(data['booking_date'], '%Y-%m-%d').date()
+        today = datetime.now().date()
+        
+        if booking_date == today:
+            # Nếu booking hôm nay, kiểm tra xem có cần bật thiết bị ngay không
+            start_dt = datetime.strptime(data['start_time'], '%H:%M:%S').time()
+            end_dt = datetime.strptime(data['end_time'], '%H:%M:%S').time()
+            now_time = datetime.now().time()
+            
+            # Bật thiết bị nếu đang trong khung giờ hoặc sắp tới (trong 15 phút)
+            start_datetime = datetime.combine(booking_date, start_dt)
+            if start_datetime - timedelta(minutes=15) <= datetime.now() <= datetime.combine(booking_date, end_dt):
+                send_mqtt_command(data['selected_court']['court_id'], "on")
+                print(f"[IoT] Tự động bật thiết bị cho sân {data['selected_court']['court_id']}")
+
         # Tạo response thành công
         response = "🎉 **ĐẶT SÂN THÀNH CÔNG!**\n\n"
         response += f"📝 Mã đặt sân: #{booking_id}\n"
@@ -1506,6 +1677,10 @@ def create_booking_in_database(user_id):
             response += f"📋 Trạng thái: Đã xác nhận\n\n"
             response += "✅ Bạn có thể đến sân theo giờ đã đặt. Vui lòng thanh toán tại quầy sau khi chơi xong!"
 
+        # Thêm thông tin IoT
+        if booking_date == today:
+            response += "\n🔌 **Thiết bị sân:** Đèn và quạt sẽ tự động bật/tắt theo lịch đặt sân"
+        
         response += "\n🙏 Cảm ơn bạn đã sử dụng dịch vụ Sunny Sport!"
 
         # Xóa conversation state
@@ -1747,15 +1922,134 @@ def get_admin_user_info(user_id):
         return jsonify({"status": "error", "message": "Lỗi server"}), 500
 
 
+# ==================== IOT DEVICE MANAGEMENT ENDPOINTS ====================
+
+@app.route('/api/iot/status', methods=['GET', 'OPTIONS'])
+def get_iot_status():
+    """Lấy trạng thái kết nối IoT và thiết bị"""
+    if request.method == 'OPTIONS':
+        return '', 200
+    
+    try:
+        global mqtt_client, mqtt_connected
+        
+        # Lấy thông tin booking hôm nay
+        today = datetime.now().strftime('%Y-%m-%d')
+        query = """
+        SELECT 
+            b.booking_id,
+            b.court_id,
+            c.court_name,
+            b.start_time,
+            b.end_time,
+            b.status,
+            CASE 
+                WHEN NOW() BETWEEN 
+                    CONCAT(b.booking_date, ' ', b.start_time) - INTERVAL 15 MINUTE 
+                    AND CONCAT(b.booking_date, ' ', b.end_time) 
+                THEN 'active'
+                WHEN NOW() > CONCAT(b.booking_date, ' ', b.end_time) 
+                THEN 'ended'
+                ELSE 'pending'
+            END as device_status
+        FROM bookings b
+        JOIN courts c ON b.court_id = c.court_id
+        WHERE b.booking_date = %s 
+        AND b.status IN ('pending', 'confirmed')
+        ORDER BY b.start_time
+        """
+        
+        bookings = execute_query(query, (today,))
+        
+        return jsonify({
+            "status": "success",
+            "mqtt_connected": mqtt_connected,
+            "today_bookings": bookings,
+            "timestamp": datetime.now().isoformat()
+        }), 200
+        
+    except Exception as e:
+        print(f"Lỗi lấy trạng thái IoT: {e}")
+        return jsonify({"status": "error", "message": "Lỗi server"}), 500
+
+
+@app.route('/api/iot/control', methods=['POST', 'OPTIONS'])
+def control_iot_device():
+    """Điều khiển thiết bị IoT thủ công"""
+    if request.method == 'OPTIONS':
+        return '', 200
+    
+    try:
+        data = request.json
+        court_id = data.get('court_id')
+        action = data.get('action')  # 'on' hoặc 'off'
+        
+        if not court_id or not action:
+            return jsonify({"status": "error", "message": "Thiếu court_id hoặc action"}), 400
+            
+        if action not in ['on', 'off']:
+            return jsonify({"status": "error", "message": "Action phải là 'on' hoặc 'off'"}), 400
+        
+        # Gửi lệnh MQTT
+        success = send_mqtt_command(court_id, action)
+        
+        if success:
+            return jsonify({
+                "status": "success", 
+                "message": f"Đã {action} thiết bị sân {court_id}",
+                "court_id": court_id,
+                "action": action,
+                "timestamp": datetime.now().isoformat()
+            }), 200
+        else:
+            return jsonify({"status": "error", "message": "Không thể gửi lệnh điều khiển"}), 500
+            
+    except Exception as e:
+        print(f"Lỗi điều khiển thiết bị: {e}")
+        return jsonify({"status": "error", "message": "Lỗi server"}), 500
+
+
+@app.route('/api/iot/check', methods=['POST', 'OPTIONS'])
+def check_iot_devices():
+    """Kiểm tra và cập nhật trạng thái thiết bị theo lịch booking"""
+    if request.method == 'OPTIONS':
+        return '', 200
+    
+    try:
+        # Chạy kiểm tra thiết bị
+        check_and_control_court_devices()
+        
+        return jsonify({
+            "status": "success",
+            "message": "Đã kiểm tra và cập nhật trạng thái thiết bị",
+            "timestamp": datetime.now().isoformat()
+        }), 200
+        
+    except Exception as e:
+        print(f"Lỗi kiểm tra thiết bị: {e}")
+        return jsonify({"status": "error", "message": "Lỗi server"}), 500
+
+
 
 
 if __name__ == '__main__':
     print("🚀 Đang khởi động server chatbot cầu lông...")
     print("📍 Server: http://localhost:5000")
     print("🔗 API: http://localhost:5000/api/chat")
+    print("🔌 IoT: Tự động điều khiển thiết bị sân")
     print("⏹️  Nhấn Ctrl+C để dừng")
     print("-" * 50)
+    
     try:
+        # Khởi động kết nối MQTT
+        print("🔌 Đang kết nối MQTT...")
+        connect_mqtt()
+        
+        # Khởi động monitoring IoT
+        print("🔌 Đang khởi động monitoring thiết bị IoT...")
+        start_iot_monitoring()
+        
+        # Khởi động Flask server
         app.run(host="0.0.0.0", port=5000, debug=True)
     except Exception as e:
         print(f"❌ Lỗi khởi động server: {e}")
